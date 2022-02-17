@@ -3,7 +3,8 @@ function timeAverageVelocities(QS, options)
 %   Use pathlines of optical flow in pullback space to query velocities
 %   and average along Lagrangian pathlines. 
 %   Default is to weight velocities contributions with a time width 5 
-%   weighted by tripulse filter.
+%   weighted by tripulse filter. 
+%   To avoid any averaging in time, set twidth = 0 ;
 %
 % Parameters
 % ----------

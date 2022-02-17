@@ -20,9 +20,6 @@ function generateCurrentPullbacks(QS, cutMesh, spcutMesh, ...
 %       create pullbacks in uphi coords
 %   generate_rsm : bool (default=false)
 %       create pullbacks in uphi coords
-%   generate_uvprime : bool (default=false)
-%       create pullbacks in as-conformal-as-possible with minimally twisted
-%       boundaries, in smoothed meshes
 %   PSize : int (default=5)
 %       how many interpolation points along each side of a patch
 %   EdgeColor : colorspec (default='none')
@@ -70,8 +67,6 @@ generate_uphi    = false ;  % generate a (u, phi) coord system pullback
 generate_spsm    = false ;  % generate an (s, phi) coord system smoothed mesh pullback
 generate_rsm     = false ;  % generate a relaxed (s, phi) coord system smoothed mesh pullback
 generate_ricci   = false ;  % generate a ricci-flowed coord system pullback
-generate_uvprime = false ;  % generate a (u',v') coord sys pullback, where u',v' are found by conformal map with minimally twisted boundaries
-generate_ruvprime = false ;  % generate a (u',v') coord sys pullback, where u',v' are found by relaxed conformal map with minimally twisted boundaries
 % Other options
 save_as_stack    = false ;  % save data as stack for each timepoint, not MIP
 channels = [] ;             % default is to image all channels (empty list)
@@ -118,14 +113,6 @@ if nargin > 4
     if isfield(pbOptions, 'generate_ricci')
         generate_ricci = pbOptions.generate_ricci ;
         pbOptions = rmfield(pbOptions, 'generate_ricci') ;
-    end
-    if isfield(pbOptions, 'generate_uvprime')
-        generate_uvprime = pbOptions.generate_uvprime ;
-        pbOptions = rmfield(pbOptions, 'generate_uvprime') ;
-    end
-    if isfield(pbOptions, 'generate_ruvprime')
-        generate_ruvprime = pbOptions.generate_ruvprime ;
-        pbOptions = rmfield(pbOptions, 'generate_ruvprime') ;
     end
     if isfield(pbOptions, 'channels')
         channels = pbOptions.channels ;
@@ -206,31 +193,6 @@ if (nargin < 4 || isempty(spcutMeshSm)) && (generate_rsm || generate_spsm)
     end
 end
 
-if generate_uvprime || generate_ruvprime
-    if isfield(pbOptions, 'uvpcutMesh') 
-        uvpcutMesh = pbOptions.uvpcutMesh ;
-    elseif isfield(pbOptions, 'uvpcutMeshSm') 
-        uvpcutMesh = pbOptions.uvpcutMeshSm ;
-    elseif isfield(pbOptions, 'uvprimecutMeshSm')
-        uvpcutMesh = pbOptions.uvprimecutMeshSm ;
-    else
-        if isempty(QS.currentMesh.uvpcutMesh)
-            QS.loadCurrentUVPrimeCutMesh()
-        end
-        uvpcutMesh = QS.currentMesh.uvpcutMesh ;
-    end
-    
-    % Smooth embedding coordinates (optional)
-    if preTextureLambda > 0
-        uvpcutMesh.v = laplacian_smooth(uvpcutMesh.v, uvpcutMesh.f, 'cotan', [], preTextureLambda, 'implicit') ;
-        uvpcutMesh.vn = per_vertex_normals(uvpcutMesh.v, uvpcutMesh.f, 'Weighting', 'angle') ;
-    end
-    % Shift embedding coordinates along normal (optional)
-    if abs(normal_shift) > 0
-        uvpcutMesh.v = uvpcutMesh.v + normal_shift * uvpcutMesh.vn ;
-    end
-end
-
 if generate_ricci
     if isfield(pbOptions, 'ricciMesh')
         ricciMesh = pbOptions.ricciMesh ;
@@ -262,8 +224,6 @@ if QS.dynamic
     imfn_spsm = sprintf( QS.fullFileBase.im_sp_sm, tt) ;
     imfn_rsm = sprintf( QS.fullFileBase.im_r_sm, tt) ;
 end
-imfn_uvprime = sprintf( QS.fullFileBase.im_uvprime, tt) ;
-imfn_ruvprime = sprintf( QS.fullFileBase.im_r_uvprime, tt) ;
 imfn_ricci = sprintf( QS.fullFileBase.im_ricci, tt) ;
 do_pb1 = ~exist(imfn_uv, 'file') && generate_uv ;
 do_pb2 = ~exist(imfn_r, 'file') && generate_relaxed ;
@@ -276,8 +236,6 @@ else
     do_pb5 = false ;
     do_pb6 = false ;
 end
-do_pb7 = ~exist(imfn_uvprime, 'file') && generate_uvprime ;
-do_pb8 = ~exist(imfn_ruvprime, 'file') && generate_ruvprime ;
 do_pb9 = ~exist(imfn_ricci, 'file') && generate_ricci;
 
 do_pb = [do_pb1, do_pb2, do_pb3, do_pb4, do_pb5, do_pb6, do_pb7, do_pb8, do_pb9] ;
@@ -305,12 +263,6 @@ if do_pullbacks
         end
         if do_pb6
             disp(['Smooth relaxed (s,phi) PB will be generated: ', imfn_rsm])
-        end
-        if do_pb7
-            disp(['Smooth uvprime PB will be generated: ', imfn_uvprime])
-        end
-        if do_pb8
-            disp(['Smooth relaxed uvprime PB will be generated: ', imfn_ruvprime])
         end
         if do_pb8
             disp(['Ricci PB will be generated: ', imfn_ricci])
@@ -421,26 +373,6 @@ if QS.dynamic
         disp('Skipping relaxed SPSm pullback image generation ')
     end
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Save smoothed u'v' image
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-if (~exist(imfn_uvprime, 'file') || overwrite) && generate_uvprime
-    disp(['Generating image for smoothed uvprime coords: ' imfn_uvprime])
-    aux_generate_orbifold(uvpcutMesh.raw, a_fixed, IV, imfn_uvprime, ...
-        pbOptions, axisorder, save_as_stack)
-else
-    disp('Skipping UVPrimeSm pullback image generation ')
-end
-
-if (~exist(imfn_ruvprime, 'file') || overwrite) && generate_ruvprime
-    disp(['Generating image for relaxed, smoothed uvprime coords: ' imfn_ruvprime])
-    aux_generate_orbifold(uvpcutMesh.raw, uvpcutMesh.raw.ar_mu, IV, imfn_ruvprime, ...
-        pbOptions, axisorder, save_as_stack)
-else
-    disp('Skipping relaxed UVPrimeSm pullback image generation ')
-end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Save ricci pullback image

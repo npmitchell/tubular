@@ -9,9 +9,9 @@ function [acom_sm, pcom_sm, dcom] = computeAPDCOMs(QS, opts)
 %         P for centerline
 %        _x_         Dorsal
 %       /  /     ___x_
-%      /  /    /      \  Anterior
-%     /  /____/        \x
-%    |  xP for APDV     |
+%      /  /    /      \    Anterior
+%     /  /____/        \ x
+%    |  x P for APDV    |
 %     \________________/
 %    (ventral here, unlabeled)
 %
@@ -75,8 +75,16 @@ preview_com = false ;
 check_slices = false ;
 
 % Unpack opts
-anteriorChannel = opts.anteriorChannel ;
-posteriorChannel = opts.posteriorChannel ;
+if isfield(opts, 'anteriorChannel')
+    anteriorChannel = opts.anteriorChannel ;
+else
+    anteriorChannel = 1 ;
+end
+if isfield(opts, 'anteriorChannel')
+    posteriorChannel = opts.posteriorChannel ;
+else
+    posteriorChannel = 2 ;
+end
 if isfield(opts, 'overwrite')
     overwrite = opts.overwrite ;
 end

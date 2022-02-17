@@ -331,9 +331,13 @@ for tidx = tidx_todo
         % If we smooth before pushing along the normal
         if smoothing_lambda > 0 
             disp('smoothing mesh via laplacian filter')
-            mesh.v = laplacian_smooth(...
-                mesh.v, mesh.f, 'cotan', [], smoothing_lambda, 'implicit') ;
-            
+            try
+                disp('attemping smoothing using gptoolbox, if configured...')
+                mesh.v = laplacian_smooth(...
+                    mesh.v, mesh.f, 'cotan', [], smoothing_lambda, 'implicit') ;            
+            catch
+                disp('Could not smooth mesh because no gptoolbox')
+            end
         end
         
         

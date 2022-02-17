@@ -6,6 +6,15 @@ function [acom,pcom,dcom, rot,trans] = computeAPDVCoords(QS, opts)
 % along the shortest linesegment emanating from the AP axis to the dorsal
 % point. 
 %
+% If acom,pcom,dcom are all inferred from iLastik training, the default
+% channels used to extract the blobs of high probability marking A,P, and a
+% point D that is dorsal to the line connecting AP are:
+%   A : 1
+%   P : 2
+%   D : 4
+% This would leave channel 3 (and 5+) to be a background channel in the
+% iLastik training.
+%
 % Chirality: note that the probabilties field is assumed to be meshlike so
 % the first two axis are swapped within com_region(). 
 %
@@ -60,8 +69,11 @@ if isfield(opts, 'tref')
     end
 else
     % by default use first timepoint
-    trefIDx = 1 ;
-    tt = QS.xp.fileMeta.timePoints(trefIDx) ;
+    try
+        tt = QS.t0 ;
+    catch
+        tt = QS.t0set() ;
+    end
 end
 
 % Default options
@@ -70,10 +82,26 @@ preview = false ;
 check_slices = false ;
 
 % Unpack opts
-dorsal_thres = opts.dorsal_thres ;
-anteriorChannel = opts.anteriorChannel ;
-posteriorChannel = opts.posteriorChannel ;
-dorsalChannel = opts.dorsalChannel ;
+if isfield(opts, 'dorsal_thres')
+    dorsal_thres = opts.dorsal_thres ;
+else
+    dorsal_thres = 0.5 ;
+end
+if isfield(opts, 'anteriorChannel')
+    anteriorChannel = opts.anteriorChannel ;
+else
+    anteriorChannel = 1 ;
+end
+if isfield(opts, 'anteriorChannel')
+    posteriorChannel = opts.posteriorChannel ;
+else
+    posteriorChannel = 2 ;
+end
+if isfield(opts, 'dorsalChannel')
+    dorsalChannel = opts.dorsalChannel ;
+else
+    dorsalChannel = 4 ;
+end
 if isfield(opts, 'overwrite')
     overwrite = opts.overwrite ;
 end

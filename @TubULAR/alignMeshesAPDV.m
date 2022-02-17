@@ -99,7 +99,11 @@ end
 if isfield(opts, 'plot_buffer')
     plot_buffer = opts.plot_buffer ;
 end
-normal_step = opts.normal_step ;
+if isfield(opts, 'normal_step')
+    normal_step = opts.normal_step ;
+else
+    normal_step = 1e-1 ;  % in pixels, how far to march if pcom is outside mesh
+end
 dcomname = fullfile(meshDir, 'dcom_for_rot.txt') ;
 
 % Default valued options
@@ -608,14 +612,14 @@ for tidx = 1:length(timePoints)
         %     'edgecolor', 'none', 'facecolor', 'k', 'FaceAlpha', 0.1) ;
         % % th = trisurf(faces_to_plot, xyzrs2(:, 1), xyzrs2(:, 2), xyzrs2(:, 3), ...
         % %     'edgecolor', 'none', 'facecolor', 'g', 'FaceAlpha', 0.5) ;
-        axis equal
-        close(fig2)
+        % axis equal
+        % close(fig2)
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         try
             [~,~,~] = apply_ambient_occlusion(th, 'SoftLighting', true) ;
         catch
-            disp('Could not apply ambient occlusion')
+            disp('Could not apply ambient occlusion -- no gptoolbox installed? Skipping occlusion.')
         end
         
         % Figure properties
