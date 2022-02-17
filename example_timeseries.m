@@ -1,6 +1,12 @@
 %% EXAMPLE MASTER PIPELINE FOR TIME SERIES DATA (3D + time)
 % by NPMitchell & Dillon Cislo
 
+% This is a pipeline to analyze dynamic tube-like surfaces in 3D data.
+% A tube-like surface is one that is either cylindrical in topology or
+% elongated and spherical in topology. If the initial mesh is a spherical
+% topology, then two 'endcaps' will be truncated in order to transform it 
+% to a cylindrical topology.
+
 % TO DO:
 % ------
 %  - redefine APDV coords as viewingCoordinates (global ref frame)
@@ -10,13 +16,6 @@
 %  - do we need gptoolbox? so far just for laplacian_smooth()
 %  - DEC tutorials --> STANDALONE AND INTEGRATED TUTORIALS
 %  - Ricci flow tutorials or remove this
-
-% This is a pipeline to analyze dynamic tube-like surfaces in 3D data.
-% A tube-like surface is one that is either cylindrical in topology or
-% elongated and spherical in topology. The pipeline will work for spheres,
-% but two 'endcaps' will be truncated in order to transform it to a
-% cylindrical topology.
-
 
 %% Clear workspace ========================================================
 % We start by clearing the memory and closing all figures
@@ -44,22 +43,18 @@ cd(dataDir)
 %% DEFINE NEW MASTER SETTINGS
 if ~exist('./masterSettings.mat', 'file')
     % Metadata about the experiment
-    stackResolution = [.2619 .2619 .2619] ;
-    nChannels = 1 ;
-    channelsUsed = 1 ;
-    timePoints = 1:81; %86:211 ;
-    ssfactor = 4 ;
-    % whether the data is stored inverted relative to real position
-    flipy = false ; 
-    timeInterval = 2 ;  % physical interval between timepoints
-    timeUnits = 'min' ; % physical unit of time between timepoints
-    spaceUnits = '$\mu$m' ; % physical unit of time between timepoints
-    scale = 1.0 ;      % scale for conversion to 16 bit
-    file32Base = 'TP%d_Ch0_Ill0_Ang0,45,90,135,180,225,270,315.tif'; 
-    fn = 'Time_%06d_c1_stab';
-    fn_prestab = 'Time_%06d_c1.tif';
-    set_preilastikaxisorder = 'xyzc' ;
-    swapZT = 1 ;
+    stackResolution = [.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
+    nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
+    channelsUsed = 1 ;          % which channels are used for analysis
+    timePoints = 123:124;       % timepoints to include in the analysis
+    ssfactor = 4 ;              % subsampling factor
+    flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
+    timeInterval = 2 ;          % physical interval between timepoints
+    timeUnits = 'min' ;         % physical unit of time between timepoints
+    spaceUnits = '$\mu$m' ;     % physical unit of time between timepoints
+    fn = 'Time_%06d_c1_stab';        % filename string pattern
+    set_preilastikaxisorder = 'xyzc' ; % data axis order for subsampled h5 data (ilastik input)
+    swapZT = 1 ;                % whether to swap the z and t dimensions
     masterSettings = struct('stackResolution', stackResolution, ...
         'nChannels', nChannels, ...
         'channelsUsed', channelsUsed, ...
@@ -69,13 +64,10 @@ if ~exist('./masterSettings.mat', 'file')
         'timeInterval', timeInterval, ...
         'timeUnits', timeUnits, ...
         'spaceUnits', spaceUnits, ...
-        'scale', scale, ...
-        'file32Base', file32Base, ...
         'fn', fn,...
-        'fn_prestab', fn_prestab, ...
         'swapZT', swapZT, ...
         'set_preilastikaxisorder', set_preilastikaxisorder, ...
-        'nU', 150, ...  % 150 for mef2 data with posterior midgut loop
+        'nU', 100, ...  
         'nV', 100); 
     disp('Saving masterSettings to ./masterSettings.mat')
     if exist('./masterSettings.mat', 'file')
@@ -118,6 +110,9 @@ if loadMaster
 end
 dir16bit = fullfile(dataDir) ;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PART 1: Surface detection using ImSAnE's integral detector
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% I. INITIALIZE ImSAnE PROJECT ===========================================
 % Setup a working directory for the project, where extracted surfaces,
 % metadata and debugging output will be stored.  Also specifiy the
@@ -133,7 +128,7 @@ end
 
 % Start by creating an experiment object, optionally pass on the project
 % directory (otherwise it will ask), and change into the directory of the
-% data.  This serves as a front-end for data loading, detection, fitting
+% data. This serves as a front-end for data loading, detection, fitting
 % etc.
 xp = project.Experiment(projectDir, dataDir);
 
@@ -214,86 +209,66 @@ xp.setTime(xp.fileMeta.timePoints(1)) ;
 %% SET DETECTION OPTIONS ==================================================
 % Load/define the surface detection parameters
 msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
-if exist(msls_detOpts_fn, 'file') 
+if exist(msls_detOpts_fn, 'file')
     load(msls_detOpts_fn, 'detectOptions')
 else
-    channel = 1;
-    foreGroundChannel = 1;
-    zdim = 2 ;
-    ssfactor=4 ;
-    niter=35 ;
-    niter0=35 ;
-    ofn_ply='mesh_ms_' ;
-    ofn_ls='msls_' ;
-    ofn_smoothply = 'mesh_' ;
-    ms_scriptDir='/mnt/data/code/morphsnakes_wrapper/morphsnakes_wrapper/' ;
-    pre_nu=-5 ;
-    pre_smoothing=0 ;
-    lambda1=1 ;
-    lambda2=1 ;
-    exit_thres=0.000005 ;
-    smoothing=0.5 ;
-    nu=0 ;
-    post_nu=2 ;
-    post_smoothing=3 ;    
-    init_ls_fn = 'msls_initguess.h5' ;
+    outputfilename_ply='mesh_ms_' ;
+    outputfilename_ls='msls_' ;
+    outputfilename_smoothply = 'mesh_' ;
+    ms_scriptDir='/mnt/data/code/morphsnakes_wrapper/morphsnakes_wrapper/' ;   
+    init_ls_fn = 'msls_initguess' ;
+    meshlabCodeDir = '/mnt/data/code/meshlab_codes/';
     mlxprogram = fullfile(meshlabCodeDir, ...
         'laplace_surface_rm_resample30k_reconstruct_LS3_1p2pc_ssfactor4.mlx') ;
-    radius_guess = 40 ;
-    center_guess = '200,75,75' ;
-    dtype = 'h5' ;
-    mask = 'none' ;
     prob_searchstr = '_stab_Probabilities.h5' ;
-    preilastikaxisorder= set_preilastikaxisorder; ... % axis order in input to ilastik as h5s. To keep as saved coords use xyzc
+    preilastikaxisorder = set_preilastikaxisorder; ... % axis order in input to ilastik as h5s. To keep as saved coords use xyzc
     ilastikaxisorder= 'cxyz'; ... % axis order as output by ilastik probabilities h5
     imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
-    include_boundary_faces = true ;
-    smooth_with_matlab = -1;
     
     % Name the output mesh directory --------------------------------------
     mslsDir = [fullfile(projectDir, 'msls_output') filesep];
 
     % Surface detection parameters ----------------------------------------
-    detectOptions = struct( 'channel', channel, ...
-        'ssfactor', ssfactor, ...
-        'niter', niter,...
-        'niter0', niter0, ...
-        'lambda1', lambda1, ...
-        'lambda2', lambda2, ...
-        'nu', nu, ...
-        'smoothing', smoothing, ...
-        'post_nu', post_nu, ...
-        'post_smoothing', post_smoothing, ...
-        'exit_thres', exit_thres, ...
-        'foreGroundChannel', foreGroundChannel, ...
+    detectOptions = struct( 'channel', 1, ...
+        'ssfactor', 4, ...
+        'niter', 35,...
+        'niter0', 160, ...
+        'lambda1', 1, ...
+        'lambda2', 1, ...
+        'pressure', 0, ...
+        'tension', 0.5, ...
+        'pre_pressure', -5, ...
+        'pre_tension', 0, ...
+        'post_pressure', 2, ...
+        'post_tension', 3, ...
+        'exit_thres', 1e-7, ...
+        'foreGroundChannel', 1, ...
         'fileName', sprintf( fn, xp.currentTime ), ...
         'mslsDir', mslsDir, ...
-        'ofn_ls', ofn_ls, ...
-        'ofn_ply', ofn_ply,...
+        'ofn_ls', outputfilename_ls, ...
+        'ofn_ply', outputfilename_ply,...
         'ms_scriptDir', ms_scriptDir, ...
         'timepoint', xp.currentTime, ...
-        'zdim', zdim, ...
-        'ofn_smoothply', ofn_smoothply, ...
-        'pre_nu', pre_nu, ...
-        'pre_smoothing', pre_smoothing, ...
+        'zdim', 2, ...
+        'ofn_smoothply', outputfilename_smoothply, ...
         'mlxprogram', mlxprogram, ...
         'init_ls_fn', init_ls_fn, ... % set to none to load prev tp
-        'run_full_dataset', run_full_dataset,... % projectDir, ... % set to 'none' for single tp
-        'radius_guess', radius_guess, ...
+        'run_full_dataset', projectDir,... % projectDir, ... % set to 'none' for single tp
+        'radius_guess', 40, ...
         'dset_name', 'exported_data',...
-        'center_guess', center_guess,... % xyz of the initial guess sphere ;
+        'center_guess', '200,75,75',... % xyz of the initial guess sphere ;
         'save', true, ... % whether to save images of debugging output
         'plot_mesh3d', false, ...
-        'dtype', dtype,...
-        'mask', mask,...
+        'dtype', 'h5',...
+        'mask', 'none',...
         'mesh_from_pointcloud', false, ...
         'prob_searchstr', prob_searchstr, ...
         'preilastikaxisorder', preilastikaxisorder, ... 
         'ilastikaxisorder', ilastikaxisorder, ... 
         'physicalaxisorder', imsaneaxisorder, ... 
-        'include_boundary_faces', include_boundary_faces, ...
-        'smooth_with_matlab', smooth_with_matlab, ...
-        'pythonVersion', '3') ;
+        'include_boundary_faces', true, ...
+        'smooth_with_matlab', -1, ...  % set this to >0 to use matlab laplacian filter instead of meshlab
+        'pythonVersion', '2') ;
 
     % save options
     if exist(msls_detOpts_fn, 'file')
@@ -336,8 +311,10 @@ end
 disp('Open with ilastik if not already done')
 
 %% TRAIN NON-STABILIZED DATA IN ILASTIK TO IDENTIFY SURFACE ==============
-% Open ilastik, train pre-stab h5s until probabilities and uncertainty are 
-% satisfactory, then run on stab images.
+% Open ilastik, train on h5s until probabilities and uncertainty are 
+% satisfactory for extracting a mesh. For example, here we train on the
+% membrane (channel 1) and the yolk (channel 2), so that a level set will
+% enclose the yolk but not escape through the membrane.
 
 %% Create MorphSnakes LevelSets from the Probabilities output of ilastik ==
 % Now detect all surfaces
@@ -367,30 +344,33 @@ else
     end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PART 2: TubULAR -- surface parameterization
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Now we have 3d data volumes and surfaces. Define a TubULAR object. 
 % To visualize data on these surfaces and compute how these surfaces deform
 % we now define TubULAR object.
 nU = masterSettings.nU ;
 nV = masterSettings.nV ;
-opts.meshDir = mslsDir ;
-opts.flipy = flipy ;
-opts.timeInterval = timeInterval ;
-opts.timeUnits = timeUnits ;
-opts.spaceUnits = spaceUnits ;
-opts.nU = nU ;
-opts.nV = nV ;
-opts.t0 = xp.fileMeta.timePoints(1) ;
-opts.normalShift = 10 ;
-opts.a_fixed = 2.0 ;
+opts.meshDir = mslsDir ;        % Directory where meshes reside
+opts.flipy = flipy ;            % Set to true if data volume axes are inverted in chirality wrt physical lab coordinates
+opts.timeInterval = timeInterval ; % Spacing between adjacent timepoints in units of timeUnits 
+opts.timeUnits = timeUnits ;    % units of time, so that adjacent timepoints are timeUnits * timeInterval apart
+opts.spaceUnits = spaceUnits ;  % Units of space in LaTeX, for ex '$mu$m' for micron
+opts.nU = nU ;                  % How many points along the longitudinal axis to sample surface
+opts.nV = nV ;                  % How many points along the circumferential axis to sample surface
+opts.t0 = xp.fileMeta.timePoints(1) ;   % reference timepoint used to define surface-Lagrangian and Lagrangian measurements
+opts.normalShift = 10 ;         % Additional dilation acting on surface for texture mapping
+opts.a_fixed = 2.0 ;            % Fixed aspect ratio of pullback images. Setting to 1.0 is most conformal mapping option.
 opts.adjustlow = 1.00 ;         % floor for intensity adjustment
 opts.adjusthigh = 99.9 ;        % ceil for intensity adjustment (clip)
-opts.phiMethod = 'curves3d' ;
-opts.lambda_mesh = 0.002 ;
-opts.lambda = 0.01 ;
-opts.lambda_err = 0.01 ;
+opts.phiMethod = 'curves3d' ;   % Method for following surface in surface-Lagrangian mapping [(s,phi) coordinates]
+opts.lambda_mesh = 0.00 ;       % Smoothing applied to the mesh before DEC measurements
+opts.lambda = 0.0 ;             % Smoothing applied to computed values on the surface
+opts.lambda_err = 0.0 ;         % Additional smoothing parameter, optional
 disp('defining TubULAR class instance (tubi= tubular instance)')
 tubi = TubULAR(xp, opts) ;
-disp('done')
+disp('done defining TubULAR instance')
 
 %% Inspect all meshes in 3D
 for tp = xp.fileMeta.timePoints
@@ -454,26 +434,19 @@ tubi.alignMeshesAPDV(alignAPDVOpts) ;
 disp('done')
 
 %% PLOT ALL TEXTURED MESHES IN 3D =========================================
-
 % Establish texture patch options
-% Get limits and create output dir
 metadat = struct() ;
 metadat.reorient_faces = false ;            % set to true if some mesh normals may be inverted (requires gptoolbox if true)
 metadat.normal_shift = tubi.normalShift ;   % normal push, in pixels, along normals defined in data XYZ space
 metadat.texture_axis_order = [1 2 3] ;      % texture space sampling. If the surface and dataspace have axis permutation, enter that here
-
-% Psize is the linear dimension of the grid drawn on each triangular face
-Options.PSize = 5 ;
-Options.EdgeColor = 'none';
+Options.PSize = 5 ;          % Psize is the linear dimension of the grid drawn on each triangular face. Set PSize > 1 for refinement of texture on each triangle of the surface triangulation. Higher numbers are slower but give more detailed images.
 Options.numLayers = [0, 0];  % how many layers to MIP over/bundle into stack, as [outward, inward]
-Options.layerSpacing = 2 ;    % layers are 2 pixels apart
+Options.layerSpacing = 2 ;   % Distance between layers over which we take MIP, in pixels, 
 
-% Plot on surface for all TP 
-options = metadat ;
-tubi.plotSeriesOnSurfaceTexturePatch(options, Options)
+% Plot on surface for all timepoints 
+tubi.plotSeriesOnSurfaceTexturePatch(metadat, Options)
 
 %% EXTRACT CENTERLINES
-% Skip if already done
 % Note: these just need to be 'reasonable' centerlines for topological
 % checks on the orbifold cuts. Therefore, use as large a resolution ('res')
 % as possible that still forms a centerline passing through the mesh
@@ -572,7 +545,6 @@ for tt = tubi.xp.fileMeta.timePoints
     else
         disp('Skipping computation of pullback')
     end
-    clear Options IV
         
 end
 disp('Done with generating spcutMeshes and cutMeshes')
@@ -582,20 +554,10 @@ options = struct() ;
 options.coordSys = 'sp' ;
 tubi.coordSystemDemo(options)
 
-%% OPTIONAL: COMPUTE MESH SURFACE AREA AND VOLUME =========================
-options = struct() ;
-tubi.measureSurfaceAreaVolume(options)
-disp('done')
 
-%% OPTIONAL: COMPUTE WRITHE OF MEANCURVE CENTERLINES ======================
-options = struct() ;
-tubi.measureWrithe(options)
-disp('done')
-
-%% OPTIONAL: Plot fancy "cross-section" view of centerlines
-options = struct() ;
-tubi.plotClineXSections(options)
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PART 3: Further refinement of dynamic meshes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Smooth the sphi grid meshes in time ====================================
 options = struct() ;
 options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
@@ -605,16 +567,12 @@ tubi.smoothDynamicSPhiMeshes(options) ;
 tubi.plotSPCutMeshSmRS(options) ;
 
 % Inspect coordinate system charts using smoothed meshes
-options = struct()
+options = struct() ;
 options.coordSys = 'spsm' ;
 tubi.coordSystemDemo(options)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Redo Pullbacks with time-smoothed meshes ===============================
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Skip if already done
 disp('Create pullback using S,Phi coords with time-averaged Meshes')
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for tt = tubi.xp.fileMeta.timePoints
     disp(['NOW PROCESSING TIME POINT ', num2str(tt)]);
     tidx = tubi.xp.tIdx(tt);
@@ -630,7 +588,10 @@ for tt = tubi.xp.fileMeta.timePoints
     tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 end
 
-%% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE =======================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE ============================
 % Skip if already done
 options = struct() ;
 options.coordsys = 'spsm' ;
@@ -748,7 +709,6 @@ tubi.measurePathlineStrainRate(options)
 
 % Pathline strain rate plots
 options = struct() ;
-options.plot_kymographs = false ;
 options.climit = 0.05 ;
 options.climitWide = 1.0 ;
 tubi.plotPathlineStrainRate(options)
@@ -762,29 +722,3 @@ options.climitRatio = 1 ;
 tubi.measurePathlineStrain(options)
 tubi.plotPathlineStrain(options)
 
-%% Measure coarse-grained bond contraction and dilation in zeta=s/L, phi
-% todo: consider putting this in Ricci map frame instead of (s,phi) frame
-options = struct() ;
-tubi.measureDxDyStrainFiltered(options) ;
-
-
-%% Extra functionality to demonstrate: PULLBACK STACKS ====================
-% Skip if already done
-disp('Create pullback stack using S,Phi coords with time-averaged Meshes');
-% Load options
-overwrite = true ;
-optionfn = fullfile(tubi.dir.im_r_sme_stack, 'spcutMeshSmStackOptions.mat') ;
-if ~exist(optionfn, 'file') || overwrite
-    spcutMeshSmStackOptions.layer_spacing = 0.5 / tubi.APDV.resolution ; % pixel resolution roughly matches xy
-    spcutMeshSmStackOptions.n_outward = 20 ;
-    spcutMeshSmStackOptions.n_inward = 40 ;
-    spcutMeshSmStackOptions.smoothIter = 0 ;
-    spcutMeshSmStackOptions.preSmoothIter = 35 ;
-    spcutMeshSmStackOptions.imSize = 500 ;
-    % Save options
-    save(optionfn, 'spcutMeshSmStackOptions')
-else
-    load(optionfn, 'smSPCutMeshStackOptions')
-end
-spcutMeshSmStackOptions.overwrite = overwrite ;
-tubi.generateSPCutMeshSmStack(spcutMeshSmStackOptions)
