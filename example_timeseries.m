@@ -9,6 +9,7 @@
 %  - imsane instructions (optional)
 %  - do we need gptoolbox? so far just for laplacian_smooth()
 %  - DEC tutorials --> STANDALONE AND INTEGRATED TUTORIALS
+%  - Ricci flow tutorials or remove this
 
 % This is a pipeline to analyze dynamic tube-like surfaces in 3D data.
 % A tube-like surface is one that is either cylindrical in topology or
@@ -29,6 +30,7 @@ dataDir = cd ;
 %% ADD PATHS TO THIS ENVIRONMENT ==========================================
 origpath = matlab.desktop.editor.getActiveFilename;
 cd(fileparts(origpath))
+addpath(fileparts(origpath))
 addpath(fullfile('utility', 'addpath_recurse'))
 addpath_recurse('utility')
 addpath_recurse('/mnt/data/code/gptoolbox')
@@ -344,8 +346,6 @@ if strcmp(detectOptions.run_full_dataset, projectDir)
     xp.setTime(xp.fileMeta.timePoints(1));
     detectOpts2 = detectOptions ;
     detectOpts2.fileName = sprintf( fn, xp.currentTime ) ;
-    detectOpts2.nu = 4 ;
-    detectOpts2.niter0 = 5 ;
     xp.setDetectOptions( detectOpts2 );
     xp.detectSurface();
 else
@@ -361,7 +361,8 @@ else
         xp.setDetectOptions( detectOpts2 );
         xp.detectSurface();
         
-        % For next time, use the output mesh as an initial mesh
+        % For next time, use the output mesh as an initial mesh, which will
+        % be searched for if init_ls_fn is set to 'none'.
         detectOpts2.init_ls_fn = 'none' ;
     end
 end
@@ -521,9 +522,10 @@ tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 % meshes)
 cleanCylOptions = struct() ;
 tubi.cleanCylMeshes(cleanCylOptions)
+disp('done cleaning cylinder meshes')
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ORBIFOLD -> begin populating Qs.dir.mesh/gridCoords_nUXXXX_nVXXXX/ 
+%% ORBIFOLD -> begin populating tubi.dir.mesh/gridCoords_nUXXXX_nVXXXX/ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Iterate Through Time Points to Create Pullbacks ========================
 for tt = tubi.xp.fileMeta.timePoints
@@ -538,7 +540,7 @@ for tt = tubi.xp.fileMeta.timePoints
     %----------------------------------------------------------------------
     cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tt) ;
     cutPathfn = sprintf(tubi.fullFileBase.cutPath, tt) ;
-    if ~exist(cutMeshfn, 'file') || ~exist(cutPathfn, 'file') || overwrite_cutMesh
+    if ~exist(cutMeshfn, 'file') || ~exist(cutPathfn, 'file')
         if exist(cutMeshfn, 'file')
             disp('Overwriting cutMesh...') ;
         else
@@ -575,39 +577,37 @@ for tt = tubi.xp.fileMeta.timePoints
 end
 disp('Done with generating spcutMeshes and cutMeshes')
 
-%% COMPUTE MESH SURFACE AREA AND VOLUME ===================================
-% Skip if already done
-% Note: doing this after fold identification so that t0 is defined for
-% plotting purposes
+%% Inspect coordinate system charts using (s,phi) coordinate system ('sp')
 options = struct() ;
+options.coordSys = 'sp' ;
+tubi.coordSystemDemo(options)
 
+%% OPTIONAL: COMPUTE MESH SURFACE AREA AND VOLUME =========================
+options = struct() ;
 tubi.measureSurfaceAreaVolume(options)
 disp('done')
 
-% RECOMPUTE WRITHE OF MEANCURVE CENTERLINES ==============================
-% Skip if already done
+%% OPTIONAL: COMPUTE WRITHE OF MEANCURVE CENTERLINES ======================
 options = struct() ;
 tubi.measureWrithe(options)
 disp('done')
 
-%% Plot fancy "cross-section" view of centerlines
+%% OPTIONAL: Plot fancy "cross-section" view of centerlines
 options = struct() ;
 tubi.plotClineXSections(options)
 
 %% Smooth the sphi grid meshes in time ====================================
-% Skip if already done
 options = struct() ;
-
 options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
 tubi.smoothDynamicSPhiMeshes(options) ;
 
 %% Plot the time-smoothed meshes
-% Skip if already done
-
 tubi.plotSPCutMeshSmRS(options) ;
 
 % Inspect coordinate system charts using smoothed meshes
-QS.coordSystemDemo()
+options = struct()
+options.coordSys = 'spsm' ;
+tubi.coordSystemDemo(options)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Redo Pullbacks with time-smoothed meshes ===============================
@@ -625,39 +625,17 @@ for tt = tubi.xp.fileMeta.timePoints
     % Establish custom Options for MIP --> choose which pullbacks to use
     pbOptions = struct() ;
     pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
+    pbOptions.generate_spsm = true ;
+    pbOptions.generate_sp = false ;
     tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 end
 
 %% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE =======================================
 % Skip if already done
 options = struct() ;
-
-% options.coordsys = 'spsm' ;
-% QS.doubleCoverPullbackImages(options)
-options.coordsys = 'rsm' ;
+options.coordsys = 'spsm' ;
 tubi.doubleCoverPullbackImages(options)
 disp('done')
-
-%% CREATE PULLBACK STACKS =================================================
-% Skip if already done
-disp('Create pullback stack using S,Phi coords with time-averaged Meshes');
-% Load options
-overwrite = true ;
-optionfn = fullfile(tubi.dir.im_r_sme_stack, 'spcutMeshSmStackOptions.mat') ;
-if ~exist(optionfn, 'file') || overwrite
-    spcutMeshSmStackOptions.layer_spacing = 0.5 / tubi.APDV.resolution ; % pixel resolution roughly matches xy
-    spcutMeshSmStackOptions.n_outward = 20 ;
-    spcutMeshSmStackOptions.n_inward = 40 ;
-    spcutMeshSmStackOptions.smoothIter = 0 ;
-    spcutMeshSmStackOptions.preSmoothIter = 35 ;
-    spcutMeshSmStackOptions.imSize = 500 ;
-    % Save options
-    save(optionfn, 'spcutMeshSmStackOptions')
-else
-    load(optionfn, 'smSPCutMeshStackOptions')
-end
-spcutMeshSmStackOptions.overwrite = overwrite ;
-tubi.generateSPCutMeshSmStack(spcutMeshSmStackOptions)
 
 %% PERFORM PIV ON PULLBACK MIPS ===========================================
 % % Compute PIV in PIVLab
@@ -788,3 +766,25 @@ tubi.plotPathlineStrain(options)
 % todo: consider putting this in Ricci map frame instead of (s,phi) frame
 options = struct() ;
 tubi.measureDxDyStrainFiltered(options) ;
+
+
+%% Extra functionality to demonstrate: PULLBACK STACKS ====================
+% Skip if already done
+disp('Create pullback stack using S,Phi coords with time-averaged Meshes');
+% Load options
+overwrite = true ;
+optionfn = fullfile(tubi.dir.im_r_sme_stack, 'spcutMeshSmStackOptions.mat') ;
+if ~exist(optionfn, 'file') || overwrite
+    spcutMeshSmStackOptions.layer_spacing = 0.5 / tubi.APDV.resolution ; % pixel resolution roughly matches xy
+    spcutMeshSmStackOptions.n_outward = 20 ;
+    spcutMeshSmStackOptions.n_inward = 40 ;
+    spcutMeshSmStackOptions.smoothIter = 0 ;
+    spcutMeshSmStackOptions.preSmoothIter = 35 ;
+    spcutMeshSmStackOptions.imSize = 500 ;
+    % Save options
+    save(optionfn, 'spcutMeshSmStackOptions')
+else
+    load(optionfn, 'smSPCutMeshStackOptions')
+end
+spcutMeshSmStackOptions.overwrite = overwrite ;
+tubi.generateSPCutMeshSmStack(spcutMeshSmStackOptions)

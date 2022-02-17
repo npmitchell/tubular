@@ -238,7 +238,7 @@ else
 end
 do_pb9 = ~exist(imfn_ricci, 'file') && generate_ricci;
 
-do_pb = [do_pb1, do_pb2, do_pb3, do_pb4, do_pb5, do_pb6, do_pb7, do_pb8, do_pb9] ;
+do_pb = [do_pb1, do_pb2, do_pb3, do_pb4, do_pb5, do_pb6, do_pb9] ;
 do_pullbacks = (any(do_pb) || overwrite) ;
 
 if do_pullbacks
@@ -264,7 +264,7 @@ if do_pullbacks
         if do_pb6
             disp(['Smooth relaxed (s,phi) PB will be generated: ', imfn_rsm])
         end
-        if do_pb8
+        if do_pb9
             disp(['Ricci PB will be generated: ', imfn_ricci])
         end
     end     

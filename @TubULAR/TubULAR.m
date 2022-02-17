@@ -2531,12 +2531,24 @@ classdef TubULAR < handle
         simulateNES(tubi, options)
         
         %% coordSysDemo
-        function coordSystemDemo(options)
+        function coordSystemDemo(tubi, options)
             % Image for publication/presentation on method & coordinate system
             % Create coordinate system charts visualization using smoothed meshes
-
-            tubi.setTime(tubi.t0 + 90)
-            mesh = tubi.loadCurrentSPCutMeshSmRS() ;
+            coordsys = 'spsm' ;
+            if isfield(options, 'coordSys')
+                coordsys = options.coordSys ;
+            end
+            
+            if strcmpi(coordsys, 'spsm')
+                mesh = tubi.loadCurrentSPCutMeshSmRS() ;
+            elseif strcmpi(coordsys, 'sp')
+                tmp = tubi.loadCurrentSPCutMesh() ;
+                mesh = struct() ;
+                mesh.u = tmp.sphi ;
+                mesh.v = tubi.xyz2APDV(tmp.v) ;
+                mesh.nU = tmp.nU ;
+                mesh.nV = tmp.nV ;
+            end
             fig = figure('units', 'centimeters', 'position', [0, 0, 13, 13]) ;
             uu = mesh.u(:, 1) ;
             vv = mesh.u(:, 2) ;

@@ -88,7 +88,6 @@ tubi.plotting.markers = {'o', 's', '^', 'v', '*', '>', '<'} ;
 tubi.dir.data = xp.fileMeta.dataDir ;
 tubi.fileName.apdv_options = fullfile(tubi.dir.data, 'alignAPDV_Opts.mat') ;
 tubi.dir.mesh = meshDir ;
-tubi.dir.maskedData = fullfile(meshDir, 'maskedData') ;
 tubi.dir.alignedMesh = fullfile(meshDir, 'alignedMesh') ;
 tubi.dir.cntrline = fullfile(meshDir, 'centerline') ;
 tubi.dir.cylinderMesh = fullfile(meshDir, 'cylinderMesh') ;
@@ -428,16 +427,6 @@ end
 tubi.dir.im_ricci = imFolder_ricci ;
 tubi.dir.im_ricci_e = imFolder_ricci_e ;
 tubi.dir.im_re_stack = imFolder_re_stack ;
-tubi.dir.segmentation = fullfile(tubi.dir.mesh, 'cellSegmentation') ;
-tubi.dir.tracking = fullfile(tubi.dir.mesh, 'cellTracking') ;
-
-if dynamic
-    tubi.dir.cellProbabilities = fullfile(tubi.dir.im_r_sme, 'cellProbabilities') ;
-    tubi.dir.cellID = fullfile(tubi.dir.im_r_sme, 'cellID') ;
-else
-    tubi.dir.cellProbabilities = fullfile(tubi.dir.im_re, 'cellProbabilities') ;
-    tubi.dir.cellID = fullfile(tubi.dir.im_re, 'cellID') ;    
-end
 
 tubi.dir.curvatures = KHSmDir ;
 tubi.dir.meanCurvature = HSmDir ;

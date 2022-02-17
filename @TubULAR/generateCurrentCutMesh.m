@@ -21,6 +21,9 @@ function generateCurrentCutMesh(QS, cutMeshOptions)
 %       proxy for the topology change, but in practice it is superior to
 %       the error-prone methods of measuring the (discrete-valued) winding
 %       number explored thus far
+%   definePDviaRicci_t0 : (bool, default=false)
+%       Compute the pullback coords at t0 via Ricci flow, then use Orbifold
+%       for other timepoints
 %
 % NPMitchell 2020
 
@@ -29,7 +32,7 @@ nsegs4path = 2 ;
 maxJitter = 100 ;
 maxTwChange = 0.7 ;
 preview = false ;
-definePDviaRicci_t0 = true ;
+definePDviaRicci_t0 = false ;
 definePDviaRicci = false ;
 ricciOptions = struct() ;
 try
@@ -53,6 +56,9 @@ if nargin > 1
     end
     if isfield(cutMeshOptions, 't0')
         t0 = cutMeshOptions.t0 ;
+    end
+    if isfield(cutMeshOptions, 'definePDviaRicci_t0')
+        definePDviaRicci_t0 = cutMeshOptions.definePDviaRicci_t0 ;
     end
     if isfield(cutMeshOptions, 'definePDviaRicci')
         definePDviaRicci = cutMeshOptions.definePDviaRicci ;
