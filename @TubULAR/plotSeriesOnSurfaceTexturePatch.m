@@ -1,11 +1,11 @@
-function plotSeriesOnSurfaceTexturePatch(QS,...
+function plotSeriesOnSurfaceTexturePatch(tubi,...
    options, TexturePatchOptions)
 % PLOTDATAONSURFACETEXTUREPATCH(xp, xyzlim, rot, trans)
 %   Plot intensity data timeseries on 3d mesh timeseries
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : QuapSlap class instance
 % overwrite : bool
 % options : struct with fields
 %   texture_shift : float (optional, default=0)
@@ -16,14 +16,14 @@ function plotSeriesOnSurfaceTexturePatch(QS,...
 %       for each individual polygon.  A lower number gives a more 
 %       pixelated texture {64}
 %
-%       - Options.Dilation: default=QS.APDV.resolution
+%       - Options.Dilation: default=tubi.APDV.resolution
 %       Special option, defines the units of space (pix2um, for ex)
 %
-%       - Options.Translation: default=QS.APDV.trans
+%       - Options.Translation: default=tubi.APDV.trans
 %       Special option, defines the translation 
 %       vector applied after rotation on all surfaces
 %
-%       - Options.Rotation: default=QS.APDV.rot
+%       - Options.Rotation: default=tubi.APDV.rot
 %       Special option, defines the dilation factor 
 %       applied to all surfaces after rotation and translation
 %
@@ -117,10 +117,10 @@ blackFigure = true ;
 makeColorbar = false ;
 smoothing_lambda = 0.0 ;
 channel = [] ;  % by default, plot all channels
-figoutdir = QS.dir.texturePatchIm ;
-normal_shift = QS.normalShift ;
+figoutdir = tubi.dir.texturePatchIm ;
+normal_shift = tubi.normalShift ;
 
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Unpack Options
 if isfield(options, 'overwrite')
@@ -145,7 +145,7 @@ if isfield(options, 'makeColorbar')
     makeColorbar = options.makeColorbar ;
 end
 if isfield(options, 'figOutDir')
-    % Note that default value inherited from QS is above!
+    % Note that default value inherited from tubi is above!
     figoutdir = options.figOutDir ;
 elseif isfield(options, 'outDir')
     figoutdir = options.outDir ;
@@ -178,15 +178,15 @@ end
 plot_view = [plot_dorsal, plot_ventral, plot_left, ...
     plot_right, plot_perspective] ;
 
-%% Unpack QS
-meshFileBase = QS.fullFileBase.mesh ;
-flipy = QS.flipy ;
-% texture_axis_order = QS.data.axisOrder ;
+%% Unpack tubi
+meshFileBase = tubi.fullFileBase.mesh ;
+flipy = tubi.flipy ;
+% texture_axis_order = tubi.data.axisOrder ;
 
 try
-    t0 = QS.t0set() ;
+    t0 = tubi.t0set() ;
 catch
-    t0 = QS.xp.fileMeta.timePoints(1) ;
+    t0 = tubi.xp.fileMeta.timePoints(1) ;
 end
 
 %% Load metadat and TexturePatchOptions if not supplied
@@ -196,8 +196,8 @@ if nargin < 4
     try
         load(metafn, 'Options')
     catch
-        [rot, trans] = QS.getRotTrans() ;
-        resolution = QS.APDV.resolution ;
+        [rot, trans] = tubi.getRotTrans() ;
+        resolution = tubi.APDV.resolution ;
         
         % Psize is the linear dimension of the grid drawn on each triangular face
         Options.PSize = 5;
@@ -207,7 +207,6 @@ if nargin < 4
         Options.Dilation = resolution ;
         Options.numLayers = [1, 1];  % [2, 2] marches ~0.5 um in either dir
         Options.layerSpacing = 2 ;
-        resave_metadat = true ;
     end
 else
     Options = TexturePatchOptions ;
@@ -218,17 +217,14 @@ if nargin < 3
         load(metafn, 'metadat')
     catch
         % Define & Save metadata
-        [~, ~, ~, ~, xyzbuff] = QS.getXYZLims() ;
-        xyzbuff(:, 1) = xyzbuff(:, 1) - 10 ;
-        xyzbuff(:, 2) = xyzbuff(:, 2) + 10 ;
-        metadat.normal_shift = QS.normalShift ;             % normal push, in pixels, along normals defined in data XYZ space
+        [~, ~, ~, ~, xyzbuff] = tubi.getXYZLims() ;
+        metadat.normal_shift = tubi.normalShift ;             % normal push, in pixels, along normals defined in data XYZ space
         metadat.xyzlim = xyzbuff ;                          % xyzlimits
-        metadat.texture_axis_order = QS.data.axisOrder ;    % texture space sampling
+        metadat.texture_axis_order = tubi.data.axisOrder ;    % texture space sampling
         metadat.reorient_faces = false ;                    % set to true if some normals may be inverted
         metadat.texture_shift = texture_shift ;             % shifts the texturepatch vertices along the 
                                                             % normal direction without shifting 
                                                             % the mesh on which texture is rendered
-        resave_metadat = true ;
         
         % pass metadat to options
         options.normal_shift = metadat.normal_shift ;
@@ -240,13 +236,18 @@ if nargin < 3
     end
 else
     metadat = options ;
-    normal_shift = options.normal_shift ;
 end
 
-% Save it
-if resave_metadat
-    save(metafn, 'metadat', 'Options')
+if isfield(metadat, 'xyzlim')
+    xyzlim = metadat.xyzlim ;
+else
+    [~, ~, ~, xyzlim] = tubi.getXYZLims() ;
+    metadat.xyzlim = xyzlim ;
 end
+reorient_faces = metadat.reorient_faces ;
+
+% Save it
+save(metafn, 'metadat', 'Options')
 
 texture_axis_order = options.texture_axis_order ;
 
@@ -271,10 +272,8 @@ fns = {fullfile(figdDir, 'patch_dorsal_%06d.png'), ...
     fullfile(figPerspDir, 'patch_persp_%06d.png') };
 
 % Unpack metadat and save 
-xyzlim = options.xyzlim ;
-reorient_faces = options.reorient_faces ;
-timeinterval = QS.timeInterval ;
-timeunits = QS.timeUnits ;
+timeinterval = tubi.timeInterval ;
+timeunits = tubi.timeUnits ;
 
 % Unpack xyzlim
 xmin = xyzlim(1, 1); xmax = xyzlim(1, 2) ;
@@ -286,7 +285,7 @@ zmin = xyzlim(3, 1); zmax = xyzlim(3, 2) ;
 xwidth = 16 ; % cm
 ywidth = 10 ; % cm
 
-tidx0 = QS.xp.tIdx(QS.t0set()) ;
+tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
 
 tidx_todoA = tidx0:30:length(timePoints) ;
 tidx_todoB = setdiff(tidx0:15:length(timePoints), tidx_todoA) ;
@@ -307,12 +306,12 @@ for tidx = tidx_todo
         % Copy passed Options argument for unpacking
         Options = TexturePatchOptions ; 
 
-        QS.setTime(tp)
-        QS.getCurrentData()
-        IV = QS.currentData.IV ;
+        tubi.setTime(tp)
+        tubi.getCurrentData()
+        IV = tubi.currentData.IV ;
         
         % % Get the data in 3d for this timepoint
-        % tidx = QS.xp.tIdx(tp) ;
+        % tidx = tubi.xp.tIdx(tp) ;
         % % if t ~= xp.currentTime
         % xp.loadTime(tp) ;
         % xp.rescaleStackToUnitAspect() ;
@@ -320,7 +319,7 @@ for tidx = tidx_todo
         % 
         % disp('Applying image...')
         % IV = xp.stack.image.apply();
-        % IV = QS.adjustIV(IV, adjustlow, adjusthigh) ;
+        % IV = tubi.adjustIV(IV, adjustlow, adjusthigh) ;
 
         % Read in the mesh file -----------------------------------------------
         disp('Reading mesh...')

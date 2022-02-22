@@ -79,7 +79,7 @@ if numel(QS.xp.fileMeta.timePoints) > 1
 else
     coordSys = 'sp' ;
 end
-resample = true ;
+resample = false ;
 
 %% Unpack parameters
 if nargin < 2

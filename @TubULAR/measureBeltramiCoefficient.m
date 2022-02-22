@@ -123,8 +123,7 @@ mu_material_filtered = zeros(nTimePoints, refMesh.nU * refMesh.nV) ;
 mu_material_vertices = mu_material_filtered ;
 % arelax = vP2d.affineRelaxFactors(vP2d.tIdx0) ;
 
-todo1 = [180, 181,182, 1:20:nTimePoints] ;
-todo2 = [todo1, setdiff(1:10:nTimePoints, todo1)] ;
+todo2 = 1:10:nTimePoints ;
 todo3 = [todo2, setdiff(1:4:nTimePoints, todo2)] ;
 tidx2do = [todo3, setdiff(1:nTimePoints, todo3)] ;
 

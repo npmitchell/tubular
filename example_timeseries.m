@@ -9,13 +9,18 @@
 
 % TO DO:
 % ------
-%  - redefine APDV coords as viewingCoordinates (global ref frame)
 %  - install instructions for morphsnakes as an option
 %  - iLastik instructions (optional)
-%  - imsane instructions (optional)
-%  - do we need gptoolbox? so far just for laplacian_smooth()
+%  - imsane instructions -- tutorial with incorporation 
+%  - do we need gptoolbox? so far just for laplacian_smooth() --> run
+%  without, for vertex_normals use meshAveragingOperators, barycenter
 %  - DEC tutorials --> STANDALONE AND INTEGRATED TUTORIALS
-%  - Ricci flow tutorials or remove this
+%  - TexturePatch > part of TubULAR
+%  - Make sure Ricci is not default
+%  - imsane integralDetector vs morphsnakesDetector
+%  - piv 
+%  - add clicker for A and P and D
+%  - ask Seb what heart tube resolution is
 
 %% Clear workspace ========================================================
 % We start by clearing the memory and closing all figures
@@ -49,7 +54,7 @@ if ~exist('./masterSettings.mat', 'file')
     timePoints = 123:124;       % timepoints to include in the analysis
     ssfactor = 4 ;              % subsampling factor
     flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
-    timeInterval = 2 ;          % physical interval between timepoints
+    timeInterval = 1 ;          % physical interval between timepoints
     timeUnits = 'min' ;         % physical unit of time between timepoints
     spaceUnits = '$\mu$m' ;     % physical unit of time between timepoints
     fn = 'Time_%06d_c1_stab';        % filename string pattern
@@ -419,16 +424,19 @@ end
 % apical surface training.
 % Anterior is at the junction of the midgut with the foregut.
 
-%% 3. align_meshes_APDV or load transformations if already done
+%% Define global orientation frame (for viewing in canonical frame)
 % Compute APDV coordinate system
 alignAPDVOpts = struct() ;
+alignAPDVOpts.overwrite = false ;
 tubi.computeAPDVCoords(alignAPDVOpts) ;
 
-% Compute the APD COMs
+%% Select the endcaps for the centerline computation (A and P) and a point
+% along which we will form a branch cut for mapping to the plane (D).
 apdvOpts = struct() ;
+apdvOpts.overwrite = false ;
 [acom_sm, pcom_sm] = tubi.computeAPDCOMs(apdvOpts) ;
 
-% Align the meshes APDV & plot them
+%% Align the meshes in the APDV global frame & plot them
 tubi.alignMeshesAPDV(alignAPDVOpts) ;
 
 disp('done')
@@ -467,7 +475,7 @@ tubi.extractCenterlineSeries(cntrlineOpts)
 disp('done with centerlines')
 
 %% Identify anomalies in centerline data
-idOptions.ssr_thres = 15 ;  % distance of sum squared residuals in um as threshold
+idOptions.ssr_thres = 15 ;  % distance of sum squared residuals in um as threshold for removing spurious centerlines
 tubi.generateCleanCntrlines(idOptions) ;
 disp('done with cleaning up centerlines')
 
@@ -486,6 +494,7 @@ else
     endcapOpts = tubi.endcapOptions ;
 end
 
+methodOpts.overwrite = true ;
 methodOpts.save_figs = true ;   % save images of cutMeshes along the way
 methodOpts.preview = false  ;     % display intermediate results
 tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
@@ -494,12 +503,14 @@ tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 % This removes "ears" from the endcaps of the tubular meshes (cylindrical
 % meshes)
 cleanCylOptions = struct() ;
+cleanCylOptions.overwrite = true ;
 tubi.cleanCylMeshes(cleanCylOptions)
 disp('done cleaning cylinder meshes')
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ORBIFOLD -> begin populating tubi.dir.mesh/gridCoords_nUXXXX_nVXXXX/ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+overwrite = true ;
 % Iterate Through Time Points to Create Pullbacks ========================
 for tt = tubi.xp.fileMeta.timePoints
     disp(['NOW PROCESSING TIME POINT ', num2str(tt)]);
@@ -513,7 +524,7 @@ for tt = tubi.xp.fileMeta.timePoints
     %----------------------------------------------------------------------
     cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tt) ;
     cutPathfn = sprintf(tubi.fullFileBase.cutPath, tt) ;
-    if ~exist(cutMeshfn, 'file') || ~exist(cutPathfn, 'file')
+    if ~exist(cutMeshfn, 'file') || ~exist(cutPathfn, 'file') || overwrite
         if exist(cutMeshfn, 'file')
             disp('Overwriting cutMesh...') ;
         else
@@ -541,6 +552,7 @@ for tt = tubi.xp.fileMeta.timePoints
     
     % Compute the pullback if the cutMesh is ok
     if compute_pullback || ~exist(sprintf(tubi.fullFileBase.im_sp, tt), 'file')
+        pbOptions = struct() ;
         tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
     else
         disp('Skipping computation of pullback')
@@ -560,6 +572,7 @@ tubi.coordSystemDemo(options)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Smooth the sphi grid meshes in time ====================================
 options = struct() ;
+options.overwrite = overwrite ;
 options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
 tubi.smoothDynamicSPhiMeshes(options) ;
 
@@ -585,6 +598,7 @@ for tt = tubi.xp.fileMeta.timePoints
     pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
     pbOptions.generate_spsm = true ;
     pbOptions.generate_sp = false ;
+    pbOptions.overwrite = overwrite ;
     tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 end
 
@@ -599,30 +613,10 @@ tubi.doubleCoverPullbackImages(options)
 disp('done')
 
 %% PERFORM PIV ON PULLBACK MIPS ===========================================
-% % Compute PIV in PIVLab
-% % ---------------------
-% % Open PIVLab
-% % Select all frames in meshDir/PullbackImages_XXXstep_sphi/smoothed_extended/
-% % Select Sequencing style 1-2, 2-3, ... 
-% %
-% % Below are settings in PIVlab that work well for this dataset:
-% % Image Preprocessing (used to select all, but now:)
-% %  --> Enable CLAHE with 20 pix
-% %  --> DO NOT Enable highpass with 15 pix
-% %  --> DO NOT Enable Intensity capping
-% %  --> Wiener2 denoise filter with 3 pix
-% %  --> DO NOT Auto constrast stretch
-% % PIV settings: 
-% %  --> 128 (32 step), 64 (32 step), 32 (16 step), 16 (8 step)
-% %  --> Linear window deformation interpolator
-% %  --> 5x repeated correlation 
-% %  --> Disable auto-correlation
-% % Post-processing
-% %  --> Standard deviation filter: 7 stdev
-% %  --> Local median filter: thres=5, eps=0.1
-% %  --> Interpolate missing data
-% % Export 
-% %  --> File > Save > MAT file
+% % Compute PIV either with built-in phase correlation or in PIVLab
+options = struct() ;
+options.overwrite = true ;
+tubi.measurePIV2d(options) ;
 
 %% Measure velocities =============================================
 disp('Making map from pixel to xyz to compute velocities in 3d for smoothed meshes...')

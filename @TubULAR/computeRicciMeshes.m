@@ -31,12 +31,8 @@ opts.resample = resample ;
 
 t0 = QS.t0set() ;
 timePoints = QS.xp.fileMeta.timePoints ;
-startID = 87 ;
-tidx2do0 = [QS.xp.tIdx(153), ...
-    QS.xp.tIdx(183), QS.xp.tIdx(213),  ...
-    QS.xp.tIdx(108), QS.xp.tIdx(168), QS.xp.tIdx(206)] ;
-tidx2do1 = [tidx2do0, ...
-    setdiff(startID:50:length(timePoints), tidx2do0)] ;
+startID = QS.xp.tIdx(t0) ;
+tidx2do1 = startID:50:length(timePoints) ;
 tidx2do1 = [tidx2do1, setdiff(startID:30:length(timePoints), tidx2do1)] ;
 tidx2do2 = [tidx2do1, setdiff(startID:20:length(timePoints), tidx2do1)] ;
 tidx2do3 = setdiff(setdiff(startID:10:length(timePoints), ...

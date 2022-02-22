@@ -4,7 +4,7 @@ function [v3dsmM, nsmM] = smoothDynamicSPhiMeshes(QS, options)
 %   simple triangular pulse averaging of positions in embedding space
 %   while preserving the pullback mesh. 
 %   Note that the computed geodesic distance along the mesh is preserved in
-%   the pullback mesh extent spcutMeshSm.u(:, 1) varies from (0, GeoLength)
+%   the pullback: mesh extent spcutMeshSm.u(:, 1) varies from (0, GeoLength)
 %
 % Parameters
 % ----------
@@ -49,9 +49,7 @@ end
 
 
 %% Prep filter
-disp('Building tripulse filter equivalent to tripuls(-0.5:0.1:0.5)')
-% made the width variable 2020-12-09, used to be 0:0.2:1, so 9 tp included
-% --> ie width used to equal 6.
+disp('Building tripulse filter for smoothing meshes')
 tripulse = linspace(0, 1, width) ;
 tripulse = [tripulse, fliplr(tripulse(1:end-1))] ;
 tripulse = tripulse ./ sum(tripulse(:)) ;
@@ -159,6 +157,36 @@ if redo_meshsmooth
             spcutMeshSm.nU = spcutMesh.nU ;
             spcutMeshSm.nV = spcutMesh.nV ;
             spcutMeshSm.pathPairs = spcutMesh.pathPairs ;
+            
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Compute effective radii
+            % Make avgpts in pixel space (not RS)
+            fprintf('Resampling uvgrid3d curves in pix...\n')
+            nU = spcutMeshSm.nU ;
+            nV = spcutMeshSm.nV ;
+            curves3d_pix = reshape(spcutMeshSm.v, [spcutMesh.nU, spcutMesh.nV, 3]) ;
+            c3d_dsv_pix = zeros(size(curves3d_pix)) ;  % in units of pix
+            avgpts_pix = zeros(spcutMesh.nU, 3) ;
+            radius_pix = zeros(spcutMesh.nU, spcutMesh.nV) ;
+            for i=1:nU
+                % Note: no need to add the first point to the curve
+                % since the endpoints already match exactly in 3d and
+                % curvspace gives a curve with points on either
+                % endpoint (corresponding to the same 3d location).
+                c3d_dsv_pix(i, :, :) = resampleCurvReplaceNaNs(squeeze(curves3d_pix(i, :, :)), nV, true) ;
+                if vecnorm(squeeze(c3d_dsv_pix(i, 1, :)) - squeeze(c3d_dsv_pix(i, end, :))) > 1e-7
+                    error('endpoints do not join! Exiting')
+                end
+                % Drop the final endpoint in the mean pt determination
+                avgpts_pix(i, :) = mean(squeeze(c3d_dsv_pix(i, 1:end-1, :)), 1) ; 
+                radius_pix(i, :) = vecnorm(squeeze(curves3d_pix(i, :, :)) - avgpts_pix(i, :), 2, 2) ;
+            end
+
+            % uvpcutMesh.raw.avgpts_pix = avgpts_pix ;
+            % uvpcutMesh.raw.radius_pix = radius_pix ;
+            spcutMeshSm.avgpts_um = QS.xyz2APDV(avgpts_pix) ;
+            spcutMeshSm.radius_um = radius_pix * QS.APDV.resolution ;
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             % Compute relaxed aspect ratio
             tmp = spcutMeshSm.u ;

@@ -1,5 +1,5 @@
-function timeAverageVelocities(QS, options)
-%measurePullbackStreamlines(QS, options)
+function timeAverageVelocities(tubi, options)
+%measurePullbackStreamlines(tubi, options)
 %   Use pathlines of optical flow in pullback space to query velocities
 %   and average along Lagrangian pathlines. 
 %   Default is to weight velocities contributions with a time width 5 
@@ -8,7 +8,7 @@ function timeAverageVelocities(QS, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : QuapSlap class instance
 % options : struct with fields 
 %   plotOptions : optional struct with fields
 %       vtscale : float
@@ -40,10 +40,10 @@ function timeAverageVelocities(QS, options)
 overwrite = false ;
 overwriteImages = false ;
 preview = true ;
-timePoints = QS.xp.fileMeta.timePoints ;
-pivimCoords = QS.piv.imCoords ;
+timePoints = tubi.xp.fileMeta.timePoints ;
+pivimCoords = tubi.piv.imCoords ;
 plotOptions = struct() ;
-samplingResolution = '1x' ;
+samplingResolution = '1x' ;  % currently only 1x is supported
 XYkernel = 0 ;        % sigma for light gaussian smoothing on full velocity 
                       % fields in XY pixel space before smoothing in time
 imethod = 'linear' ;  % interpolation method for velocities onto pathlines
@@ -87,26 +87,24 @@ end
 
 %% Determine sampling Resolution from input -- either nUxnV or (2*nU-1)x(2*nV-1)
 if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
-    doubleResolution = false ;
-elseif strcmp(samplingResolution, '2x') || strcmp(samplingResolution, 'double')
-    doubleResolution = true ;
+    resampleResolution = false ;
 else 
-    error("Could not parse samplingResolution: set to '1x' or '2x'")
+    error("Could not parse samplingResolution: currently only '1x' is supported")
 end
 
-%% Unpack QS
-pivDir = QS.dir.piv ;
-piv3dfn = QS.fullFileBase.piv3d ;
+%% Unpack tubi
+pivDir = tubi.dir.piv ;
+piv3dfn = tubi.fullFileBase.piv3d ;
 ntps = length(timePoints) ;
-% [rot, ~] = QS.getRotTrans() ;
-% resolution = QS.APDV.resolution ; 
-[~, ~, ~, xyzlim_APDV] = QS.getXYZLims() ;
-axis_order = QS.data.axisOrder ;
-blue = QS.plotting.colors(1, :) ;
-red = QS.plotting.colors(2, :) ;
-green = QS.plotting.colors(4, :) ;
-t0 = QS.t0set() ;
-timePoints = QS.xp.fileMeta.timePoints ;
+% [rot, ~] = tubi.getRotTrans() ;
+% resolution = tubi.APDV.resolution ; 
+[~, ~, ~, xyzlim_APDV] = tubi.getXYZLims() ;
+axis_order = tubi.data.axisOrder ;
+blue = tubi.plotting.colors(1, :) ;
+red = tubi.plotting.colors(2, :) ;
+green = tubi.plotting.colors(4, :) ;
+t0 = tubi.t0set() ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Colormap
 close all
@@ -118,10 +116,10 @@ close all
 %% Perform/Load simple averaging
 disp('Performing/Loading simple averaging')
 % Create directories
-if doubleResolution
-    fileNames = QS.fileName.pivAvg2x ;
+if resampleResolution
+    fileNames = tubi.fileName.pivAvgResample ;
 else
-    fileNames = QS.fileName.pivAvg ;
+    fileNames = tubi.fileName.pivAvg ;
 end
 % Check if the time smoothed velocities exist already
 % 2d velocities (pulled back), scaled by dilation of metric are v2dum 
@@ -131,7 +129,7 @@ end
 % vertex-based velocities are vv
 % face-based velocities are vf
 
-QS.clearTime() ;
+tubi.clearTime() ;
 
 %% Build grids for averaging
 if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
@@ -151,13 +149,13 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         % dt = timePoints(i + 1) - tp ;
         
         disp(['Filling in velocity matrices, t=' num2str(tp)])
-        QS.setTime(tp) ;
-        if doubleResolution
-            QS.getCurrentVelocity('piv3d2x') ;
-            piv3d = QS.currentVelocity.piv3d2x ;
+        tubi.setTime(tp) ;
+        if resampleResolution
+            tubi.getCurrentVelocity('piv3dResample') ;
+            piv3d = tubi.currentVelocity.piv3dResample ;
         else
-            QS.getCurrentVelocity('piv3d') ;
-            piv3d = QS.currentVelocity.piv3d ;
+            tubi.getCurrentVelocity('piv3d') ;
+            piv3d = tubi.currentVelocity.piv3d ;
         end
         
         % Allocate memory if this is the first timestep. Assume all grids
@@ -207,20 +205,36 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         popts.timePoints = tp2do ;
         
         % PIV pathlines
-        [XXpath, YYpath] = QS.pullbackPathlines(piv3d.x0, piv3d.y0, tp, popts) ;
+        [XXpath, YYpath] = tubi.pullbackPathlines(piv3d.x0, piv3d.y0, tp, popts) ;
         % face pathlines
-        if strcmp(QS.piv.imCoords, 'sp_sme')
-            im0 = imread(sprintf(QS.fullFileBase.im_sp_sme, tp)) ;
-            mesh0 = load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
+        if strcmp(tubi.piv.imCoords, 'sp_sme')
+            im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
+            mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
             mesh0 = mesh0.spcutMeshSmRS ;
             umax = max(mesh0.u(:, 1)) ;
             vmax = max(mesh0.u(:, 2)) ;
-            mXY = QS.uv2XY(im0, mesh0.u, doubleCovered, umax, vmax) ;
+            mXY = tubi.uv2XY(im0, mesh0.u, doubleCovered, umax, vmax) ;
+        elseif strcmpi(tubi.piv.imCoords, 'sp')
+            im0 = imread(sprintf(tubi.fullFileBase.im_uv, tp)) ;
+            mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMesh') ;
+            mesh0 = mesh0.spcutMesh ;
+            umax = max(mesh0.sphi(:, 1)) ;
+            vmax = max(mesh0.sphi(:, 2)) ;
+            mXY = tubi.uv2XY(im0, mesh0.sphi, doubleCovered, umax, vmax) ;  
+        elseif strcmpi(tubi.piv.imCoords, 'uv')
+            im0 = imread(sprintf(tubi.fullFileBase.im_uv, tp)) ;
+            mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMesh') ;
+            mesh0 = mesh0.spcutMesh ;
+            umax = max(mesh0.uv(:, 1)) ;
+            vmax = max(mesh0.uv(:, 2)) ;
+            mXY = tubi.uv2XY(im0, mesh0.uv, doubleCovered, umax, vmax) ;     
+        else
+            error(['Did not recognize imCoords for piv:' tubi.piv.imCoords])
         end
         bc = barycenter(mXY, mesh0.f) ; % this is in gptoolbox
-        [fXpath, fYpath] = QS.pullbackPathlines(bc(:, 1), bc(:, 2), tp, popts) ;
+        [fXpath, fYpath] = tubi.pullbackPathlines(bc(:, 1), bc(:, 2), tp, popts) ;
         % vertex pathlines
-        [vXpath, vYpath] = QS.pullbackPathlines(mXY(:, 1), mXY(:, 2), tp, popts) ;
+        [vXpath, vYpath] = tubi.pullbackPathlines(mXY(:, 1), mXY(:, 2), tp, popts) ;
         
         % Check eval points
         % clf
@@ -234,18 +248,7 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         % linfilt = 0.1 * ones(10, 1, 1) ;
         % ellipsoid = fspecial3('ellipsoid', [5, 1, 1]) ;
         disp('Building tripulse filter equivalent to tripuls()')
-        if twidth == 2
-            tripulse = [ 0.3333; 0.6666; 1; 0.6666; 0.3333];
-            tripulse = tripulse ./ sum(tripulse(:)) ;
-            % tripulse = reshape(tripulse, [length(tripulse), 1]) ;
-        elseif twidth == 1
-            tripulse = [ 0.5; 1; 0.5];
-            tripulse = tripulse ./ sum(tripulse(:)) ;
-        elseif twidth == 0
-            tripulse = [ 1 ] ;
-        else
-            error(['build tripulse of twidth ' num2str(twidth) ' here'])
-        end
+        tripulse = tripulseFunction(twidth) ;
         
         % Preallocate
         vMtp  = zeros(size(vsmM, 2), size(vsmM, 3)) ;    % in um/dt rs at PIV evaluation points
@@ -254,6 +257,7 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         vvMtp = zeros(size(vvsmM, 2), size(vvsmM, 3)) ;  % in um/min rs
         v2dMtp   = zeros(size(v2dsmM, 2), size(v2dsmM, 3)) ;  % in pixels/ min
         v2dMumtp = zeros(size(v2dsmMum, 2), size(v2dsmMum, 3)) ;  % in scaled pix/min, but proportional to um/min
+        
         for qq = 1:length(tp2do)
             disp(['timeAverageVelocities: Interpolating t0=', ...
                 num2str(tp) ' coords onto pathline at t=', ...
@@ -268,15 +272,15 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
             
             % Grab PIV for this timepoint and interpolate onto pathline
             % segment for all timepoints in tp2do          
-            QS.setTime(tp2do(qq)) ;
+            tubi.setTime(tp2do(qq)) ;
             
             % Load piv if this is not the last timePoint
-            if doubleResolution 
-                QS.getCurrentVelocity('piv3d2x') ;
-                piv3d = QS.currentVelocity.piv3d2x ;
+            if resampleResolution 
+                tubi.getCurrentVelocity('piv3dResample') ;
+                piv3d = tubi.currentVelocity.piv3dResample ;
             else
-                QS.getCurrentVelocity('piv3d') ;
-                piv3d = QS.currentVelocity.piv3d ;
+                tubi.getCurrentVelocity('piv3d') ;
+                piv3d = tubi.currentVelocity.piv3d ;
             end
 
             % Store x0,y0 PIV evaluation positions in pixels
@@ -323,35 +327,35 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
             v3dvertices = [Fx(vX(:), vY(:)), Fy(vX(:), vY(:)), Fz(vX(:), vY(:))] ;
 
             % Check it
-            if preview
-                close all
-                % mesh0.vrs = QS.xyz2APDV(mesh0.v);
-                % vn_rs = QS.dx2APDV(mesh0.vn) ;
-                % mesh0.vn_rs = vn_rs ./ vecnorm(vn_rs, 2, 2) ;
-                subplot(3, 1, 1)
-                vvn = dot(mesh0.vn, v3dvertices, 2) ;
-                trisurf(triangulation(mesh0.f, mesh0.v), vvn, ...
-                    'edgecolor', 'none') ;
-                caxis([-2,2]); axis equal; colormap(bwr256); colorbar()
-                title(['Computed result for ' num2str(tp2do(qq))])
-                view(2)
-                subplot(3, 1, 2)
-                tmp = load(QS.fileName.pivAvg.vv, 'vvsmM') ;
-                tmpv = squeeze(tmp.vvsmM(tidx, :, :)) ;
-                vvn2 = dot(mesh0.vn, tmpv, 2) ;
-                trisurf(triangulation(mesh0.f, mesh0.v), vvn2, ...
-                    'edgecolor', 'none') ;
-                caxis([-2,2]); axis equal; colormap(bwr256); colorbar()
-                title('Loaded result of average from disk')
-                view(2)
-                subplot(3, 1, 3)
-                trisurf(triangulation(mesh0.f, mesh0.v), vvn-vvn2, ...
-                    'edgecolor', 'none') ;
-                caxis([-2,2]); axis equal; colormap(bwr256); colorbar()
-                title('difference from loaded result')
-                view(2)
-                pause(1) ;
-            end
+            % if preview
+            %     close all
+            %     % mesh0.vrs = tubi.xyz2APDV(mesh0.v);
+            %     % vn_rs = tubi.dx2APDV(mesh0.vn) ;
+            %     % mesh0.vn_rs = vn_rs ./ vecnorm(vn_rs, 2, 2) ;
+            %     subplot(3, 1, 1)
+            %     vvn = dot(mesh0.vn, v3dvertices, 2) ;
+            %     trisurf(triangulation(mesh0.f, mesh0.v), vvn, ...
+            %         'edgecolor', 'none') ;
+            %     caxis([-2,2]); axis equal; colormap(bwr256); colorbar()
+            %     title(['Computed result for ' num2str(tp2do(qq))])
+            %     view(2)
+            %     subplot(3, 1, 2)
+            %     tmp = load(tubi.fileName.pivAvg.vv, 'vvsmM') ;
+            %     tmpv = squeeze(tmp.vvsmM(tidx, :, :)) ;
+            %     vvn2 = dot(mesh0.vn, tmpv, 2) ;
+            %     trisurf(triangulation(mesh0.f, mesh0.v), vvn2, ...
+            %         'edgecolor', 'none') ;
+            %     caxis([-2,2]); axis equal; colormap(bwr256); colorbar()
+            %     title('Loaded result of average from disk')
+            %     view(2)
+            %     subplot(3, 1, 3)
+            %     trisurf(triangulation(mesh0.f, mesh0.v), vvn-vvn2, ...
+            %         'edgecolor', 'none') ;
+            %     caxis([-2,2]); axis equal; colormap(bwr256); colorbar()
+            %     title('difference from loaded result')
+            %     view(2)
+            %     pause(1) ;
+            % end
             
             % 5. Interpolate v0t2d
             v0t2dX = reshape(piv3d.v0t2d(:, 1), size(x0)) ;
@@ -372,15 +376,15 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
             % Check it
             % if preview
             %     close all
-            %     QS.getPIV(options) ;
+            %     tubi.getPIV(options) ;
             %     % get size of images to make
-            %     gridsz = size(QS.piv.raw.x{1}) ;
+            %     gridsz = size(tubi.piv.raw.x{1}) ;
             %     % Define Nx1 and Mx1 float arrays for xspace and yspace
-            %     xx = QS.piv.raw.x{tidx}(1, :) ;
-            %     yy = QS.piv.raw.y{tidx}(:, 1) ;
+            %     xx = tubi.piv.raw.x{tidx}(1, :) ;
+            %     yy = tubi.piv.raw.y{tidx}(:, 1) ;
             %     % Load the image to put flow on top
             %     if strcmp(pivimCoords, 'sp_sme')
-            %         im = imread(sprintf(QS.fullFileBase.im_sp_sme, tp)) ;
+            %         im = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
             %         ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
             %     else
             %         error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])
@@ -431,7 +435,7 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         plotOptions.v2dsm = squeeze(v2dsmM(tidx, :, :)) ;
         plotOptions.v2dsmum = squeeze(v2dsmMum(tidx, :, :)) ;
         plotOptions.overwrite = overwriteImages ;
-        QS.plotAverageVelocitiesTimePoint(tp, plotOptions) ;
+        tubi.plotAverageVelocitiesTimePoint(tp, plotOptions) ;
     end
     
     clearvars first 

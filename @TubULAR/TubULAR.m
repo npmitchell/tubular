@@ -56,19 +56,6 @@ classdef TubULAR < handle
     % nU            : int, sampling number along longitudinal axis
     % uvexten       : str, naming extension with nU and nV like '_nU0100_nV0100'
     % t0            : int, reference timePoint in the experiment
-    % features : struct with fields
-    %   folds : #timepoints x #folds int, 
-    %       indices of nU sampling of folds
-    %   fold_onset : #folds x 1 float
-    %       timestamps (not indices) of fold onset
-    %   ssmax : #timepoints x 1 float
-    %       maximum length of the centerline at each timepoint
-    %   ssfold : #timepoints x #folds float
-    %       positional pathlength along centerline of folds
-    %   rssmax : #timepoints x 1 float
-    %       maximum proper length of the surface over time
-    %   rssfold : #timepoints x #folds float
-    %       positional proper length along surface of folds
     % velocityAverage : struct with fields
     %   vsmM : (#timePoints-1) x (nX*nY) x 3 float array
     %       3d velocities at PIV evaluation coordinates in um/dt rs
@@ -139,12 +126,6 @@ classdef TubULAR < handle
         uvexten                 % naming extension with nU and nV like '_nU0100_nV0100'
         t0                      % reference time in the experiment
         normalShift
-        features = struct('folds', [], ...  % #timepoints x #folds int, indices of nU sampling of folds
-            'fold_onset', [], ...       % #folds x 1 float, timestamps (not indices) of fold onset
-            'ssmax', [], ...            % #timepoints x 1 float, maximum length of the centerline at each timepoint
-            'ssfold', [], ...           % #timepoints x #folds float, positional pathlength along centerline of folds
-            'rssmax', [], ...           % #timepoints x 1 float, maximum proper length of the surface over time
-            'rssfold', []) ;            % #timepoints x #folds float, positional proper length along surface of folds
         a_fixed                         % aspect ratio for fixed geometry pullback meshes
         phiMethod = '3dcurves'          % method for determining Phi map in pullback mesh creation, with 
                                         % the full map from embedding to pullback being [M'=(Phi)o()o()]. 
@@ -234,24 +215,12 @@ classdef TubULAR < handle
             'vertices', [], ...             % Lagrangian pathlines from mesh vertices
             'vertices3d', [], ...           % Lagrangian pathlines from mesh vertices
             'faces', [], ...                % Lagrangian pathlines from mesh face barycenters
-            'featureIDs', struct(...        % struct with features in pathline coords
-                'vertices', [], ...         % longitudinal position of features from pathlines threaded through pullback mesh vertices at t=t0Pathline
-                'piv', [], ...              % longitudinal position of features from pathlines threaded through PIV evaluation coordinates at t=t0Pathline
-                'faces', []), ...           % longitudinal position of features from pathlines threaded through pullback mesh face barycenters at t=t0Pathline
             'beltrami', ...                 % beltrami coefficient evaluated along pathlines
                 struct('mu_material', [], ...
                 'mu_material_filtered', [], ...
                 'mu_material_vertices', [], ...
                 'fitlerOptions', []));     
-        pathlines_uvprime = struct('t0', [], ...    % timestamp (not an index) at which pathlines form regular grid in space
-            'piv', [], ...                  % Lagrangian pathlines from piv coords
-            'vertices', [], ...             % Lagrangian pathlines from mesh vertices
-            'faces', [], ...                % Lagrangian pathlines from mesh face barycenters
-            'featureIDs', struct(...        % struct with features in pathline coords
-                'vertices', [], ...         % longitudinal position of features from pathlines threaded through pullback mesh vertices at t=t0Pathline
-                'piv', [], ...              % longitudinal position of features from pathlines threaded through PIV evaluation coordinates at t=t0Pathline
-                'faces', []));              % longitudinal position of features from pathlines threaded through pullback mesh face barycenters at t=t0Pathline
-        currentStrain = struct(...
+       currentStrain = struct(...
             'pathline', ...                 % strain from pathlines
                 struct('t0Pathlines', [], ...   % t=0 timepoint for pathlines in question
                 'strain', [], ...               % strain evaluated along pathlines
@@ -513,64 +482,8 @@ classdef TubULAR < handle
             end
         end
         
-        function features = getFeatures(tubi, varargin)
-            %GETFEATURES(tubi, varargin)
-            %   Load features of the tubi object (those specied, or all of 
-            %   them). Features include {'folds', 'fold_onset', 'ssmax', 
-            %   'ssfold', 'rssmax', 'rssfold'}. 
-            if nargin > 1
-                for qq=1:length(varargin)
-                    if isempty(eval(['tubi.features.' varargin{qq}]))
-                        disp(['Loading feature: ' varargin{qq}])
-                        tubi.loadFeatures(varargin{qq})
-                    end
-                end
-            else
-                tubi.loadFeatures() ;
-            end
-            if nargout > 0
-                features = tubi.features ; 
-            end
-        end
-        function loadFeatures(tubi, varargin)
-            % Load all features stored in tubi.features
-            % 
-            % Parameters
-            % ----------
-            % varargin : optional string list/cell
-            %   which specific features to load
-            %
-            if nargin > 1
-                if any(strcmp(varargin, {'folds', 'fold_onset', ...
-                    'ssmax', 'ssfold', 'rssmax', 'rssfold'}))
-                    
-                    % Load all features relating to folds
-                    disp('Loading folding features')
-                    load(tubi.fileName.fold, 'folds', 'fold_onset', ...
-                        'ssmax', 'ssfold', 'rssmax', 'rssfold') ;
-                    tubi.features.folds = folds ;
-                    tubi.features.fold_onset = fold_onset ; 
-                    tubi.features.ssmax = ssmax ; 
-                    tubi.features.ssfold = ssfold ;
-                    tubi.features.rssmax = rssmax ;
-                    tubi.features.rssfold = rssfold ;
-                else
-                    error('Feature not recognized')
-                end
-            else
-                % Load all features
-                load(tubi.fileName.fold, 'folds', 'fold_onset', ...
-                    'ssmax', 'ssfold', 'rssmax', 'rssfold') ;
-                tubi.features.folds = folds ;
-                tubi.features.fold_onset = fold_onset ; 
-                tubi.features.ssmax = ssmax ; 
-                tubi.features.ssfold = ssfold ;
-                tubi.features.rssmax = rssmax ;
-                tubi.features.rssfold = rssfold ;
-            end
-        end
-        
         function data = loadBioFormats(tubi, fullFileName)
+            % Load a tiff from disk using bioFormats importer
             r = bfGetReader(fullFileName);
             r.setSeries(tubi.xp.fileMeta.series-1);
             nChannelsUsed = numel(tubi.xp.expMeta.channelsUsed);
@@ -978,7 +891,7 @@ classdef TubULAR < handle
                     disp('Loaded clean centerlines from disk')
                 catch
                     disp('No clean centerlines on disk, generating...')
-                    tubi.cleanCntrlines = generateCleanCntrlines(tubi, idOptions) ;
+                    tubi.cleanCntrlines = tubi.generateCleanCntrlines() ;
                 end
             end
         end
@@ -1860,9 +1773,7 @@ classdef TubULAR < handle
             end
         end
         measurePIV3dMultiChannel(tubi, options)
-        measurePIV3dDoubleResolution(tubi, options)
-        % Note: To timeAverage Velocities at Double resolution, pass
-        % options.doubleResolution == true
+        measurePIV2d(tubi, options)
         
         %% Metric
         plotMetric(tubi, options) 

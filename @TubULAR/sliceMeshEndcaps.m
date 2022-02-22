@@ -124,6 +124,8 @@ if isfield(opts, 'tref')
 end
 if isfield(methodOpts, 'overwrite')
     overwrite = methodOpts.overwrite ;
+elseif isfield(opts, 'overwrite')
+    overwrite = opts.overwrite ;
 end
 if isfield(methodOpts, 'save_figs')
     save_figs = methodOpts.save_figs ;
@@ -743,6 +745,9 @@ for ii=todo
         timestr = sprintf('%03d', tt * QS.timeInterval) ;
         titlestr = [titlestr timestr ' ' QS.timeUnits] ;
         title(titlestr, 'Interpreter', 'Latex')
+        legend({'surface', 'cutPath start', 'cutPath end', ...
+            'anterior', 'posterior', ...
+            'anterior point with offset', 'posterior point with offset'})
         %view(50, 145)
         set(gcf, 'PaperUnits', 'centimeters');
         set(gcf, 'PaperPosition', [0 0 xwidth ywidth]); %x_width=10cm y_width=16cm

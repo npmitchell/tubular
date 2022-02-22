@@ -92,6 +92,8 @@ if isfield(opts, 'overwrite')
 end
 if isfield(opts, 'overwrite_ims')
     overwrite_ims = opts.overwrite_ims ;  % overwrite images, whether or not we overwrite everything else
+else
+    overwrite_ims = overwrite ;
 end
 if isfield(opts, 'preview')
     preview = opts.preview ;

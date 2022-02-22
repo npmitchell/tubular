@@ -126,9 +126,6 @@ else
         lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 end
 
-folds = load(QS.fileName.fold) ;
-fons = folds.fold_onset - QS.xp.fileMeta.timePoints(1) ;
-
 %% Colormap
 bwr256 = bluewhitered(256) ;
 
@@ -156,9 +153,8 @@ elseif strcmp(averagingStyle, 'simple')
     end
 end
 
-%% Load time offset for first fold, t0
+%% Load time offset, t0
 QS.t0set() ;
-tfold = QS.t0 ;
 
 %% load from QS
 if doubleResolution

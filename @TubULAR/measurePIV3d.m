@@ -1,5 +1,5 @@
-function measurePIV3d(QS, options)
-% measurePIV3D(QS, options)
+function measurePIV3d(tubi, options)
+% measurePIV3D(tubi, options)
 %   Measure 3d flows from PIV results on smoothed (s,phi) MIP pullbacks
 %   
 %   default options for created MIPS (done before this method) are:
@@ -10,14 +10,14 @@ function measurePIV3d(QS, options)
 %     pbOptions.generate_rsm = true ;
 %     pbOptions.generate_spsm = true ;
 %     pbOptions.generate_sphi = false ;
-%     QS.data.adjustlow = 1.00 ;
-%     QS.data.adjusthigh = 99.999 ;
-%     QS.generateCurrentPullbacks([], [], [], pbOptions) ;
+%     tubi.data.adjustlow = 1.00 ;
+%     tubi.data.adjusthigh = 99.999 ;
+%     tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 %
 % 
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : QuapSlap class instance
 % options : struct with fields 
 %   overwrite : bool
 %       overwrite previous results
@@ -25,7 +25,7 @@ function measurePIV3d(QS, options)
 %       view intermediate results
 %   timePoints : numeric 1D array
 %       the timepoints to consider for the measurement. For ex, could
-%       choose subset of the QS experiment timePoints
+%       choose subset of the tubi experiment timePoints
 %
 %
 % Returns
@@ -73,7 +73,7 @@ end
 if isfield(options, 'timePoints')
     timePoints = options.timePoints ;
 else
-    timePoints = QS.xp.fileMeta.timePoints ;
+    timePoints = tubi.xp.fileMeta.timePoints ;
 end
 if isfield(options, 'doubleCovered')
     doubleCovered = options.doubleCovered ; 
@@ -107,18 +107,18 @@ if isfield(options, 'vnscale')
     vnscale = options.vnscale ;
 end
 
-%% Unpack QS
-piv3dfn = QS.fullFileBase.piv3d ;
+%% Unpack tubi
+piv3dfn = tubi.fullFileBase.piv3d ;
 ntps = length(timePoints) ;
-[rot, ~] = QS.getRotTrans() ;
-resolution = QS.APDV.resolution ; 
-[~, ~, ~, xyzlim_APDV] = QS.getXYZLims() ;
-axis_order = QS.data.axisOrder ;
-pivOutDir = QS.dir.piv.v3d ;
-blue = QS.plotting.colors(1, :) ;
-red = QS.plotting.colors(2, :) ;
-green = QS.plotting.colors(4, :) ;
-t0 = QS.t0set() ;
+[rot, ~] = tubi.getRotTrans() ;
+resolution = tubi.APDV.resolution ; 
+[~, ~, ~, xyzlim_APDV] = tubi.getXYZLims() ;
+axis_order = tubi.data.axisOrder ;
+pivOutDir = tubi.dir.piv.v3d ;
+blue = tubi.plotting.colors(1, :) ;
+red = tubi.plotting.colors(2, :) ;
+green = tubi.plotting.colors(4, :) ;
+t0 = tubi.t0set() ;
 
 %% Check if all timepoints' piv3d exist already
 redo_piv3d = overwrite ; 
@@ -144,8 +144,13 @@ else
     % preallocate piv3d
     piv3d = cell(ntps, 1) ;
     
-    disp('Loading raw PIV results')
-    piv = load(QS.fileName.pivRaw.raw) ;
+    disp('Attempint to load raw PIV results')
+    try
+        piv = load(tubi.fileName.pivRaw.raw) ;
+    catch
+        tubi.measurePIV2d(options)
+        piv = load(tubi.fileName.pivRaw.raw) ;
+    end
     
     % Iterate over all images with flow fields ----------------------------
     for ii=1:(ntps - 1)
@@ -153,12 +158,12 @@ else
         timestr = sprintf('%03d', timePoints(ii) - t0) ;
         disp(['t = ' timestr])
         tp = timePoints(ii) ;
-        dt = (timePoints(ii + 1) - tp) * QS.timeInterval ;
+        dt = (timePoints(ii + 1) - tp) * tubi.timeInterval ;
         
         % Get scale of image
         if strcmp(pivimCoords, 'sp_sme') || strcmp(pivimCoords, 'spsme') 
-            im0 = imread(sprintf(QS.fullFileBase.im_sp_sme, tp)) ;
-            im1 = imread(sprintf(QS.fullFileBase.im_sp_sme, timePoints(ii+1))) ;
+            im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
+            im1 = imread(sprintf(tubi.fullFileBase.im_sp_sme, timePoints(ii+1))) ;
             doubleCovered = true ;
         else
             error(['Unrecognized pivimCoords: ' pivimCoords])
@@ -168,22 +173,22 @@ else
         Ysz1 = size(im1, 1) ;
         
         % Load spcutMesh 
-        mesh0 = load(sprintf(QS.fullFileBase.spcutMeshSm, ...
+        mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSm, ...
             timePoints(ii)), 'spcutMeshSm') ;
         mesh0 = mesh0.spcutMeshSm ;
         umax0 = max(mesh0.u(:, 1)) ;
         vmax0 = max(mesh0.u(:, 2)) ;
         
         % Load next timepoint's spcutMesh
-        mesh1 = load(sprintf(QS.fullFileBase.spcutMeshSm, ...
+        mesh1 = load(sprintf(tubi.fullFileBase.spcutMeshSm, ...
             timePoints(ii + 1)), 'spcutMeshSm') ;
         mesh1 = mesh1.spcutMeshSm ;
         umax1 = max(mesh1.u(:, 1)) ;
         vmax1 = max(mesh1.u(:, 2)) ;
         
-        m0XY = QS.uv2XY(im0, mesh0.u, doubleCovered, umax0, vmax0) ;
+        m0XY = tubi.uv2XY(im0, mesh0.u, doubleCovered, umax0, vmax0) ;
         % Note: no need for m1XY since we only use tiled mesh (tm1XY)
-        % m1XY = QS.uv2XY(im1, mesh1.u, doubleCovered, umax1, vmax1) ;
+        % m1XY = tubi.uv2XY(im1, mesh1.u, doubleCovered, umax1, vmax1) ;
         m0x = m0XY(:, 1) ;
         m0y = m0XY(:, 2) ;
 
@@ -237,7 +242,7 @@ else
         % Note: tm0v2d will be [nU*(nV-1)*4 + nU*nV] x 2
         % Note: pt0    will be [#X0 * #Y0] x 3
         [tm0f, tm0v2d, tm0v3d, ~] = tileAnnularCutMesh(mesh0, tileCount);
-        tm0XY = QS.uv2XY(im0, tm0v2d, doubleCovered, umax0, vmax0) ;
+        tm0XY = tubi.uv2XY(im0, tm0v2d, doubleCovered, umax0, vmax0) ;
         [pt0, fieldfaces, tr0] = interpolate2Dpts_3Dmesh(tm0f, tm0XY,...
                                         tm0v3d, [x0(:), y0(:)]) ;
         
@@ -275,7 +280,7 @@ else
         disp('Interpolating 3d vertices for tiled mesh 1')
         tileCount = [2, 2] ;
         [tm1f, tm1v2d, tm1v3d, ~] = tileAnnularCutMesh(mesh1, tileCount);
-        tm1XY = QS.uv2XY(im1, tm1v2d, doubleCovered, umax1, vmax1) ;
+        tm1XY = tubi.uv2XY(im1, tm1v2d, doubleCovered, umax1, vmax1) ;
         pt1 = interpolate2Dpts_3Dmesh(tm1f, tm1XY, tm1v3d, [x1(:), y1(:)]) ;
         
         % Ensure no NaNs in pt0 and pt1
@@ -307,16 +312,16 @@ else
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Load 3D data for coloring mesh pullback
             disp(['loading timepoint data t=' num2str(tp)])
-            QS.setTime(tp) ;
-            QS.getCurrentData() ;
-            IV0 = QS.currentData.IV ;
+            tubi.setTime(tp) ;
+            tubi.getCurrentData() ;
+            IV0 = tubi.currentData.IV ;
             
             % also plot the next timepoint
             t1 = timePoints(ii + 1) ;
             disp(['loading subsequent timepoint data t=' num2str(t1)])
-            QS.setTime(t1);
-            QS.getCurrentData() ;
-            IV1 = QS.currentData.IV ;            
+            tubi.setTime(t1);
+            tubi.getCurrentData() ;
+            IV1 = tubi.currentData.IV ;            
             
             disp('previewing')
             % evaluate flow field at (x, Ysz - y). Add (u,v) to (x, Ysz - y).
@@ -332,7 +337,7 @@ else
             mesh0adv_pix = [ m0x + addx, m0y + addy] ;
 
             % Texture image options
-            Options.imSize = ceil( Xsz0 .* [(1+sum(tileCount))/QS.a_fixed, 1] );  % row, col pix
+            Options.imSize = ceil( Xsz0 .* [(1+sum(tileCount))/tubi.a_fixed, 1] );  % row, col pix
             Options.yLim = [0 Ysz0];
             Options.xLim = [0 Xsz0];
             % original image RED
@@ -348,7 +353,7 @@ else
             % Load next timepoint BLUE
             % im1 = imread(fullfile(fns(i+1).folder, fns(i+1).name)) ;
             % patchImRGB = cat(3, im0, uint8(patchIma * 255), im1) ;
-            minrow = (tileCount(1) - 0.5)*Xsz0 / QS.a_fixed ;
+            minrow = (tileCount(1) - 0.5)*Xsz0 / tubi.a_fixed ;
             patchImaCrop = patchIma(minrow+1:minrow+Ysz0, :) ;
             patchImRGB = cat(3, im0, patchImaCrop, im1) ;
 
@@ -563,7 +568,7 @@ else
         end
         
         % Test validity of result
-        v0_rs =  QS.dx2APDV(v0) / dt ;
+        v0_rs =  tubi.dx2APDV(v0) / dt ;
         if any(isnan(v0_rs(:))) || any(isnan(v0_rs(:)))
            % disp('inpainting NaNs in pt0 & pt1')
            error('why nans?')
@@ -597,13 +602,13 @@ else
         % Face-centered velocities
         datstruct.v3dvertices = v3dvertices ;
         datstruct.v3dfaces = v3dfaces ;
-        datstruct.v3dfaces_rs = QS.dx2APDV(v3dfaces) / dt ; 
+        datstruct.v3dfaces_rs = tubi.dx2APDV(v3dfaces) / dt ; 
         assert(all(size(v3dfaces) == size(datstruct.m0f)))
         
         % rotated and scaled velocities
-        datstruct.v0_rs = QS.dx2APDV(v0) / dt ;
-        datstruct.v0t_rs = QS.dx2APDV(v0t) / dt ;
-        if QS.flipy
+        datstruct.v0_rs = tubi.dx2APDV(v0) / dt ;
+        datstruct.v0t_rs = tubi.dx2APDV(v0t) / dt ;
+        if tubi.flipy
             % Direct normals inward
             datstruct.v0n_rs = -v0n * resolution / dt ;
             normals_rs = (rot * facenormals')' ;            
@@ -730,8 +735,8 @@ else
                 % quiver3(pt0(nearby, 1), pt0(nearby, 2), pt0(nearby, 3), ...
                 %     v0(nearby, 1), v0(nearby, 2), v0(nearby, 3), 0, 'color', green) 
             else
-                m0vr = QS.xyz2APDV(m0.v) ;
-                m1vr = QS.xyz2APDV(m1.v) ;
+                m0vr = tubi.xyz2APDV(m0.v) ;
+                m1vr = tubi.xyz2APDV(m1.v) ;
                 trisurf(m0.f, m0vr(:, 1), m0vr(:, 2), m0vr(:, 3), ...
                     'FaceColor', blue, 'EdgeColor', 'none', 'FaceAlpha', 0.1)
                 hold on;
@@ -739,7 +744,7 @@ else
                     'FaceColor', red, 'EdgeColor', 'none', 'FaceAlpha', 0.1)
             end
             hold on      
-            pt0r = QS.xyz2APDV(pt0) ;
+            pt0r = tubi.xyz2APDV(pt0) ;
             quiver3(pt0r(:, 1), pt0r(:, 2), pt0r(:, 3), ...
                 datstruct.v0_rs(:, 1), ...
                 datstruct.v0_rs(:, 2), ...
@@ -764,8 +769,8 @@ else
         end
         
         %% Draw 2D flows
-        vtdir2d = QS.dir.piv.vt2d ;
-        vndir2d = QS.dir.piv.vn2d ;
+        vtdir2d = tubi.dir.piv.vt2d ;
+        vndir2d = tubi.dir.piv.vn2d ;
         if ~exist(vtdir2d, 'dir')
             mkdir(vtdir2d)
         end
@@ -774,15 +779,15 @@ else
         end
         
         % check if figure output exists already
-        outimfn_n = fullfile(vndir2d, sprintf([QS.fileBase.name '.png'], tp)) ;
-        outimfn_t = fullfile(vtdir2d, sprintf([QS.fileBase.name '.png'], tp)) ;
+        outimfn_n = fullfile(vndir2d, sprintf([tubi.fileBase.name '.png'], tp)) ;
+        outimfn_t = fullfile(vtdir2d, sprintf([tubi.fileBase.name '.png'], tp)) ;
         if save_ims && (~exist(outimfn_n, 'file') || overwrite)
             washout2d = 0.5 ;
             % Load the image to put flow on top
             imRGB = cat(3, im0, im0, im0) ;  % convert to rgb for no cmap change
             im = imRGB * washout2d + max(im0(:)) * (1-washout2d) ;
             options.label = ['scaled tangential velocity, ', ...
-                '$|v_t|/||g^{-1}||$ [$\mu$m/', QS.timeUnits, ']'] ;
+                '$|v_t|/||g^{-1}||$ [$\mu$m/', tubi.timeUnits, ']'] ;
             options.xlim = [0, size(im, 2)] ;
             if doubleCovered
                 options.ylim = size(im, 1) * [0.25, 0.75] ;
@@ -790,7 +795,7 @@ else
                 options.ylim = size(im, 1) * [0, 1] ;
             end
             options.title = ['tangential velocity, $t=$', ...
-                sprintf('%03d', tp-t0), ' ', QS.timeUnits] ;
+                sprintf('%03d', tp-t0), ' ', tubi.timeUnits] ;
             options.outfn = outimfn_t ;
             if length(x0(1, :)) > 200
                 options.qsubsample = 10 ;
@@ -877,14 +882,14 @@ else
             c.Label.String = 'normal velocity, $v_n$ [$\mu$m/min]' ;
             c.Label.Interpreter = 'Latex' ;
             title(['normal velocity, $t = $', sprintf('%03d', tp - t0),...
-                ' ', QS.timeUnits], 'Interpreter', 'Latex')
+                ' ', tubi.timeUnits], 'Interpreter', 'Latex')
             % Write figure to file
             saveas(gcf, outimfn_n)
             
         end
 
         % Save dilation field as image
-        dilfn = fullfile(QS.dir.piv.dilation, [sprintf('%04d', tp) '.png']) ;
+        dilfn = fullfile(tubi.dir.piv.dilation, [sprintf('%04d', tp) '.png']) ;
         if save_ims && (~exist(dilfn, 'file') || overwrite)
             close all
             fig = figure('units', 'normalized', ...

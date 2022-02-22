@@ -1,22 +1,40 @@
 function initializeTubULAR(tubi, xp, opts)
-%initializeQuapSlap(tubi, xp, opts)
-%   Hidden method for instantiating QuapSlap class
+%initializeTubULAR(tubi, xp, opts)
+%   Hidden method for instantiating TubULAR class
 %
 % Parameters
 % ----------
-% tubi : QuapSlap object whose properties to fill in
-% xp : Imsane Experiment class instance belonging to tubi
+% tubi : TubULAR object whose properties to fill in with this function
+% xp : Imsane Experiment class instance belonging to tubi or struct
+%    if imsane class instance, tubular uses imsane fields to populate
+%    metadata. Otherwise this needs to be a struct with fields
+%      fileMeta
+%      expMeta
+%    See docs for entries in these fields and their descriptions.
 % opts : struct with fields
-%   xp : ImSAnE class object instance
 %   flipy : bool
+%       Set to true if lab coordinates are mirrored along some axis wrt to 
+%       data coords.
 %   meshDir : str
+%       path to where meshes are stored and output will be placed
 %   timeUnits : str
+%       units of time, for ex 'min'
 %   spaceUnits : str
+%       units of space, for ex '$mu$m' for microns
 %   nU : int
+%       resolution in the longitudinal direction, in number of sampling
+%       points per proper length of the mesh
 %   nV : int
+%       resolution in the circumferential direction, in number of sampling
+%       points per circumference
 %   lambda : optional float 
+%       smoothing applied to fields on a mesh before computation of DEC
+%       derivatives
 %   lambda_mesh : optional float 
+%       smoothing (diffusion constant) applied to mesh vertices before
+%       computation of DEC fields
 %   lambda_err : optional float
+%       additional smoothing for fields derived from DEC fields
 %   
 %
 % NPMitchell 2020
@@ -399,6 +417,13 @@ tubi.fileBase.ricciSolution = 'ricciSolution_%04diter_%06d.mat' ;
 tubi.fullFileBase.ricciSolution = fullfile(tubi.dir.ricci.solution, tubi.fileBase.ricciSolution) ;
 tubi.fileBase.ricciMu = 'ricciMesh_mus_%04diter_%06d.mat' ;
 tubi.fullFileBase.ricciMu = fullfile(tubi.dir.ricci.mu, tubi.fileBase.ricciMu) ;
+
+tubi.fileBase.ricciMeshWithResampling = 'ricciMeshWithResampling_%04diter_%06d.mat' ;
+tubi.fullFileBase.ricciMeshWithResampling = fullfile(tubi.dir.ricci.meshWithResampling, tubi.fileBase.ricciMeshWithResampling) ;
+tubi.fileBase.ricciSolutionWithResampling = 'ricciSolutionWithResampling_%04diter_%06d.mat' ;
+tubi.fullFileBase.ricciSolutionWithResampling = fullfile(tubi.dir.ricci.solutionWithResampling, tubi.fileBase.ricciSolutionWithResampling) ;
+tubi.fileBase.ricciMuWithResampling = 'ricciMesh_musWithResampling_%04diter_%06d.mat' ;
+tubi.fullFileBase.ricciMuWithResampling = fullfile(tubi.dir.ricci.muWithResampling, tubi.fileBase.ricciMuWithResampling) ;
 
 %% centerlines
 tubi.dir.clineDVhoop = ...

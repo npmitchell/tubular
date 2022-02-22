@@ -111,8 +111,6 @@ xx = QS.piv.raw.x{tidx}(1, :) ;
 yy = QS.piv.raw.y{tidx}(:, 1) ;
 
 %% Prepare for plots
-QS.getFeatures('ssfold')
-ssfold_frac = QS.features.ssfold / QS.nU ;
 t0 = QS.t0set() ;
 tunit = [' ' QS.timeUnits] ;
 
@@ -226,9 +224,6 @@ vy = reshape(v2dsmum_ii(:, 2), gridsz) ;
 % % Check normal velocity and rotations
 % quiver3(piv.x{i}, piv.y{i}, 0*piv.x{i}, vx, vy, vn, 0)
 
-% Get lobes for this timepoint
-foldx = ssfold_frac(tidx, :) * size(im, 2) ;
-
 % Plot the normal velocity on top
 if ~exist(vnfn, 'file') || overwrite
     disp(['Saving ' vnfn])
@@ -241,7 +236,7 @@ if ~exist(vnfn, 'file') || overwrite
     if invertImage
         imw = (max(im(:))-im) * washout2d + max(im(:)) * (1-washout2d) ;
     else
-        imw = im * washout2vnscaled + max(im(:)) * (1-washout2d) ;
+        imw = im * washout2d + max(im(:)) * (1-washout2d) ;
     end
     scalarFieldOnImage(imw, [xx', yy], vn, alphaVal, vnscale, ...
         labelOpts) ;
@@ -353,7 +348,7 @@ if ~exist(vtgvnfn, 'file') || overwrite || true
         imw = max(im(:)) - im ;
         % imw = (max(im(:))-im) * washout2d + max(im(:)) * (1-washout2d) ;
     else
-        imw = im * washout2vnscaled + max(im(:)) * (1-washout2d) ;
+        imw = im * washout2d + max(im(:)) * (1-washout2d) ;
     end
     scalarFieldOnImage(imw, [xx', yy], vn, alphaVal, vnscale, ...
         labelOpts) ;
