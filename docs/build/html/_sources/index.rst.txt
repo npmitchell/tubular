@@ -11,8 +11,14 @@ Welcome to TubULAR's documentation!
    :caption: Contents:
 
 
+What is it?
+-----------
+TubULAR is a set of tools for working with 3D data of surfaces -- potentially complex and dynamic -- that can be described as tubes.
+Developing guts, neural tubes, and pumping hearts can all be treated as tubes, with potentially complex and dynamic shapes.
+With TubULAR, we can describe the tissue motion on the tube-like surface and quantify how it changes over time.
+
 Usage
-=====
+-----
 
 TubULAR is self-contained MATLAB code, so no additional dependencies are strictly necessary. 
 However, there is additional functionality included in the tutorials that use ImSAnE environments and Morphological Snakes level set surface detection methods. 

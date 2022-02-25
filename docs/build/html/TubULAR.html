@@ -506,6 +506,11 @@ This is a timestamp (not an index) at which pathlines form regular grid in space
 <dd><p>Bases: <code class="xref mat mat-class docutils literal notranslate"><span class="pre">handle</span></code></p>
 <p>Tube-like sUrface Lagrangian Analysis Resource (TubULAR) class</p>
 <dl class="simple">
+<dt>uv<span class="classifier">(conformal map onto unit square)</span></dt><dd><p>Conformally mapping the cylinderCutMesh onto the unit square
+in the plane results in the instantaneous uv coordinate system.
+Corners of the unit square are taken directly from the cutMesh,
+so are liable to include some overall twist.</p>
+</dd>
 <dt>sphi<span class="classifier">(proper length x rectified azimuthal coordinate)</span></dt><dd><p>quasi-axisymmetric system in which first coordinate is
 proper length along surface and second is a rectified azimuthal
 coordinate. Rectification means that the surface is rotated as
@@ -515,11 +520,6 @@ in pullback space. This rectification may be based on surface
 positions in R^3 (geometric) or based on intensity motion in
 pullback space (material/Lagrangian) inferred through
 phasecorrelation of tissue strips around discretized s values.</p>
-</dd>
-<dt>uv<span class="classifier">(conformal map onto unit square)</span></dt><dd><p>Conformally mapping the cylinderCutMesh onto the unit square
-in the plane results in the instantaneous uv coordinate system.
-Corners of the unit square are taken directly from the cutMesh,
-so are liable to include some overall twist.</p>
 </dd>
 <dt>uvprime<span class="classifier">(conformal map</span></dt><dd><p>[same as uvprime_sm, since uvprime is currently computed via
 sphi_sm coordinates]</p>
@@ -551,7 +551,8 @@ surface-Lagrangian frame (ie sp_sme or up_sme).</p>
 </ul>
 </dd>
 </dl>
-<p>xyzlim        : 3x2 float, mesh limits in full resolution pixels, in data space
+<p>imSize        : 2x1 int, size of pullback images to create
+xyzlim        : 3x2 float, mesh limits in full resolution pixels, in data space
 xyzlim_um     : 3x2 float, mesh limits in lab APDV frame in microns
 resolution    : float, resolution of pixels in um
 rot           : 3x3 float, APDV rotation matrix
@@ -605,6 +606,11 @@ Separately, define the AP points for centerline extraction. For most gut
 data, the posterior point is different in centerline than it is for AP
 centerline specification, so we use a different ILP to train for A and P
 for all timepoints of dynamic data.</p>
+<dl class="mat attribute">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.APDV">
+<span class="sig-name descname"><span class="pre">APDV</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct(</span>            <span class="pre">'resolution',</span> <span class="pre">[],</span> <span class="pre">\n'rot',</span> <span class="pre">[],</span> <span class="pre">\n'trans',</span> <span class="pre">[])"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.APDV" title="Permalink to this definition">#</a></dt>
+<dd><p>translation vector to transform data into APDV frame (rot*v+trans)*resolution</p>
+</dd></dl>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.APDV2dxyz">
 <span class="sig-name descname"><span class="pre">APDV2dxyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">a</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.APDV2dxyz" title="Permalink to this definition">#</a></dt>
@@ -656,6 +662,11 @@ before double covering/tiling</p></li>
 </dd>
 </dl>
 </dd></dl>
+<dl class="mat attribute">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.a_fixed">
+<span class="sig-name descname"><span class="pre">a_fixed</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'1'</span></em><a class="headerlink" href="#@TubULAR.TubULAR.a_fixed" title="Permalink to this definition">#</a></dt>
+<dd><p>aspect ratio for fixed geometry pullback meshes</p>
+</dd></dl>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.adjustIV">
 <span class="sig-name descname"><span class="pre">adjustIV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">IV</span></em>, <em class="sig-param"><span class="pre">adjustlow</span></em>, <em class="sig-param"><span class="pre">adjusthigh</span></em>, <em class="sig-param"><span class="pre">forceValues</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.adjustIV" title="Permalink to this definition">#</a></dt>
@@ -675,9 +686,9 @@ before double covering/tiling</p></li>
 </dl>
 </dd></dl>
 <dl class="mat attribute">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.apdvCOMOptions">
-<span class="sig-name descname"><span class="pre">apdvCOMOptions</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct('rawMesh',</span> <span class="pre">[],</span> <span class="pre">\n'alignedMesh',</span> <span class="pre">[],</span> <span class="pre">\n'cylinderMesh',</span> <span class="pre">[],</span> <span class="pre">\n'cylinderMeshClean',</span> <span class="pre">[],</span> <span class="pre">\n'cutMesh',</span> <span class="pre">[],</span> <span class="pre">\n'cutPath',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMesh',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMeshSm',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMeshSmRS',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMeshSmRSC',</span> <span class="pre">[],</span> <span class="pre">\n'ricciMesh',</span> <span class="pre">[],</span> <span class="pre">\n'uvpcutMesh',</span> <span class="pre">[])"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.apdvCOMOptions" title="Permalink to this definition">#</a></dt>
-<dd><p>rectilinear cutMesh in (u,v) from Dirichlet map result to rectangle</p>
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.apdvOptions">
+<span class="sig-name descname"><span class="pre">apdvOptions</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct('rawMesh',</span> <span class="pre">[],</span> <span class="pre">\n'alignedMesh',</span> <span class="pre">[],</span> <span class="pre">\n'cylinderMesh',</span> <span class="pre">[],</span> <span class="pre">\n'cylinderMeshClean',</span> <span class="pre">[],</span> <span class="pre">\n'cutMesh',</span> <span class="pre">[],</span> <span class="pre">\n'cutPath',</span> <span class="pre">[],</span> <span class="pre">\n'uvcutMesh',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMesh',</span> <span class="pre">[],</span>         <span class="pre">%</span> <span class="pre">rectilinear</span> <span class="pre">cutMesh</span> <span class="pre">in</span> <span class="pre">(s,phi)</span> <span class="pre">'surface</span> <span class="pre">Lagrangian'</span> <span class="pre">parameterization\n'spcutMeshSm',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMeshSmRS',</span> <span class="pre">[],</span> <span class="pre">\n'spcutMeshSmRSC',</span> <span class="pre">[],</span> <span class="pre">\n'ricciMesh',</span> <span class="pre">[])"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.apdvOptions" title="Permalink to this definition">#</a></dt>
+<dd><p>ricci flow result pullback mesh, topological annulus</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.cleanCntrlines">
@@ -780,10 +791,6 @@ before double covering/tiling</p></li>
 <span class="sig-name descname"><span class="pre">dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.dir" title="Permalink to this definition">#</a></dt>
 <dd><p>str, directory where QuapSlap data lives</p>
 </dd></dl>
-<dl class="mat attribute">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.dirBase">
-<span class="sig-name descname"><span class="pre">dirBase</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.dirBase" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.doubleCoverPullbackImages">
 <span class="sig-name descname"><span class="pre">doubleCoverPullbackImages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.doubleCoverPullbackImages" title="Permalink to this definition">#</a></dt>
@@ -850,7 +857,7 @@ fileMeta : struct with fields</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.endcapOptions">
-<span class="sig-name descname"><span class="pre">endcapOptions</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct('preview',</span> <span class="pre">false,</span> <span class="pre">\n'save_ims',</span> <span class="pre">true,</span> <span class="pre">\n'xyzlim_um_buff',</span> <span class="pre">[],</span> <span class="pre">\n'xyzlim_raw',</span> <span class="pre">[],</span> <span class="pre">\n'xyzlim_pix',</span> <span class="pre">[],</span> <span class="pre">\n'xyzlim_um',</span> <span class="pre">[],</span> <span class="pre">\n'colors',</span> <span class="pre">[])"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.endcapOptions" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">endcapOptions</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.endcapOptions" title="Permalink to this definition">#</a></dt>
 <dd><p>the full map from embedding to pullback being [M’=(Phi)o()o()].
 This string specifier must be ‘3dcurves’ (geometric phi stabilization)
 or ‘texture’ (optical flow phi stabilization)</p>
@@ -858,7 +865,7 @@ or ‘texture’ (optical flow phi stabilization)</p>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.fileBase">
 <span class="sig-name descname"><span class="pre">fileBase</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.fileBase" title="Permalink to this definition">#</a></dt>
-<dd><p>subsampling factor for probabilities</p>
+<dd><p>fileNames to be populated by timestamp (’…%06dmat’)</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.fileName">
@@ -870,9 +877,14 @@ or ‘texture’ (optical flow phi stabilization)</p>
 <span class="sig-name descname"><span class="pre">flipy</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.flipy" title="Permalink to this definition">#</a></dt>
 <dd><p>whether data is mirror image of lab frame coordinates</p>
 </dd></dl>
+<dl class="mat attribute">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.fullFileBase">
+<span class="sig-name descname"><span class="pre">fullFileBase</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.fullFileBase" title="Permalink to this definition">#</a></dt>
+<dd><p>full path of filenames (like fullfile(tubi.dir.X, tubi.fileBase.X))</p>
+</dd></dl>
 <dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getAPCOMSm">
-<span class="sig-name descname"><span class="pre">getAPCOMSm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getAPCOMSm" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getAPpointsSm">
+<span class="sig-name descname"><span class="pre">getAPpointsSm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getAPpointsSm" title="Permalink to this definition">#</a></dt>
 <dd><p>Load the anterior and posterior ‘centers of mass’ ie the
 endpoints of the object’s centerline</p>
 </dd></dl>
@@ -944,26 +956,9 @@ self</p></li>
 <dd><p>Obtain the cell segmentation in 3D pullback space</p>
 </dd></dl>
 <dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getCurrentVelocityMultiChannel">
-<span class="sig-name descname"><span class="pre">getCurrentVelocityMultiChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">varargin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getCurrentVelocityMultiChannel" title="Permalink to this definition">#</a></dt>
-<dd><p>By default, load 1x resolution piv3d for each channel</p>
-</dd></dl>
-<dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.getPIV">
 <span class="sig-name descname"><span class="pre">getPIV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getPIV" title="Permalink to this definition">#</a></dt>
 <dd><p>Load PIV results and store in tubi.piv if not already loaded</p>
-</dd></dl>
-<dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getPIVMultiChannel">
-<span class="sig-name descname"><span class="pre">getPIVMultiChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getPIVMultiChannel" title="Permalink to this definition">#</a></dt>
-<dd><p>Load PIV results and store in tubi.piv if not already loaded</p>
-</dd></dl>
-<dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getPathlineFeatureIDs">
-<span class="sig-name descname"><span class="pre">getPathlineFeatureIDs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">pathlineType</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getPathlineFeatureIDs" title="Permalink to this definition">#</a></dt>
-<dd><p>featureIDs = GETPATHLINEFEATUREIDS(tubi, pathlineType, options)
-recall, load, or interactively identify feature locations
-as positions in zeta, the longitudinal pullback coordinate</p>
 </dd></dl>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.getPullbackPathlines">
@@ -993,13 +988,6 @@ of vertices in spcutMeshSmRSC embedding
 along x axis</p>
 </dd></dl>
 <dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getUVPrimePathlineFeatureIDs">
-<span class="sig-name descname"><span class="pre">getUVPrimePathlineFeatureIDs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">pathlineType</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getUVPrimePathlineFeatureIDs" title="Permalink to this definition">#</a></dt>
-<dd><p>featureIDs = getUVPrimePathlineFeatureIDs(tubi, pathlineType, options)
-recall, load, or interactively identify feature locations
-as positions in zeta, the longitudinal pullback coordinate</p>
-</dd></dl>
-<dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.getVelocityAverage">
 <span class="sig-name descname"><span class="pre">getVelocityAverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">varargin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getVelocityAverage" title="Permalink to this definition">#</a></dt>
 <dd><p>todo: check if all varargin are already loaded</p>
@@ -1021,6 +1009,11 @@ as positions in zeta, the longitudinal pullback coordinate</p>
 Grab each xyzlim from self, otherwise load from disk
 full resolution pix</p>
 </dd></dl>
+<dl class="mat attribute">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.imSize">
+<span class="sig-name descname"><span class="pre">imSize</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.imSize" title="Permalink to this definition">#</a></dt>
+<dd><p>size of pullback images to create (default is [a_ratio * 1000, 1000])</p>
+</dd></dl>
 <dl class="mat staticmethod">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.invertRotation">
 <em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">invertRotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">rot</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.invertRotation" title="Permalink to this definition">#</a></dt>
@@ -1034,11 +1027,6 @@ full resolution pix</p>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.loadPIV">
 <span class="sig-name descname"><span class="pre">loadPIV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.loadPIV" title="Permalink to this definition">#</a></dt>
-<dd><p>Load PIV results from disk and store in tubi.piv</p>
-</dd></dl>
-<dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.loadPIVMultiChannel">
-<span class="sig-name descname"><span class="pre">loadPIVMultiChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.loadPIVMultiChannel" title="Permalink to this definition">#</a></dt>
 <dd><p>Load PIV results from disk and store in tubi.piv</p>
 </dd></dl>
 <dl class="mat method">
@@ -1056,11 +1044,6 @@ full resolution pix</p>
 <span class="sig-name descname"><span class="pre">loadVelocitySimpleAverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">varargin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.loadVelocitySimpleAverage" title="Permalink to this definition">#</a></dt>
 <dd><p>Load and pack into struct</p>
 </dd></dl>
-<dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.manualTrackingAdd">
-<span class="sig-name descname"><span class="pre">manualTrackingAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.manualTrackingAdd" title="Permalink to this definition">#</a></dt>
-<dd><p>Add to current tracks on disk</p>
-</dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.nU">
 <span class="sig-name descname"><span class="pre">nU</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.nU" title="Permalink to this definition">#</a></dt>
@@ -1073,8 +1056,8 @@ full resolution pix</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.normalShift">
-<span class="sig-name descname"><span class="pre">normalShift</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.normalShift" title="Permalink to this definition">#</a></dt>
-<dd><p>aspect ratio for fixed geometry pullback meshes</p>
+<span class="sig-name descname"><span class="pre">normalShift</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'0'</span></em><a class="headerlink" href="#@TubULAR.TubULAR.normalShift" title="Permalink to this definition">#</a></dt>
+<dd><p>shift to apply to meshes in pixel space along normal direction</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.phiMethod">
@@ -1086,17 +1069,24 @@ full resolution pix</p>
 <span class="sig-name descname"><span class="pre">piv</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct(</span>             <span class="pre">'imCoords',</span> <span class="pre">'sp_sme',</span> <span class="pre">\n'Lx',</span> <span class="pre">[],</span> <span class="pre">\n'Ly',</span> <span class="pre">[],</span> <span class="pre">\n'raw',</span> <span class="pre">struct(),</span> <span class="pre">\n'smoothed',</span> <span class="pre">struct(),</span> <span class="pre">\n'smoothing_sigma',</span> <span class="pre">1</span> <span class="pre">)"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.piv" title="Permalink to this definition">#</a></dt>
 <dd><p>sigma of gaussian smoothing on PIV, in units of PIV sampling grid pixels</p>
 </dd></dl>
-<dl class="mat attribute">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.pivMultiChannel">
-<span class="sig-name descname"><span class="pre">pivMultiChannel</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct(</span>             <span class="pre">'imCoords',</span> <span class="pre">'sp_sme',</span> <span class="pre">\n'Lx',</span> <span class="pre">[],</span> <span class="pre">\n'Ly',</span> <span class="pre">[],</span> <span class="pre">\n'raw',</span> <span class="pre">cell(1),</span> <span class="pre">\n'smoothed',</span> <span class="pre">cell(1),</span> <span class="pre">\n'smoothing_sigma',</span> <span class="pre">1</span> <span class="pre">)"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.pivMultiChannel" title="Permalink to this definition">#</a></dt>
-<dd><p>sigma of gaussian smoothing on PIV, in units of PIV sampling grid pixels</p>
-</dd></dl>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.plotPathlineBeltramiKymograph">
 <span class="sig-name descname"><span class="pre">plotPathlineBeltramiKymograph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">t0Pathlines</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.plotPathlineBeltramiKymograph" title="Permalink to this definition">#</a></dt>
 <dd><p>Example usage for 2021 gut paper:
 options = struct(‘ylim’, [0, 2] )
 tubi.plotPathlineBeltramiKymograph([], options)</p>
+</dd></dl>
+<dl class="mat attribute">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.plotting">
+<span class="sig-name descname"><span class="pre">plotting</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct('preview',</span> <span class="pre">false,</span> <span class="pre">\n'save_ims',</span> <span class="pre">true,</span> <span class="pre">\n'xyzlim_um_buff',</span> <span class="pre">[],</span> <span class="pre">\n'xyzlim_raw',</span> <span class="pre">[],</span> <span class="pre">\n'xyzlim_pix',</span> <span class="pre">[],</span> <span class="pre">\n'xyzlim_um',</span> <span class="pre">[],</span> <span class="pre">\n'colors',</span> <span class="pre">[])"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.plotting" title="Permalink to this definition">#</a></dt>
+<dd><p>adist : distance around anterior point A which is removed from tubular mesh (sliced off)
+pdist : distance around anterior point P which is removed from tubular mesh (sliced off)
+tref : reference time used to define th point on the endcap</p>
+<blockquote>
+<div><p>at which we cut the cylinder mesh into a cylinderCutMesh (a topological disk/square).
+This “dorsal” point for other timepoints are identified by pointmatching.</p>
+</div></blockquote>
+<p>Additional fields allowed :</p>
 </dd></dl>
 <dl class="mat staticmethod">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.quarterIndicesDV">
@@ -1135,14 +1125,18 @@ tubi.xp.fileMeta.timePoints</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.smoothing">
-<span class="sig-name descname"><span class="pre">smoothing</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct(</span>            <span class="pre">'lambda',</span> <span class="pre">0.00,</span> <span class="pre">\n'lambda_mesh',</span> <span class="pre">0.00,</span> <span class="pre">\n'lambda_err',</span> <span class="pre">0.00,</span> <span class="pre">\n'nmodes',</span> <span class="pre">7,</span> <span class="pre">\n'zwidth',</span> <span class="pre">1)"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.smoothing" title="Permalink to this definition">#</a></dt>
-<dd><p>pivPullback = ‘sp_sme’; % coordinate system used for velocimetry
-—&gt; instead use tubi.piv.imCoords</p>
+<span class="sig-name descname"><span class="pre">smoothing</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"struct(</span>            <span class="pre">'lambda',</span> <span class="pre">0.00,</span> <span class="pre">\n'lambda_mesh',</span> <span class="pre">0.00,</span> <span class="pre">\n'nmodes',</span> <span class="pre">7,</span> <span class="pre">\n'zwidth',</span> <span class="pre">1)"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.smoothing" title="Permalink to this definition">#</a></dt>
+<dd><p>half-width of tripulse filter applied along zeta/z/s/u direction in pullback space, in units of du/dz/ds/dzeta</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.spaceUnits">
 <span class="sig-name descname"><span class="pre">spaceUnits</span></span><em class="property"> <span class="pre">=</span> <span class="pre">"'$\\mu$m'"</span></em><a class="headerlink" href="#@TubULAR.TubULAR.spaceUnits" title="Permalink to this definition">#</a></dt>
 <dd><p>units of the embedding space (ex ‘$mu$m’)</p>
+</dd></dl>
+<dl class="mat attribute">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.ssfactor">
+<span class="sig-name descname"><span class="pre">ssfactor</span></span><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#@TubULAR.TubULAR.ssfactor" title="Permalink to this definition">#</a></dt>
+<dd><p>subsampling factor for probabilities</p>
 </dd></dl>
 <dl class="mat attribute">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.t0">
@@ -1245,13 +1239,13 @@ Note: if QS.plotting.preview == True, displays intermediate results</p>
 <dd><p>ALIGNMESHESAPDV(opts)
 Uses anterior, posterior, and dorsal training in ilastik h5 output to
 align meshes along APDV coordinate system with global rotation matrix
-and translation vector. Extracted COMs from the
+and translation vector. Extracted pts from the
 segmented training is loaded/saved in h5 file opts.rawapdvname (usually
-“apdv_coms_from_training.h5”).
-Smoothed COMs from the segmented training –&gt; opts.rawapdvname
-Smoothed rotated scaled COMs              –&gt; opts.outapdvname
+“apdv_pts_from_training.h5”).
+Smoothed pts from the segmented training –&gt; opts.rawapdvname
+Smoothed rotated scaled pts              –&gt; opts.outapdvname
 Note that the global rotation matrix for the QuapSlap instance is defined
-previously in computeAPDCOMs()</p>
+previously in ptputeAPdpts()</p>
 <p>This is a function similar to the align_meshes_APDV.m script</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1289,10 +1283,10 @@ Saved to fullfile(meshDir, ‘xyzlim.txt’)</p></li>
 fullfile(meshDir, ‘xyzlim_APDV.txt’)</p></li>
 <li><p><em>xyzlim_APDV_um.txt</em> – bounding box in rotated frame, in microns. Saved to
 fullfile(meshDir, ‘xyzlim_APDV_um.txt’)</p></li>
-<li><p><em>apdv_coms_rs.h5 (outapdvname)</em> – Centers of mass for A, P, and D in microns in rotated, scaled APDV
+<li><p><em>apdv_pts_rs.h5 (outapdvname)</em> – Centers of mass for A, P, and D in microns in rotated, scaled APDV
 coord system. Note that this coord system is mirrored if flipy==true.
-Also contains raw acom,pcom,dcom in subsampled pixels.
-Saved to fullfile(meshDir, ‘centerline/apdv_coms_rs.h5’)</p></li>
+Also contains raw apt,ppt,dpt in subsampled pixels.
+Saved to fullfile(meshDir, ‘centerline/apdv_pts_rs.h5’)</p></li>
 <li><p><em>startendpt.h5</em> – Starting and ending points
 Saved to fullfile(meshDir, ‘centerline/startendpt_rs.h5’) ;</p></li>
 <li><p><em>NPMitchell 2020</em></p></li>
@@ -1309,86 +1303,6 @@ Saved to fullfile(meshDir, ‘centerline/startendpt_rs.h5’) ;</p></li>
 <dd class="field-odd"><p>NPMitchell 2020</p>
 </dd>
 </dl>
-</dd></dl>
-<dl class="mat function">
-<dt class="sig sig-object mat" id="@TubULAR.computeAPDCOMs">
-<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">computeAPDCOMs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">opts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.computeAPDCOMs" title="Permalink to this definition">#</a></dt>
-<dd><p>[acom_sm, pcom_sm, dcom] = COMPUTEAPDCOMS(opts)
-Compute the anterior, posterior, and dorsal centers of mass either from:</p>
-<blockquote>
-<div><ol class="arabic">
-<li><p>Clicking on the points on the mesh from t=t0</p></li>
-<li><p>moments of inertia of the mesh surface, identifying the endpoints
-near the long axis of the object at t=t0. (autoAP = true)</p></li>
-<li><p>iLastik training for CENTERLINE computation.  (use_iLastik=true)
-Note that these are allowed to be different than the
-APD points for ALIGNMENT computation.
-For example, the posterior point
-might be a point which does NOT form an AP axis  with the
-anteriormost point, as in the illustration of the midgut below:</p>
-<blockquote>
-<div><blockquote>
-<div><p>P for centerline</p>
-</div></blockquote>
-<p>_x_         Dorsal</p>
-</div></blockquote>
-<p>/  /     ___x_</p>
-</li>
-</ol>
-<blockquote>
-<div><blockquote>
-<div><blockquote>
-<div><p>/  /    /         Anterior pt for both centerline and for defining APDV axes</p>
-</div></blockquote>
-<p>/  /____/        x</p>
-</div></blockquote>
-<div class="line-block">
-<div class="line">x P for APDV    |
-________________/</div>
-</div>
-<p>(ventral here, unlabeled)</p>
-</div></blockquote>
-</div></blockquote>
-<p>The default behavior is to use iLastik training if found, unless
-opts.use_iLastik is set to false. If use_iLastik is false or no iLastik
-output is found, the default is to have the user click on the points.
-If opts.autoAP == true, then we automatically find A and P positions by
-simply point matching from line intersections onto the mesh.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>opts</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – <ul class="simple">
-<li><p>use_iLastik : default=true if training h5s are present on disk</p></li>
-<li><p>timePoints</p></li>
-<li><p>dorsal_thres : float between 0 and 1</p></li>
-<li><p>anteriorChannel : int</p></li>
-<li><p>posteriorChannel</p></li>
-<li><p>dorsalChannel</p></li>
-<li><p>overwrite : bool</p></li>
-<li><p>apdvoutdir : string</p></li>
-<li><p>meshDir : string</p></li>
-<li><p>preview_com : bool</p></li>
-<li><p>check_slices : bool</p></li>
-<li><p>axorder : length 3 int array</p></li>
-<li><dl class="simple">
-<dt>smwindow<span class="classifier">float or int (optional, default=30)</span></dt><dd><p>number of timepoints over which we smooth</p>
-</dd>
-</dl>
-</li>
-<li><p>preview : bool (optional, default=false)</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>apdv_coms_from_training.h5 (rawapdvname, tubi.fileName.apdv)</dt><dd><p>Raw centers of mass for A, P, and D in subsampled pixels, in
-probability data space coordinate system
-Saved to fullfile(meshDir, ‘centerline/apdv_coms_from_training.h5’)</p>
-</dd>
-<dt>tubi.fileName.dcom</dt><dd><p>txt file with dorsal COM for APDV definition</p>
-</dd>
-</dl>
-<p>rawapdvmatname=fullfile(tubi.dir.cntrline, ‘apdv_coms_from_training.mat’)</p>
-<p>NPMitchell 2020</p>
 </dd></dl>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.computeAPDVCoords">
@@ -1420,6 +1334,96 @@ the first two axis are swapped within com_region().</p>
 <p>Todo: back-save acom_for_rot and pcom_for_rot for datasets already
 processed, inferred from rot and trans</p>
 <p>Note that axisOrder is applying upon invoking getCurrentData()</p>
+</dd></dl>
+<dl class="mat function">
+<dt class="sig sig-object mat" id="@TubULAR.computeAPDpoints">
+<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">computeAPDpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">opts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.computeAPDpoints" title="Permalink to this definition">#</a></dt>
+<dd><p>[apts_sm, ppts_sm, dpt] = COMPUTEAPDPOINTS(opts)
+Compute the anterior, posterior, and dorsal points either from:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>Clicking on the points on the mesh from t=t0</p></li>
+<li><p>moments of inertia of the mesh surface, identifying the endpoints
+near the long axis of the object at t=t0. (autoAP = true)</p></li>
+<li><p>iLastik training for CENTERLINE computation.  (use_iLastik=true)
+Note that these are allowed to be different than the
+APD points for ALIGNMENT computation.
+For example, the posterior point
+might be a point which does NOT form an AP axis  with the
+anteriormost point, as in the illustration of the midgut below:</p>
+<blockquote>
+<div><blockquote>
+<div><p>Posterior pt for centerline</p>
+</div></blockquote>
+<p>_x_         Dorsal pt</p>
+</div></blockquote>
+<p>/  /     ___x_</p>
+</li>
+</ol>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>/  /    /      </p>
+</div></blockquote>
+<p>/  /____/          Anterior pt for both centerline and for defining APDV axes</p>
+</div></blockquote>
+<div class="line-block">
+<div class="line">x P for APDV    | x
+________________/</div>
+</div>
+<p>(ventral here, unlabeled)</p>
+</div></blockquote>
+</div></blockquote>
+<p>The default behavior is to use iLastik training if found, unless
+opts.use_iLastik is set to false. If use_iLastik is false or no iLastik
+output is found, the default is to have the user click on the points.
+If opts.autoAP == true, then we automatically find A and P positions by
+simply point matching from line intersections onto the mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>opts</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – <ul class="simple">
+<li><p>use_iLastik : default=true if training h5s are present on disk</p></li>
+<li><p>timePoints : timepoints for which to extract APD points</p></li>
+<li><p>dorsal_thres : float between 0 and 1, threshold for COM extraction</p></li>
+<li><dl class="simple">
+<dt>anteriorChannel<span class="classifier">int, which channel of training to use if training</span></dt><dd><p>is used for extracting COM from probability cloud</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>posteriorChannel<span class="classifier">int, which channel of training to use if training</span></dt><dd><p>is used for extracting COM from probability cloud</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>dorsalChannel<span class="classifier">int, which channel of training to use if training</span></dt><dd><p>is used for extracting COM from probability cloud</p>
+</dd>
+</dl>
+</li>
+<li><p>overwrite : bool, overwrite previous results on disk</p></li>
+<li><p>preview_com : bool, inspect the centers of mass extraction</p></li>
+<li><p>axorder : length 3 int array, permutation of axes if needed</p></li>
+<li><dl class="simple">
+<dt>smwindow<span class="classifier">float or int (optional, default=30)</span></dt><dd><p>number of timepoints over which we smooth</p>
+</dd>
+</dl>
+</li>
+<li><p>preview : bool (optional, default=false)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>apdv_pts_for_centerline.h5 (rawapdvname, tubi.fileName.apdv)</dt><dd><p>Raw points (centers of mass if training-based) for A, P, and D in
+subsampled pixels, in probability data space coordinate system. (note
+this is downsampled by ssfactor)
+Saved to fullfile(meshDir, ‘centerline/apdv_pts_for_centerline.h5’)</p>
+</dd>
+<dt>tubi.fileName.dpt</dt><dd><p>txt file with dorsal COM for APDV definition</p>
+</dd>
+</dl>
+<p>rawapdvmatname=fullfile(tubi.dir.cntrline, ‘apdv_pts_for_centerline.mat’)</p>
+<p>NPMitchell 2020</p>
 </dd></dl>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.computeLocalSurfacePatch">
@@ -2424,11 +2428,27 @@ choose subset of the QS experiment timePoints</p>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.measureMetricStrainRate">
 <span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">measureMetricStrainRate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.measureMetricStrainRate" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>NPMitchell 2020</p>
+<dd><p>Advect the current mesh by the current raw velocities and measure
+differences between metric of advected (future) mesh and current mesh
+(reference). This gives a measurement of the strain rate tensor with
+units related to the pullback space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tubi</strong> – </p></li>
+<li><p><strong>options</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>&lt;none&gt;</em></p></li>
+<li><p><em>Saves to disk</em></p></li>
+<li><p><em>————-</em></p></li>
+</ul>
+</p>
 </dd>
 </dl>
+<p>NPMitchell 2020</p>
 </dd></dl>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.measurePIV2d">
@@ -2597,40 +2617,6 @@ fieldfaces : Nx1 int: face indices into spcutMesh where v defined” ;</p>
 <p>NPMitchell 2020-2021</p>
 </dd></dl>
 <dl class="mat function">
-<dt class="sig sig-object mat" id="@TubULAR.measurePathlineFeatureIDs">
-<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">measurePathlineFeatureIDs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.measurePathlineFeatureIDs" title="Permalink to this definition">#</a></dt>
-<dd><p>Interactively identify one longitudinal (zeta) position per feature for
-Lagrangian pathlines using field measurements along Lagrangian pathlines.</p>
-<p>One can use, for example, radius of the pathlines on the mesh from the
-centerline, or the normal velocity, or dz – the ratio of projected
-(embedding space) proper distance of a unit vector along longitudinal
-mesh direction to the pullback distance along the longitudinal direction,
-or dp – similar for circumferential direction, divv – the divergence of
-the velocity field, etc. Uses two fields to identify the feature
-positions along the longitudinal dimension.</p>
-<p>todo: generalize beyond vP pathline array</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>QS</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">QuapSlap</span> <span class="pre">class</span> <span class="pre">object</span> <span class="pre">instance</span></code></span>) – </p></li>
-<li><p><strong>pathlineType</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">str</span> <span class="pre">specifier</span> <span class="pre">('vertices',</span> <span class="pre">'piv',</span> <span class="pre">'faces')</span></code></span>) – whether pathlines in question thread through mesh vertices, piv
-evaluation coordinates, or face barycenters at t=t0Pathlines</p></li>
-<li><p><strong>options</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">optional</span> <span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – overwrite : bool
-field1 : str specifier (‘radius’, ‘dz’, ‘dp’, ‘divv’, ‘veln’)
-field2 : str specifier (‘radius’, ‘dz’, ‘dp’, ‘divv’, ‘veln’)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>featureIDs</strong> (<em>#features x 1 int array</em>) – longitudinal pullback coordinate for features, as an index into the
-pullback pathlines (which are grid-like).</p></li>
-<li><p><em>NPMitchell 2020</em></p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.measurePathlineMetric">
 <span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">measurePathlineMetric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.measurePathlineMetric" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
@@ -2704,7 +2690,7 @@ median_filter_strainRates : bool</p></li>
 </dd></dl>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.measurePathlineStrainRate">
-<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">measurePathlineStrainRate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.measurePathlineStrainRate" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">measurePathlineStrainRate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.measurePathlineStrainRate" title="Permalink to this definition">#</a></dt>
 <dd><blockquote>
 <div><p>Query the metric strain rate along lagrangian pathlines.
 Plot results as kymographs.</p>
@@ -2712,7 +2698,7 @@ Plot results as kymographs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>QS</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">QuapSlap</span> <span class="pre">class</span> <span class="pre">instance</span></code></span>) – </p></li>
+<li><p><strong>tubi</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">TubULAR</span> <span class="pre">class</span> <span class="pre">instance</span></code></span>) – </p></li>
 <li><p><strong>options</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – plot_kymographs : bool
 plot_kymographs_cumsum : bool
 plot_gdot_correlations : bool
@@ -3208,7 +3194,7 @@ plot_lobe_strain        : bool</p></li>
 </dd></dl>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.plotPathlineStrainRate">
-<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">plotPathlineStrainRate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.plotPathlineStrainRate" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">plotPathlineStrainRate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.plotPathlineStrainRate" title="Permalink to this definition">#</a></dt>
 <dd><blockquote>
 <div><p>Plot the strain rate along pathlines as kymographs and
 correlation plots. These are computed via finite differencing of
@@ -3219,7 +3205,7 @@ metrics g_{ij} of those meshes are measured and differenced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>QS</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">QuapSlap</span> <span class="pre">class</span> <span class="pre">instance</span></code></span>) – </p></li>
+<li><p><strong>tubi</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">QuapSlap</span> <span class="pre">class</span> <span class="pre">instance</span></code></span>) – </p></li>
 <li><p><strong>options</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – plot_kymographs         : bool
 plot_kymographs_cumsum  : bool
 plot_correlations       : bool
@@ -3570,7 +3556,7 @@ nTimePoints</p></li>
 </dd></dl>
 <dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.plotStrainRateTimePoint">
-<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">plotStrainRateTimePoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">tp</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.plotStrainRateTimePoint" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">plotStrainRateTimePoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">tp</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.plotStrainRateTimePoint" title="Permalink to this definition">#</a></dt>
 <dd><blockquote>
 <div><p>Plot the traceful and traceless components of the strain rate tensor
 defined on each face, using vertex-based results loaded from disk.
@@ -3580,9 +3566,39 @@ spectral filtering) than the face-based results on disk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>QS</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">QuapSlap</span> <span class="pre">class</span> <span class="pre">instance</span></code></span>) – </p></li>
-<li><p><strong>tp</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">int</span></code></span>) – timepoint in units of (1/QS.timeInterval) * QS.timeUnits</p></li>
-<li><p><strong>options</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – </p></li>
+<li><p><strong>tubi</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">Additional</span> <span class="pre">optional</span> <span class="pre">fields</span> <span class="pre">of</span> <span class="pre">options</span> <span class="pre">that</span> <span class="pre">are</span> <span class="pre">already</span> <span class="pre">specified</span> <span class="pre">by</span></code></span>) – </p></li>
+<li><p><strong>tp</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">int</span></code></span>) – timepoint in units of (1/tubi.timeInterval) * tubi.timeUnits</p></li>
+<li><p><strong>options</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">struct</span> <span class="pre">with</span> <span class="pre">fields</span></code></span>) – <dl class="simple">
+<dt>overwrite<span class="classifier">bool</span></dt><dd><p>Overwrite existing results on disk</p>
+</dd>
+<dt>mesh<span class="classifier">struct with fields f,v</span></dt><dd><p>current Mesh, allowed to be supplied to allow speedup (prevents
+delay from loading cutMesh from disk)</p>
+</dd>
+<dt>cutMesh<span class="classifier">struct with fields f,v, pathPairs, nU, nV</span></dt><dd><p>current cutMesh, allowed to be supplied to allow speedup (prevents
+delay from loading cutMesh from disk)</p>
+</dd>
+<dt>clim_trace<span class="classifier">2x1 numeric</span></dt><dd><p>color limits for the colormap/bar of the isotropic strain rate</p>
+</dd>
+<dt>clim_deviatoric<span class="classifier">2x1 numeric</span></dt><dd><p>color limits for the colormap/bar of the deviatoric strain rate</p>
+</dd>
+<dt>samplingResolution<span class="classifier">’1x’ or ‘resampled’</span></dt><dd><p>currently only 1x resolution is allowed</p>
+</dd>
+<dt>averagingStyle<span class="classifier">’Lagrangian’ or ‘none’</span></dt><dd><p>currently we have restricted the velocity averaging style in
+tubular to either be Lagrangian averaging or none</p>
+</dd>
+<dt>debug<span class="classifier">bool</span></dt><dd><p>if true, show intermediate results</p>
+</dd>
+<dt>plot_comparison<span class="classifier">bool</span></dt><dd><p>plot a comparison between trace of measured strain rate and
+measured DEC divergence minus H*normal velocity, where H is the
+mean curvature.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>tubi</strong> – </p></li>
+<li><p><strong>are</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">metadata</span> <span class="pre">but</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">overwritten</span> <span class="pre">by</span> <span class="pre">including</span> <span class="pre">them</span> <span class="pre">in</span> <span class="pre">options</span></code></span>) – lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;</p></li>
 </ul>
 </dd>
 </dl>
