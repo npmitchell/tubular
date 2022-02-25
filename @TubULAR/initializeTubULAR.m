@@ -66,8 +66,17 @@ end
 dynamic = length(tubi.xp.fileMeta.timePoints) > 1 ;
 tubi.dynamic = dynamic ; 
 
-tubi.normalShift = opts.normalShift ;
-tubi.a_fixed = opts.a_fixed ;
+if isfield(opts, 'normalShift')
+    tubi.normalShift = opts.normalShift ;
+end
+if isfield(opts, 'a_fixed')
+    tubi.a_fixed = opts.a_fixed ;
+end
+if isfield(opts, 'imSize')
+    tubi.imSize = opts.imSize ;
+else
+    tubi.imSize = [tubi.a_fixed * 1000, 1000] ;
+end
 if isfield(opts, 'adjustlow')
     tubi.data.adjustlow = opts.adjustlow ;
 end
@@ -104,7 +113,7 @@ tubi.plotting.markers = {'o', 's', '^', 'v', '*', '>', '<'} ;
 % Directories of the tubi object
 % Meshes and measurements before gridding into pullback coords
 tubi.dir.data = xp.fileMeta.dataDir ;
-tubi.fileName.apdv_options = fullfile(tubi.dir.data, 'alignAPDV_Opts.mat') ;
+tubi.fileName.apdvOptions = fullfile(tubi.dir.data, 'alignAPDV_Options.mat') ;
 tubi.dir.mesh = meshDir ;
 tubi.dir.alignedMesh = fullfile(meshDir, 'alignedMesh') ;
 tubi.dir.cntrline = fullfile(meshDir, 'centerline') ;
@@ -210,12 +219,7 @@ if dynamic
     tubi.dir.gstrain = fullfile(uvDir, 'metricStrain') ;
     tubi.dir.gstrainRate = fullfile(tubi.dir.gstrain, 'rateMetric') ;
     tubi.dir.gstrainRateIm = fullfile(tubi.dir.gstrainRate, 'images') ;
-    tubi.dir.gstrainMesh = fullfile(tubi.dir.gstrain, 'meshMetric') ;
-    tubi.dir.gstrainMeshIm = fullfile(tubi.dir.gstrainMesh, 'images') ;
-    tubi.fileBase.gstrainMesh = 'gstrainMesh_%06d.mat' ;
     tubi.fileBase.gstrainRate = 'gstrainRate_%06d.mat' ;
-    tubi.fullFileBase.gstrainMesh = fullfile(tubi.dir.gstrainMesh, ...
-        tubi.fileBase.gstrainMesh) ; 
     tubi.fullFileBase.gstrainRate = fullfile(tubi.dir.gstrainRate, ...
         tubi.fileBase.gstrainRate) ; 
 
@@ -286,8 +290,8 @@ tubi.fullFileBase.apdProb = fullfile(tubi.dir.data, tubi.fileBase.apdProb) ;
 tubi.fullFileBase.apCenterlineProb = fullfile(tubi.dir.data, tubi.fileBase.apCenterlineProb) ;
 tubi.fullFileBase.prob = fullfile(tubi.dir.data, tubi.fileBase.prob) ;
 tubi.fileName.apdv = ...
-    fullfile(clineDir, 'apdv_coms_from_training.h5') ;
-tubi.fileName.dcom = fullfile(meshDir, 'dcom_for_rot.txt') ;
+    fullfile(clineDir, 'apdv_pts_for_centerline.h5') ;
+tubi.fileName.dpt = fullfile(meshDir, 'dpt_for_rot.txt') ;
 tubi.fileName.startendPt = fullfile(clineDir, 'startendpt.h5') ;
 tubi.fileName.cleanCntrlines = ...
     fullfile(clineDir, 'centerlines_anomalies_fixed.mat') ;

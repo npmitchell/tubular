@@ -1,11 +1,11 @@
-function measurePathlineStrainRate(QS, options)
-% measurePathlineStrainRate(QS, options)
+function measurePathlineStrainRate(tubi, options)
+% measurePathlineStrainRate(tubi, options)
 %   Query the metric strain rate along lagrangian pathlines.
 %   Plot results as kymographs.
 %   
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields
 %   plot_kymographs : bool
 %   plot_kymographs_cumsum : bool
@@ -20,15 +20,15 @@ overwriteImages = false ;
 plot_comparison = false ;
 
 %% Parameter options
-lambda_mesh = QS.smoothing.lambda_mesh ;
-lambda = QS.smoothing.lambda ; 
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+lambda = tubi.smoothing.lambda ; 
 debug = false ;
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
 averagingStyle = "Lagrangian" ;
 % Load time offset for first fold, t0 -- default pathline t0
-QS.t0set() ;
-t0 = QS.t0 ;
+tubi.t0set() ;
+t0 = tubi.t0 ;
 % By default, t0Pathline = t0 (see below)
 
 %% Unpack options & assign defaults
@@ -73,50 +73,46 @@ end
 if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
     doubleResolution = false ;
     sresStr = '' ;
-elseif strcmp(samplingResolution, '2x') || strcmp(samplingResolution, 'double')
-    doubleResolution = true ;
-    sresStr = 'doubleRes_' ;
-else 
-    error("Could not parse samplingResolution: set to '1x' or '2x'")
+else
+    error("Could not parse samplingResolution: set to '1x' ")
 end
 
-%% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+%% Unpack tubi
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 if strcmp(averagingStyle, 'Lagrangian')
-    sKDir = QS.dir.strainRate.smoothing;
+    sKDir = tubi.dir.strainRate.smoothing;
 else
     error('Have not implemented strain rate measurements based on simple averaging')
 end
-folds = load(QS.fileName.fold) ;
-fons = folds.fold_onset - QS.xp.fileMeta.timePoints(1) ;
+fons = t0 - tubi.xp.fileMeta.timePoints(1) ;
 
 %% Colormap
 bwr256 = bluewhitered(256) ;
 
-%% load from QS
+%% load from tubi
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 % We relate the normal velocities to the divergence / 2 * H.
-tps = QS.xp.fileMeta.timePoints(1:end-1) - t0;
+tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0;
 
 % Unit definitions for axis labels
-unitstr = [ '[1/' QS.timeUnits ']' ];
-vunitstr = [ '[' QS.spaceUnits '/' QS.timeUnits ']' ];
+unitstr = [ '[1/' tubi.timeUnits ']' ];
+vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
     
 % DONE WITH PREPARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load pathlines to build Kymographs along pathlines
-QS.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
-vP = QS.pathlines.vertices ;
+tubi.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
+vP = tubi.pathlines.vertices ;
 
 % Output directory is inside StrainRate dir
 sKPDir = fullfile(sKDir, sprintf('pathline_%04dt0', t0Pathline)) ;
@@ -128,16 +124,16 @@ end
 mdatdir = fullfile(sKDir, 'measurements') ;
 
 % Load Lx, Ly by loadingPIV. 
-QS.loadPIV()
-Xpiv = QS.piv.raw.x ;
-Ypiv = QS.piv.raw.y ;
+tubi.loadPIV()
+Xpiv = tubi.piv.raw.x ;
+Ypiv = tubi.piv.raw.y ;
 
 % Also need velocities to advect mesh
-% QS.loadVelocityAverage('vv')
-% vPIV = QS.velocityAverage.vv ;
+% tubi.loadVelocityAverage('vv')
+% vPIV = tubi.velocityAverage.vv ;
 
 % Discern if piv measurements are done on a double covering or the meshes
-if strcmp(QS.piv.imCoords(end), 'e')
+if strcmp(tubi.piv.imCoords(end), 'e')
     doubleCovered = true ;
 end
 
@@ -145,11 +141,11 @@ end
 strain = zeros(size(vP.vX, 2) * size(vP.vX, 3), 4) ; 
 strain(:, 2) = 1e4 ;
 strain(:, 3) = 1e4 ;
-for tp = QS.xp.fileMeta.timePoints(1:end-1)
+for tp = tubi.xp.fileMeta.timePoints(1:end-1)
     close all
     disp(['t = ' num2str(tp)])
-    tidx = QS.xp.tIdx(tp) ;
-    QS.setTime(tp) ;
+    tidx = tubi.xp.tIdx(tp) ;
+    tubi.setTime(tp) ;
     
     % Check for timepoint measurement on disk, on mesh vertices 
     estrainFn = fullfile(outdir, sprintf('strainRate_%06d.mat', tp)) ;
@@ -160,12 +156,12 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         try
             load(srfnMesh, 'strainrate_vtx', 'gg_vtx', 'dx_vtx', 'dy_vtx') 
         catch
-            msg = 'Run QS.measurePathlineStrainRate() ' ;
+            msg = 'Run tubi.measurePathlineStrainRate() ' ;
             msg = [msg 'with lambdas=(mesh,lambda,err)=('] ;
             msg = [msg num2str(lambda_mesh) ','] ;
             msg = [msg num2str(lambda) ','] ;
             msg = [msg ' before running ', ...
-                    'QS.measurePathlineStrainRate()'] ;
+                    'tubi.measurePathlineStrainRate()'] ;
                 
             load(srfnMesh, 'strainrate_vtx', 'gg_vtx', 'dx_vtx', 'dy_vtx') 
             error(msg)
@@ -178,7 +174,7 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         Ly = vP.Ly(tidx) ;
         options.Lx = Lx ;
         options.Ly = Ly ;
-        XY = QS.doubleToSingleCover(XY, Ly) ;
+        XY = tubi.doubleToSingleCover(XY, Ly) ;
         
         %% Recall strain rate at gridded vertices
         % strainrate from vertices to pathlines
@@ -190,11 +186,11 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         exy(nU*(nV-1)+1:nU*nV) = exy(1:nU) ;
         eyx(nU*(nV-1)+1:nU*nV) = eyx(1:nU) ;
         eyy(nU*(nV-1)+1:nU*nV) = eyy(1:nU) ;
-        ezz = QS.interpolateOntoPullbackXY(XY, exx, options) ;
-        ezp = QS.interpolateOntoPullbackXY(XY, exy, options) ;
-        epz = QS.interpolateOntoPullbackXY(XY, eyx, options) ;
+        ezz = tubi.interpolateOntoPullbackXY(XY, exx, options) ;
+        ezp = tubi.interpolateOntoPullbackXY(XY, exy, options) ;
+        epz = tubi.interpolateOntoPullbackXY(XY, eyx, options) ;
         assert(all(ezp == epz))
-        epp = QS.interpolateOntoPullbackXY(XY, eyy, options) ;
+        epp = tubi.interpolateOntoPullbackXY(XY, eyy, options) ;
         strainrate = [ezz, ezp, epz, epp] ;
         
         % Metric from vertices to pathlines
@@ -206,10 +202,10 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         gxy(nU*(nV-1)+1:nU*nV) = gxy(1:nU) ;
         gyx(nU*(nV-1)+1:nU*nV) = gyx(1:nU) ;
         gyy(nU*(nV-1)+1:nU*nV) = gyy(1:nU) ;
-        gzz = QS.interpolateOntoPullbackXY(XY, gxx, options) ;
-        gzp = QS.interpolateOntoPullbackXY(XY, gxy, options) ;
-        gpz = QS.interpolateOntoPullbackXY(XY, gyx, options) ;
-        gpp = QS.interpolateOntoPullbackXY(XY, gyy, options) ;
+        gzz = tubi.interpolateOntoPullbackXY(XY, gxx, options) ;
+        gzp = tubi.interpolateOntoPullbackXY(XY, gxy, options) ;
+        gpz = tubi.interpolateOntoPullbackXY(XY, gyx, options) ;
+        gpp = tubi.interpolateOntoPullbackXY(XY, gyy, options) ;
         assert(all(gzp == gpz))
         gg = [gzz, gzp, gpz, gpp] ;
         
@@ -218,11 +214,11 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         dy = dy_vtx ;
         dx(nU*(nV-1)+1:nU*nV) = dx(1:nU) ;
         dy(nU*(nV-1)+1:nU*nV) = dy(1:nU) ;
-        dz = QS.interpolateOntoPullbackXY(XY, dx, options) ;
-        dp = QS.interpolateOntoPullbackXY(XY, dy, options) ;
+        dz = tubi.interpolateOntoPullbackXY(XY, dx, options) ;
+        dp = tubi.interpolateOntoPullbackXY(XY, dy, options) ;
         
         %% Save image of dz and dp
-        % dzdpDir = fullfile(sprintf(QS.dir.strainRate.pathline.root, ...
+        % dzdpDir = fullfile(sprintf(tubi.dir.strainRate.pathline.root, ...
         %         lambda, lambda_mesh), 'dzdp') ;
         % if plot_dzdp && (~exist(
         %     % Check the ratio of lengths compared to pullback lengths
@@ -268,7 +264,7 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         %% Average strainRATE along pathline DV hoops
         % Average along DV -- ignore last redudant row at nV
         [dev_ap, theta_ap] = ...
-            QS.dvAverageNematic(dev(:, 1:nV-1), theta(:, 1:nV-1)) ;
+            tubi.dvAverageNematic(dev(:, 1:nV-1), theta(:, 1:nV-1)) ;
         tre_ap = mean(tre(:, 1:nV-1), 2) ;
         
         % quarter bounds
@@ -283,22 +279,22 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         
         % left quarter
         [dev_l, theta_l] = ...
-            QS.dvAverageNematic(dev(:, left), theta(:, left)) ;
+            tubi.dvAverageNematic(dev(:, left), theta(:, left)) ;
         tre_l = mean(tre(:, left), 2) ;
         
         % right quarter
         [dev_r, theta_r] = ...
-            QS.dvAverageNematic(dev(:, right), theta(:, right)) ;
+            tubi.dvAverageNematic(dev(:, right), theta(:, right)) ;
         tre_r = mean(tre(:, right), 2) ;
         
         % dorsal quarter
         [dev_d, theta_d] = ...
-            QS.dvAverageNematic(dev(:, dorsal), theta(:, dorsal)) ;
+            tubi.dvAverageNematic(dev(:, dorsal), theta(:, dorsal)) ;
         tre_d = mean(tre(:, dorsal), 2) ;
         
         % ventral quarter
         [dev_v, theta_v] = ...
-            QS.dvAverageNematic(dev(:, ventral), theta(:, ventral)) ;
+            tubi.dvAverageNematic(dev(:, ventral), theta(:, ventral)) ;
         tre_v = mean(tre(:, ventral), 2) ;
         
         %% Check result
@@ -342,7 +338,7 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
         disp('strainRate already on disk')
         % Load mesh
         % disp('Loading mesh')
-        % tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp)) ;
+        % tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
         % mesh1 = tmp.spcutMeshSmRS ;
         % clearvars tmp
         % % Normalize the zeta to fixed aspect ratio (ar=aspectratio relaxed)
@@ -358,7 +354,7 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
     plotOpts.t0Pathline = t0Pathline ;
     plotOpts.plot_comparison = plot_comparison ;
     disp('plotting pathline strain rate for this timepoint')
-    QS.plotPathlineStrainRateTimePoint(tp, plotOpts)
+    tubi.plotPathlineStrainRateTimePoint(tp, plotOpts)
 end
 disp('done with measuring pathline strain rate')
 
@@ -374,9 +370,9 @@ files_exist = exist(apKymoFn, 'file') && ...
     exist(dKymoFn, 'file') && exist(vKymoFn, 'file') ;
 if ~files_exist 
     disp('Compiling kymograph data to save to disk...')
-    for tp = QS.xp.fileMeta.timePoints(1:end-1)
+    for tp = tubi.xp.fileMeta.timePoints(1:end-1)
         close all
-        tidx = QS.xp.tIdx(tp) ;
+        tidx = tubi.xp.tIdx(tp) ;
 
         % Check for timepoint measurement on disk
         srfn = fullfile(outdir, sprintf('strainRate_%06d.mat', tp))   ;

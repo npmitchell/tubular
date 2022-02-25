@@ -1,5 +1,7 @@
 %% EXAMPLE MASTER PIPELINE FOR TIME SERIES DATA (3D + time)
 % by NPMitchell & Dillon Cislo
+% Here we segment using MATLAB built-in level sets and render tissue on
+% surfaces of a neural-tube-like stem cell culture
 
 % This is a pipeline to analyze a static tube-like surface in 3D data.
 % A tube-like surface is one that is either cylindrical in topology or
@@ -21,29 +23,26 @@ cd(fileparts(origpath))
 addpath(fileparts(origpath))
 addpath(fullfile('utility', 'addpath_recurse'))
 addpath_recurse('utility')
-addpath_recurse('/mnt/data/code/gptoolbox')
 addpath('TexturePatch')
-addpath('DEC')
-addpath(fullfile('utility','plotting'))
-addpath(fullfile('utility','plotting'))
 % go back to the data
 cd(dataDir)
 
+
 %% DEFINE NEW MASTER SETTINGS
-if ~exist('./masterSettings.mat', 'file')
+if ~exist('./masterSettings.mat', 'file') || true
     % Metadata about the experiment
-    stackResolution = [.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
-    nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
-    channelsUsed = 1 ;          % which channels are used for analysis
-    timePoints = 123:124;       % timepoints to include in the analysis
-    ssfactor = 4 ;              % subsampling factor
+    stackResolution = [0.909 0.909 2.0] ;  % resolution in spaceUnits per pixel
+    nChannels = 3 ;             % how many channels is the data (ex 2 for GFP + RFP)
+    channelsUsed = [1,2,3] ;          % which channels are used for analysis
+    timePoints = 1;             % timepoints to include in the analysis
+    ssfactor = 2 ;              % subsampling factor
     flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
     timeInterval = 1 ;          % physical interval between timepoints
     timeUnits = 'min' ;         % physical unit of time between timepoints
     spaceUnits = '$\mu$m' ;     % physical unit of time between timepoints
-    fn = 'Time_%06d_c1_stab';        % filename string pattern
+    fn = '2019_11_28_2uMSB_Tile_Scan_Stripe_Merge_crop-1';        % filename string pattern
     set_preilastikaxisorder = 'xyzc' ; % data axis order for subsampled h5 data (ilastik input)
-    swapZT = 1 ;                % whether to swap the z and t dimensions
+    swapZT = 0 ;                % whether to swap the z and t dimensions
     masterSettings = struct('stackResolution', stackResolution, ...
         'nChannels', nChannels, ...
         'channelsUsed', channelsUsed, ...
@@ -94,10 +93,7 @@ if loadMaster
     fn = masterSettings.fn ;
     set_preilastikaxisorder = masterSettings.set_preilastikaxisorder ;
     swapZT = masterSettings.swapZT ;
-    nU = masterSettings.nU ;
-    nV = masterSettings.nV ;
 end
-dir16bit = fullfile(dataDir) ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PART 1: Surface detection using ImSAnE's integral detector
@@ -106,8 +102,6 @@ dir16bit = fullfile(dataDir) ;
 % Setup a working directory for the project, where extracted surfaces,
 % metadata and debugging output will be stored.  Also specifiy the
 % directory containing the data.
-cd(dir16bit)
-dataDir = cd ;
 projectDir = dataDir ;
 % [ projectDir, ~, ~ ] = fileparts(matlab.desktop.editor.getActiveFilename); 
 cd(projectDir);
@@ -176,12 +170,12 @@ first_tp = 1 ;
 expMeta                     = struct();
 expMeta.channelsUsed        = channelsUsed ;
 expMeta.channelColor        = 1;
-expMeta.description         = 'Drosophila gut';
+expMeta.description         = 'neural-tube-like stem cell culture';
 expMeta.dynamicSurface      = 1;
 expMeta.jitterCorrection    = 0;  % 1: Correct for sample translation
 expMeta.fitTime             = fileMeta.timePoints(first_tp);
 expMeta.detectorType        = 'surfaceDetection.integralDetector';
-expMeta.fitterType          = 'surfaceFitting.meshWrapper';
+expMeta.fitterType          = 'surfaceFitting.tubularMeshWrapper';
 
 % Now set the meta data in the experiment.
 xp.setFileMeta(fileMeta);
@@ -198,7 +192,7 @@ xp.setTime(xp.fileMeta.timePoints(1)) ;
 %% SET DETECTION OPTIONS ==================================================
 % Load/define the surface detection parameters
 msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
-if exist(msls_detOpts_fn, 'file')
+if exist(msls_detOpts_fn, 'file') && false 
     load(msls_detOpts_fn, 'detectOptions')
 else
     outputfilename_ply='mesh_ms_' ;
@@ -209,17 +203,17 @@ else
     meshlabCodeDir = '/mnt/data/code/meshlab_codes/';
     mlxprogram = fullfile(meshlabCodeDir, ...
         'laplace_surface_rm_resample30k_reconstruct_LS3_1p2pc_ssfactor4.mlx') ;
-    prob_searchstr = '_stab_Probabilities.h5' ;
+    prob_searchstr = '_Probabilities.h5' ;
     preilastikaxisorder = set_preilastikaxisorder; ... % axis order in input to ilastik as h5s. To keep as saved coords use xyzc
     ilastikaxisorder= 'cxyz'; ... % axis order as output by ilastik probabilities h5
-    imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
+    imsaneaxisorder = 'cxyz'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
     
     % Name the output mesh directory --------------------------------------
     mslsDir = [fullfile(projectDir, 'msls_output') filesep];
 
     % Surface detection parameters ----------------------------------------
     detectOptions = struct( 'channel', 1, ...
-        'ssfactor', 4, ...
+        'ssfactor', ssfactor, ...
         'niter', 35,...
         'niter0', 160, ...
         'lambda1', 1, ...
@@ -245,7 +239,7 @@ else
         'run_full_dataset', projectDir,... % projectDir, ... % set to 'none' for single tp
         'radius_guess', 40, ...
         'dset_name', 'exported_data',...
-        'center_guess', '200,75,75',... % xyz of the initial guess sphere ;
+        'center_guess', '30,175,75',... % xyz of the initial guess sphere ;
         'save', true, ... % whether to save images of debugging output
         'plot_mesh3d', false, ...
         'dtype', 'h5',...
@@ -299,7 +293,7 @@ for tt = xp.fileMeta.timePoints
 end    
 disp('Open with ilastik if not already done')
 
-%% TRAIN NON-STABILIZED DATA IN ILASTIK TO IDENTIFY SURFACE ==============
+%% TRAIN DATA IN ILASTIK TO IDENTIFY SURFACE ==============
 % Open ilastik, train on h5s until probabilities and uncertainty are 
 % satisfactory for extracting a mesh. For example, here we train on the
 % membrane (channel 1) and the yolk (channel 2), so that a level set will

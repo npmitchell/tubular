@@ -91,8 +91,7 @@ buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 nU = QS.nU ;
 nV = QS.nV ;
-folds = load(QS.fileName.fold) ;
-fons = folds.fold_onset - QS.xp.fileMeta.timePoints(1) ;
+fons = t0 - QS.xp.fileMeta.timePoints(1) ;
 
 %% Prepare directories for images
 dirs2make = { srlambdaDir, ...
@@ -252,15 +251,6 @@ for qq = 1:length(outdirs)
         ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
         xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
 
-        % Plot fold identifications
-        hold on;
-        fons1 = max(1, fons(1)) ;
-        fons2 = max(1, fons(2)) ;
-        fons3 = max(1, fons(3)) ;
-        plot(folds.folds(fons1:end-1, 1) / nU, tps(fons1:end))
-        plot(folds.folds(fons2:end-1, 2) / nU, tps(fons2:end))
-        plot(folds.folds(fons3:end-1, 3) / nU, tps(fons3:end))
-
         tidx0 = QS.xp.tIdx(t0) ;
         cb = colorbar() ;
         ylabel(cb, label, 'Interpreter', 'Latex')  
@@ -269,19 +259,6 @@ for qq = 1:length(outdirs)
         fn = fullfile(odir, [name '.png']) ;
         export_fig(fn, '-png', '-nocrop', '-r200')   
 
-        % Zoom in on small values
-        caxis([-clim_zoom, clim_zoom])
-        colormap(bbr256)
-        fn = fullfile(odir, [name '_zoom.png']) ;
-        disp(['saving ', fn])
-        export_fig(fn, '-png', '-nocrop', '-r200')   
-        % Zoom in on early times
-        ylim([min(tps), max(fons) + 10])
-        caxis([-clim_zoom, clim_zoom])
-        colormap(bbr256)
-        fn = fullfile(odir, [name '_zoom_early.png']) ;
-        disp(['saving ', fn])
-        export_fig(fn, '-png', '-nocrop', '-r200')   
     end
     
 
@@ -293,75 +270,52 @@ for qq = 1:length(outdirs)
     
     % Check if images already exist on disk
     fn = fullfile(odir, [ name '.png']) ;
-    fn_zoom = fullfile(odir, [name '_zoom_early.png']) ;
-    zoomstrs = {'', '_zoom'} ;
     
     if ~exist(fn, 'file') || ~exist(fn_zoom, 'file') || overwrite
-        for pp = 1:2
-            zoomstr = zoomstrs{pp} ;        
-            if pp == 1
-                clim = clim_deviatoric ;
-            else
-                clim = clim_deviatoric * 0.5 ;
-            end
-            
-            % Unpack what to plot (averaged kymographs, vary averaging region)
-            devK = devsK{qq} ;
-            thetaK = thetasK{qq} ;
+        
+        clim = clim_deviatoric ;
 
-            % Map intensity from dev and color from the theta
-            indx = max(1, round(mod(2*thetaK(:), 2*pi)*size(pm256, 1)/(2 * pi))) ;
-            colors = pm256(indx, :) ;
-            devKclipped = min(devK / clim, 1) ;
-            colorsM = devKclipped(:) .* colors ;
-            colorsM = reshape(colorsM, [size(devK, 1), size(devK, 2), 3]) ;
+        % Unpack what to plot (averaged kymographs, vary averaging region)
+        devK = devsK{qq} ;
+        thetaK = thetasK{qq} ;
 
-            % Plot the kymograph
-            close all
-            set(gcf, 'visible', 'off')
-            imagesc((1:nU)/nU, tps, colorsM)
-            caxis([-clim, clim])
-            % Add folds to plot
-            hold on;
-            fons1 = max(1, fons(1)) ;
-            fons2 = max(1, fons(2)) ;
-            fons3 = max(1, fons(3)) ;
-            plot(folds.folds(fons1:end-1, 1) / nU, tps(fons1:end))
-            plot(folds.folds(fons2:end-1, 2) / nU, tps(fons2:end))
-            plot(folds.folds(fons3:end-1, 3) / nU, tps(fons3:end))
+        % Map intensity from dev and color from the theta
+        indx = max(1, round(mod(2*thetaK(:), 2*pi)*size(pm256, 1)/(2 * pi))) ;
+        colors = pm256(indx, :) ;
+        devKclipped = min(devK / clim, 1) ;
+        colorsM = devKclipped(:) .* colors ;
+        colorsM = reshape(colorsM, [size(devK, 1), size(devK, 2), 3]) ;
 
-            % Colorbar and phasewheel
-            colormap(gca, phasemap)
-            phasebar('colormap', phasemap, ...
-                'location', [0.82, 0.7, 0.1, 0.135], 'style', 'nematic') ;
-            ax = gca ;
-            cb = colorbar('location', 'eastOutside') ;
-            drawnow
-            axpos = get(ax, 'position') ;
-            cbpos = get(cb, 'position') ;
-            set(cb, 'position', [cbpos(1), cbpos(2), cbpos(3), cbpos(4)*0.6])
-            set(ax, 'position', axpos) 
-            hold on;
-            caxis([0, clim])
-            colormap(gca, gray)
+        % Plot the kymograph
+        close all
+        set(gcf, 'visible', 'off')
+        imagesc((1:nU)/nU, tps, colorsM)
+        caxis([-clim, clim])
 
-            % title and save
-            title([titles{2}, titleadd{qq}], 'Interpreter', 'Latex')
-            ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
-            xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
-            ylabel(cb, label, 'Interpreter', 'Latex')  
-            fn = fullfile(odir, [ name zoomstr '.png']) ;
-            disp(['saving ', fn])
-            export_fig(fn, '-png', '-nocrop', '-r200')   
+        % Colorbar and phasewheel
+        colormap(gca, phasemap)
+        phasebar('colormap', phasemap, ...
+            'location', [0.82, 0.7, 0.1, 0.135], 'style', 'nematic') ;
+        ax = gca ;
+        cb = colorbar('location', 'eastOutside') ;
+        drawnow
+        axpos = get(ax, 'position') ;
+        cbpos = get(cb, 'position') ;
+        set(cb, 'position', [cbpos(1), cbpos(2), cbpos(3), cbpos(4)*0.6])
+        set(ax, 'position', axpos) 
+        hold on;
+        caxis([0, clim])
+        colormap(gca, gray)
 
-            if pp == 2
-                % Zoom in on early times
-                ylim([min(tps), max(fons) + 10])
-                fn = fullfile(odir, [name zoomstr '_early.png']) ;
-                disp(['saving ', fn])
-                export_fig(fn, '-png', '-nocrop', '-r200')   
-            end
-        end
+        % title and save
+        title([titles{2}, titleadd{qq}], 'Interpreter', 'Latex')
+        ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+        xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
+        ylabel(cb, label, 'Interpreter', 'Latex')  
+        fn = fullfile(odir, [ name '.png']) ;
+        disp(['saving ', fn])
+        export_fig(fn, '-png', '-nocrop', '-r200')
+        
     end
 end
 disp('done with plotting strain rate')

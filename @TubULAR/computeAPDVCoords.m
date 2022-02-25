@@ -132,9 +132,9 @@ end
 %% Prepare filenames
 rotname = tubi.fileName.rot ;
 transname = tubi.fileName.trans ;
-dcomname = fullfile(tubi.dir.mesh, 'dcom_for_rot.txt') ;  % tubi.fileName.dcom
-acomname = fullfile(tubi.dir.mesh, 'acom_for_rot.txt') ;
-pcomname = fullfile(tubi.dir.mesh, 'pcom_for_rot.txt') ;
+dptname = tubi.fileName.dpt ;  
+aptname = fullfile(tubi.dir.mesh, 'apt_for_rot.txt') ;
+pptname = fullfile(tubi.dir.mesh, 'ppt_for_rot.txt') ;
 
 % Check if rotation and translation exist on disk
 no_rot_on_disk = ~exist(rotname, 'file') ;
@@ -216,17 +216,17 @@ if redo_rot_calc || overwrite
         options.check_slices = check_slices ; 
         options.color = 'green' ;
 
-        apcomsOK = exist(acomname, 'file') && exist(pcomname, 'file') ;
+        apcomsOK = exist(aptname, 'file') && exist(pptname, 'file') ;
 
         % Load dcom if already on disk
-        if exist(dcomname, 'file') && ~overwrite && apcomsOK
+        if exist(dptname, 'file') && ~overwrite && apcomsOK
             disp('Loading dorsal COM from disk')
-            dcom = dlmread(dcomname) ;
-            startpt = dlmread(acomname) ;
+            dcom = dlmread(dptname) ;
+            startpt = dlmread(aptname) ;
             spt = startpt * ssfactor;
-            pcom = dlmread(pcomname) ;
+            pcom = dlmread(pptname) ;
         else
-            if exist(dcomname, 'file')
+            if exist(dptname, 'file')
                 disp('Overwriting existing dorsal COM on disk')
             else
                 disp('Computing dorsal COM for the first time')
@@ -283,11 +283,13 @@ if redo_rot_calc || overwrite
                 ylabel('y')
                 zlabel('z')
             end
-            sgtitle('Dorsal COM for APDV coordinates')
+            legend({'surface', 'dorsal pt for axess definition'}, ...
+                'Location', 'northwest')
+            sgtitle('Dorsal point for APDV coordinates')
             saveas(gcf, [tubi.fileName.dcom(1:end-3) 'png'])
 
             % SAVE DCOM
-            dlmwrite(dcomname, dcom) ;
+            dlmwrite(dptname, dcom) ;
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Compute and save anterior and posterior points to use as definition of 
@@ -373,6 +375,9 @@ if redo_rot_calc || overwrite
                 plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')
                 plot3(pcom(1) * ssfactor, pcom(2) * ssfactor, pcom(3) * ssfactor, 'o')
                 plot3(dcom(1) * ssfactor, dcom(2) * ssfactor, dcom(3) * ssfactor, 'o')
+                plot3([acom(1), pcom(1)] * ssfactor, ...
+                    [acom(2), pcom(2)] * ssfactor, ...
+                    [acom(3), pcom(3)] * ssfactor, 'k-')
                 axis equal
                 if ii == 1
                     view(0, 90)
@@ -382,8 +387,10 @@ if redo_rot_calc || overwrite
                     view(180, 0)
                 end
             end
+            legend({'surface', 'anterior pt', 'posterior pt', 'dorsal pt'}, ...
+                'Location', 'northwest')
             sgtitle('APD COMs for APDV coordinates')
-            saveas(gcf, fullfile(tubi.dir.mesh, 'apd_coms.png'))
+            saveas(gcf, fullfile(tubi.dir.mesh, 'apd_pts_for_APDVcoords.png'))
 
             %% Define "start point" as anterior COM projected onto mesh
             if strcmpi(anteriorMethod, 'insideornearestvertex')
@@ -431,8 +438,8 @@ if redo_rot_calc || overwrite
             end
 
             % Save to disk
-            dlmwrite(acomname, acom) ;
-            dlmwrite(pcomname, pcom) ;
+            dlmwrite(aptname, acom) ;
+            dlmwrite(pptname, pcom) ;
         end
     else
         disp('Defining APDV based on datavolume axes, without major alignment/rotation of the object')
@@ -486,6 +493,9 @@ if redo_rot_calc || overwrite
             plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')
             plot3(pcom(1) * ssfactor, pcom(2) * ssfactor, pcom(3) * ssfactor, 'o')
             plot3(dcom(1) * ssfactor, dcom(2) * ssfactor, dcom(3) * ssfactor, 'o')
+            plot3([acom(1), pcom(1)] * ssfactor, ...
+                    [acom(2), pcom(2)] * ssfactor, ...
+                    [acom(3), pcom(3)] * ssfactor, 'k-')
             axis equal
             if ii == 1
                 view(0, 90)
@@ -495,16 +505,18 @@ if redo_rot_calc || overwrite
                 view(180, 0)
             end
         end
-        sgtitle('APD COMs for APDV coordinates')
-        saveas(gcf, fullfile(tubi.dir.mesh, 'apd_coms.png'))
+        legend({'surface', 'anterior pt', 'posterior pt', 'dorsal pt', 'ap axis'}, ...
+                'Location', 'northwest')
+        sgtitle('APD pts for APDV coordinates')
+        saveas(gcf, fullfile(tubi.dir.mesh, 'apd_pts.png'))
 
         %% Define "start point" for APDV coords at the anterior
         startpt = acom ;
         spt = acom * ssfactor ;
 
-        dlmwrite(acomname, acom) ;
-        dlmwrite(pcomname, pcom) ;    
-        dlmwrite(dcomname, dcom) ;    
+        dlmwrite(aptname, acom) ;
+        dlmwrite(pptname, pcom) ;    
+        dlmwrite(dptname, dcom) ;    
                 
     end
     
@@ -520,8 +532,8 @@ if redo_rot_calc || overwrite
     if redo_rot_calc
         % load the probabilities for anterior posterior dorsal
         % Load dcom if already on disk
-        disp(['Loading dorsal COM from disk: ' dcomname])
-        dcom = dlmread(dcomname) ;
+        disp(['Loading dorsal COM from disk: ' dptname])
+        dcom = dlmread(dptname) ;
 
         % compute rotation -- Note we choose to use startpt instead of
         % acom here so that the dorsal point will lie in the y=0 plane.
@@ -604,9 +616,9 @@ else
     disp('Rot and trans already on disk')
     rot = dlmread(rotname) ;
     trans = dlmread(transname, ',');
-    dcom = dlmread(dcomname) ;
-    acom = dlmread(acomname) ;
-    pcom = dlmread(pcomname) ;
+    dcom = dlmread(dptname) ;
+    acom = dlmread(aptname) ;
+    pcom = dlmread(pptname) ;
 end
 
 
@@ -633,22 +645,23 @@ for ii = 1:3
     trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
     hold on;
     if ~exist('acom', 'var')
-        acom = dlmread(acomname) ;
+        acom = dlmread(aptname) ;
     end
     if ~exist('pcom', 'var')
-        pcom = dlmread(pcomname) ;
+        pcom = dlmread(pptname) ;
     end
     if ~exist('dcom', 'var')
-        dcom = dlmread(dcomname) ;
+        dcom = dlmread(dptname) ;
     end
     
     plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')
     plot3(pcom(1) * ssfactor, pcom(2) * ssfactor, pcom(3) * ssfactor, 'o')
     plot3(dcom(1) * ssfactor, dcom(2) * ssfactor, dcom(3) * ssfactor, 'o')
     axis equal
-    xlabel('x [pix]')
-    ylabel('y [pix]')
-    zlabel('z [pix]')
+    plot3([acom(1), pcom(1)] * ssfactor, ...
+        [acom(2), pcom(2)] * ssfactor, ...
+        [acom(3), pcom(3)] * ssfactor, 'k-')
+    axis equal
     if ii == 1
         view(0, 90)
     elseif ii == 2
@@ -656,9 +669,16 @@ for ii = 1:3
     else
         view(180, 0)
     end
+    
+    xlabel('x [pix]')
+    ylabel('y [pix]')
+    zlabel('z [pix]')
+
 end
-sgtitle('APD COMs for APDV coordinates')
-saveas(gcf, fullfile(tubi.dir.mesh, 'apd_coms_APDVCoords.png'))
+legend({'surface', 'anterior pt', 'posterior pt', 'dorsal pt', 'ap axis'}, ...
+    'Location', 'northwest')
+sgtitle('APD pts for APDV coordinates')
+saveas(gcf, fullfile(tubi.dir.mesh, 'apd_pts_APDVCoords.png'))
 axis equal
 %%%%%%%%%%%%%%%%%%%%%%
 if preview

@@ -173,14 +173,7 @@ mKDir = fullfile(QS.dir.metricKinematics.root, ...
     lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 
 %% Get fold locations for pathlines
-try
-    folds = load(sprintf(QS.fileName.pathlines.featureIDs, t0Pathline)) ;
-catch
-    disp('Feature IDs for pathlines not stored on disk. Defining...')
-    folds = QS.measurePathlineFeatureIDs ;
-end
-foldNonPathline = load(QS.fileName.fold) ;
-fons = foldNonPathline.fold_onset - QS.xp.fileMeta.timePoints(1) ;
+fons = t0 - QS.xp.fileMeta.timePoints(1) ;
 
 %% Colormap
 bwr256 = bluewhitered(256) ;
@@ -414,9 +407,8 @@ if plot_kymographs
             
             % Check if images already exist on disk
             fn = fullfile(odir, [ names{pp} '.png']) ;
-            fn_zoom = fullfile(odir, [names{pp} '_zoom_early.png']) ;
             
-            if ~exist(fn, 'file') || ~exist(fn_zoom, 'file') || overwrite
+            if ~exist(fn, 'file') || overwrite
                 close all
                 set(gcf, 'visible', 'off')
                 imagesc((1:nU)/nU, tps, m2plot{pp})
@@ -425,13 +417,6 @@ if plot_kymographs
                 end
                 colormap(bwr256)
 
-                % Plot feature/fold identifications
-                hold on;
-                for ii = 1:length(fons)
-                    fonsi = max(1, fons(ii)) ;
-                    tones = ones(size(tps(fonsi:end))) ;
-                    plot(featureIDs(ii) * tones / nU, tps(fonsi:end))
-                end
                 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
@@ -443,19 +428,6 @@ if plot_kymographs
                 disp(['saving ', fn])
                 export_fig(fn, '-png', '-nocrop', '-r200')   
 
-                % Zoom in on small values
-                caxis([-climits(pp)/3, climits(pp)/3])
-                colormap(bwr256)
-                fn = fullfile(odir, [names{pp} '_zoom.png']) ;
-                disp(['saving ', fn])
-                export_fig(fn, '-png', '-nocrop', '-r200')   
-                % Zoom in on early times
-                ylim([min(tps), max(fons) + 10])
-                caxis([-climits(pp)/3, climits(pp)/3])
-                colormap(bwr256)
-                fn = fullfile(odir, [names{pp} '_zoom_early.png']) ;
-                disp(['saving ', fn])
-                export_fig(fn, '-png', '-nocrop', '-r200')   
             end
         end
     end
@@ -504,21 +476,12 @@ if plot_kymographs_cumsum
         for pp = 1:length(m2plot)
             % Check if images already exist on disk
             fn = fullfile(odir, [ names{pp} '.png']) ;
-            fn_zoom = fullfile(odir, [names{pp} '_zoom.png']) ;
-            fn_zoom_early = fullfile(odir, [names{pp} '_zoom_early.png']) ;
-            if ~exist(fn, 'file') || ~exist(fn_zoom, 'file') || overwrite
+            if ~exist(fn, 'file') || overwrite
                 close all
                 set(gcf, 'visible', 'off')
                 imagesc((1:nU)/nU, tps, m2plot{pp})
                 caxis([-climits(pp), climits(pp)])
                 colormap(bwr256)
-                % Add features/folds to plot
-                hold on;
-                for ii = 1:length(fons)
-                    fonsi = max(1, fons(ii)) ;
-                    tones = ones(size(tps(fonsi:end))) ;
-                    plot(featureIDs(ii) * tones / nU, tps(fonsi:end))
-                end
                 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
@@ -530,19 +493,6 @@ if plot_kymographs_cumsum
                 disp(['saving ', tmp{end}, ': ', fn])
                 export_fig(fn, '-png', '-nocrop', '-r200')   
 
-                % Zoom in on small values
-                caxis([-climits(pp)/2, climits(pp)/2])
-                colormap(bwr256)
-                tmp = strsplit(fn_zoom, filesep) ;
-                disp(['saving ', tmp{end}])
-                export_fig(fn_zoom, '-png', '-nocrop', '-r200')   
-                % Zoom in on early times
-                ylim([min(tps), max(fons) + 10])
-                caxis([-climits(pp)/2, climits(pp)/2])
-                colormap(bwr256)
-                tmp = strsplit(fn_zoom_early, filesep) ;
-                disp(['saving ', tmp{end}])
-                export_fig(fn_zoom_early, '-png', '-nocrop', '-r200')   
             end
         end
     end
@@ -585,25 +535,12 @@ if plot_kymographs_cumprod
         for pp = 1:length(m2plot)
             % Check if images already exist on disk
             fn = fullfile(odir, [ names{pp} '.png']) ;
-            fn_zoom = fullfile(odir, [names{pp} '_zoom_early.png']) ;
-            if ~exist(fn, 'file') || ~exist(fn_zoom, 'file') || overwrite
+            if ~exist(fn, 'file') || overwrite
                 close all
                 set(gcf, 'visible', 'off')
                 imagesc((1:nU)/nU, tps, m2plot{pp})
                 caxis([1-climits(pp), 1+climits(pp)])
                 colormap(bwr256)
-                % Add folds to plot
-                hold on;
-                fons1 = max(1, fons(1)) ;
-                fons2 = max(1, fons(2)) ;
-                fons3 = max(1, fons(3)) ;
-                t1ones = ones(size(tps(fons1:end))) ;
-                t2ones = ones(size(tps(fons2:end))) ;
-                t3ones = ones(size(tps(fons3:end))) ;
-                tidx0 = QS.xp.tIdx(t0) ;
-                plot(folds.folds(tidx0, 1) * t1ones / nU, tps(fons1:end))
-                plot(folds.folds(tidx0, 2) * t2ones / nU, tps(fons2:end))
-                plot(folds.folds(tidx0, 3) * t3ones / nU, tps(fons3:end))
 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
@@ -613,21 +550,6 @@ if plot_kymographs_cumprod
                 ylabel(cb, labels{pp}, 'Interpreter', 'Latex')  
                 disp(['saving ', fn])
                 export_fig(fn, '-png', '-nocrop', '-r200')   
-
-                % Zoom in on small values
-                caxis([1-climits(pp)/3, 1+climits(pp)/3])
-                colormap(bwr256)
-                fn = fullfile(odir, [names{pp} '_zoom.png']) ;
-                tmp = strsplit(fn, filesep) ;
-                disp(['saving ', tmp{end}])
-                export_fig(fn, '-png', '-nocrop', '-r200')   
-                % Zoom in on early times
-                ylim([min(tps), max(fons) + 10])
-                caxis([1-climits(pp)/3, 1+climits(pp)/3])
-                colormap(bwr256)
-                tmp = strsplit(fn_zoom, filesep) ;
-                disp(['saving ', tmp{end}])
-                export_fig(fn_zoom, '-png', '-nocrop', '-r200')   
             end
         end
     end
@@ -636,7 +558,7 @@ end
 
 %% Metric Kinematic Correlations
 % Plot both all time and select times
-timeSpans = {tps, tps(tps < max(fons) + 11)} ;
+timeSpans = {tps} ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot correlation between terms div(v) and 2Hvn

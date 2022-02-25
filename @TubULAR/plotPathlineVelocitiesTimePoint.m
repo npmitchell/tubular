@@ -101,8 +101,6 @@ end
 tidx = QS.xp.tIdx(tp) ;
 
 %% Prepare for plots
-QS.getFeatures('ssfold')
-ssfold_frac = QS.features.ssfold / QS.nU ;
 t0 = QS.t0set() ;
 tunit = [' ' QS.timeUnits] ;
 

@@ -1,17 +1,28 @@
 function measureMetricStrainRate(QS, options)
 %measureMetricStrainRate(QS, options)
+% Advect the current mesh by the current raw velocities and measure
+% differences between metric of advected (future) mesh and current mesh
+% (reference). This gives a measurement of the strain rate tensor with
+% units related to the pullback space.
 %   
 % Parameters
 % ----------
+% tubi : 
+% options : struct with fields
 %
 % Returns 
 % -------
+% <none>
+%
+% Saves to disk
+% -------------
+% 
 %
 % NPMitchell 2020
 
 %% Default options
-lambda = 0.01 ;
-lambda_mesh = 0.002 ;
+lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
 overwrite = false ;
 preview = true ;
 metric_style = 'strain' ;  % {'mesh', 'strain'} ;
@@ -420,22 +431,6 @@ for tp = tp2do
             ylim(xyzlim(2, :))
             zlim(xyzlim(3, :))
             axis off
-
-            % Save images;
-            % dorsal
-            % if pp == 1
-            %     view(0, 90)
-            % ventral
-            % elseif pp == 2
-            %     view(0, -90)
-            % left
-            % elseif pp == 3
-            %     view(0, 0)
-            % right
-            % elseif pp == 4
-            %     view(0, 180)
-            % end
-            % end
             
             % left view
             view(0, 0) 

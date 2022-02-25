@@ -434,14 +434,14 @@ tubi.computeAPDVCoords(alignAPDVOpts) ;
 % along which we will form a branch cut for mapping to the plane (D).
 apdvOpts = struct() ;
 apdvOpts.overwrite = false ;
-[acom_sm, pcom_sm] = tubi.computeAPDCOMs(apdvOpts) ;
+[apts_sm, ppts_sm] = tubi.computeAPDpoints(apdvOpts) ;
 
 %% Align the meshes in the APDV global frame & plot them
 tubi.alignMeshesAPDV(alignAPDVOpts) ;
 
 disp('done')
 
-%% PLOT ALL TEXTURED MESHES IN 3D =========================================
+%% PLOT ALL TEXTURED MESHES IN 3D (OPTIONAL: this is SLOW) ================
 % Establish texture patch options
 metadat = struct() ;
 metadat.reorient_faces = false ;            % set to true if some mesh normals may be inverted (requires gptoolbox if true)
@@ -503,7 +503,7 @@ tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 % This removes "ears" from the endcaps of the tubular meshes (cylindrical
 % meshes)
 cleanCylOptions = struct() ;
-cleanCylOptions.overwrite = true ;
+cleanCylOptions.overwrite = false ;
 tubi.cleanCylMeshes(cleanCylOptions)
 disp('done cleaning cylinder meshes')
     
@@ -598,7 +598,7 @@ for tt = tubi.xp.fileMeta.timePoints
     pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
     pbOptions.generate_spsm = true ;
     pbOptions.generate_sp = false ;
-    pbOptions.overwrite = overwrite ;
+    pbOptions.overwrite = false ;
     tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 end
 
@@ -677,10 +677,6 @@ options.climit = 1 ;
 options.coordSys = 'ricci' ;
 tubi.measureBeltramiCoefficient(options) ;
 
-%% Generate all Beltramis from all Riccis & plot aspect ratio over time
-options = struct() ;
-tubi.computeRicciMeshes(options) 
-
 %% Strain rate (epsilon = 1/2 (djvi+divj) -vn bij)
 options = struct() ;
 tubi.measureStrainRate(options) 
@@ -700,6 +696,9 @@ options = struct() ;
 options.overwriteImages = false ;
 options.plot_dzdp = false ;
 tubi.measurePathlineStrainRate(options)
+
+%% Measure divergence and out-of-plane deformation along pathlines
+tubi.measurePathlineMetricKinematics()
 
 % Pathline strain rate plots
 options = struct() ;

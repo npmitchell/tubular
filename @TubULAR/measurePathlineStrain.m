@@ -91,11 +91,8 @@ end
 if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
     doubleResolution = false ;
     sresStr = '' ;
-elseif strcmp(samplingResolution, '2x') || strcmp(samplingResolution, 'double')
-    doubleResolution = true ;
-    sresStr = 'doubleRes_' ;
-else 
-    error("Could not parse samplingResolution: set to '1x' or '2x'")
+else
+    error("Could not parse samplingResolution: set to '1x'")
 end
 
 %% Unpack QS
@@ -103,8 +100,7 @@ QS.getXYZLims ;
 xyzlim = QS.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
-folds = load(QS.fileName.fold) ;
-fons = folds.fold_onset - QS.xp.fileMeta.timePoints(1) ;
+fons = QS.t0set() - QS.xp.fileMeta.timePoints(1) ;
 
 %% Colormap
 close all

@@ -1,6 +1,6 @@
-function [acom_sm, pcom_sm, dcom] = computeAPDCOMs(tubi, opts)
-%[acom_sm, pcom_sm, dcom] = COMPUTEAPDCOMS(opts)
-% Compute the anterior, posterior, and dorsal centers of mass either from:
+function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
+%[apts_sm, ppts_sm, dpt] = COMPUTEAPDPOINTS(opts)
+% Compute the anterior, posterior, and dorsal points either from:
 %   (1) Clicking on the points on the mesh from t=t0
 %   (2) moments of inertia of the mesh surface, identifying the endpoints
 %       near the long axis of the object at t=t0. (autoAP = true)
@@ -11,12 +11,12 @@ function [acom_sm, pcom_sm, dcom] = computeAPDCOMs(tubi, opts)
 %       might be a point which does NOT form an AP axis  with the 
 %       anteriormost point, as in the illustration of the midgut below:
 % 
-%         P for centerline
-%        _x_         Dorsal
+%         Posterior pt for centerline
+%        _x_         Dorsal pt
 %       /  /     ___x_
-%      /  /    /      \    Anterior pt for both centerline and for defining APDV axes
-%     /  /____/        \ x
-%    |  x P for APDV    |
+%      /  /    /      \    
+%     /  /____/        \   Anterior pt for both centerline and for defining APDV axes
+%    |  x P for APDV    | x
 %     \________________/
 %    (ventral here, unlabeled)
 %
@@ -31,17 +31,17 @@ function [acom_sm, pcom_sm, dcom] = computeAPDCOMs(tubi, opts)
 % ----------
 % opts : struct with fields
 %   - use_iLastik : default=true if training h5s are present on disk
-%   - timePoints
-%   - dorsal_thres : float between 0 and 1
-%   - anteriorChannel : int
-%   - posteriorChannel
-%   - dorsalChannel
-%   - overwrite : bool
-%   - apdvoutdir : string
-%   - meshDir : string
-%   - preview_com : bool
-%   - check_slices : bool
-%   - axorder : length 3 int array
+%   - timePoints : timepoints for which to extract APD points
+%   - dorsal_thres : float between 0 and 1, threshold for COM extraction
+%   - anteriorChannel : int, which channel of training to use if training
+%                       is used for extracting COM from probability cloud
+%   - posteriorChannel : int, which channel of training to use if training
+%                       is used for extracting COM from probability cloud
+%   - dorsalChannel : int, which channel of training to use if training
+%                       is used for extracting COM from probability cloud
+%   - overwrite : bool, overwrite previous results on disk
+%   - preview_com : bool, inspect the centers of mass extraction
+%   - axorder : length 3 int array, permutation of axes if needed
 %   - smwindow : float or int (optional, default=30)
 %       number of timepoints over which we smooth
 %   - preview : bool (optional, default=false)
@@ -49,13 +49,14 @@ function [acom_sm, pcom_sm, dcom] = computeAPDCOMs(tubi, opts)
 %
 % OUTPUTS
 % -------
-% apdv_coms_from_training.h5 (rawapdvname, tubi.fileName.apdv)
-%   Raw centers of mass for A, P, and D in subsampled pixels, in 
-%   probability data space coordinate system
-%   Saved to fullfile(meshDir, 'centerline/apdv_coms_from_training.h5')
-% tubi.fileName.dcom 
+% apdv_pts_for_centerline.h5 (rawapdvname, tubi.fileName.apdv)
+%   Raw points (centers of mass if training-based) for A, P, and D in 
+%   subsampled pixels, in probability data space coordinate system. (note
+%   this is downsampled by ssfactor)
+%   Saved to fullfile(meshDir, 'centerline/apdv_pts_for_centerline.h5')
+% tubi.fileName.dpt
 %   txt file with dorsal COM for APDV definition
-% rawapdvmatname=fullfile(tubi.dir.cntrline, 'apdv_coms_from_training.mat')
+% rawapdvmatname=fullfile(tubi.dir.cntrline, 'apdv_pts_for_centerline.mat')
 % 
 %
 % NPMitchell 2020
@@ -101,7 +102,6 @@ end
 % Default options
 overwrite = false ; 
 preview_com = false ;
-check_slices = false ;
 
 % Unpack opts
 if isfield(opts, 'anteriorChannel')
@@ -120,9 +120,6 @@ end
 if isfield(opts, 'preview_com')
     preview_com = opts.preview_com ;
 end
-if isfield(opts, 'check_slices')
-    check_slices = opts.check_slices ;
-end
 
 % Default valued options
 smwindow = 30 ;
@@ -131,34 +128,34 @@ if isfield(opts, 'smwindow')
 end
 
 rawapdvname = tubi.fileName.apdv ;
-rawapdvmatname = fullfile(apdvoutdir, 'apdv_coms_from_training.mat') ;
+rawapdvmatname = fullfile(apdvoutdir, 'apdv_pts_for_centerline.mat') ;
 preview = false ;
 if isfield(opts, 'preview')
     preview = opts.preview ;
 end
 
 
-%% Iterate through each mesh to compute acom(t) and pcom(t). Prepare file.
-acoms = zeros(length(timePoints), 3) ;
-pcoms = zeros(length(timePoints), 3) ;
+%% Iterate through each mesh to compute apts(t) and ppt(t). Prepare file.
+apts = zeros(length(timePoints), 3) ;
+ppts = zeros(length(timePoints), 3) ;
 load_from_disk = false ;
 if exist(tubi.fileName.apdv, 'file') && ~overwrite
     load_from_disk = true ;
     try
-        h5create(tubi.fileName.apdv, '/acom_sm', size(acoms)) ;
+        h5create(tubi.fileName.apdv, '/apts_sm', size(apts)) ;
         load_from_disk = false ;
     catch
         try
-            acom_sm = h5read(tubi.fileName.apdv, '/acom_sm') ;
-            acoms = h5read(tubi.fileName.apdv, '/acom') ;
-            disp('acom_sm already exists')
+            apts_sm = h5read(tubi.fileName.apdv, '/apts_sm') ;
+            apts = h5read(tubi.fileName.apdv, '/apts') ;
+            disp('apts_sm already exists')
         catch
             load_from_disk = false;
         end
         if load_from_disk
-            if size(acoms, 1) ~= length(tubi.xp.fileMeta.timePoints)
+            if size(apts, 1) ~= length(tubi.xp.fileMeta.timePoints)
                 disp(['#timepoints = ' num2str(length(tubi.xp.fileMeta.timePoints)) ])
-                disp(['#timepoints on disk = ', num2str(size(acoms, 1))])
+                disp(['#timepoints on disk = ', num2str(size(apts, 1))])
                 disp(['Must first rename ' tubi.fileName.apdv ' to overwrite with different number of timepoints: moving file.'])
                 movefile(tubi.fileName.apdv, [tubi.fileName.apdv '_backup'])
                 load_from_disk = false ;
@@ -166,19 +163,19 @@ if exist(tubi.fileName.apdv, 'file') && ~overwrite
         end
     end
     try
-        h5create(tubi.fileName.apdv, '/pcom_sm', size(pcoms)) ;
+        h5create(tubi.fileName.apdv, '/ppts_sm', size(ppts)) ;
         load_from_disk = false ;
     catch
         try
-            pcom_sm = h5read(tubi.fileName.apdv, '/pcom_sm') ;
-            pcoms = h5read(tubi.fileName.apdv, '/pcom') ;
-            disp('pcom_sm already exists')
+            ppts_sm = h5read(tubi.fileName.apdv, '/ppts_sm') ;
+            ppts = h5read(tubi.fileName.apdv, '/ppts') ;
+            disp('ppts_sm already exists')
         catch
             load_from_disk = false;
         end
         
         if load_from_disk
-            if size(pcoms, 1) ~= length(tubi.xp.fileMeta.timePoints) 
+            if size(ppts, 1) ~= length(tubi.xp.fileMeta.timePoints) 
                 disp(['Must first rename ' tubi.fileName.apdv ' to overwrite with different number of timepoints: moving file.'])
                 movefile(tubi.fileName.apdv, [tubi.fileName.apdv '_backup'])
                 load_from_disk = false ;
@@ -187,28 +184,28 @@ if exist(tubi.fileName.apdv, 'file') && ~overwrite
     end
 end
 if ~load_from_disk
-    disp('acom and/or pcom not already saved on disk. Compute them')
+    disp('apts and/or ppts not already saved on disk. Compute them')
 end
 
 disp(['Load from disk? =>', num2str(load_from_disk)])
 
-%% Compute smoothed acom and pcom if not loaded from disk -- RAW XYZ coords
+%% Compute smoothed apts and ppts if not loaded from disk -- RAW XYZ coords
 if ~load_from_disk || overwrite
     
-    % Compute raw acom and pcom if not loaded from disk -- RAW XYZ coords
+    % Compute raw apts and ppts if not loaded from disk -- RAW XYZ coords
     if use_iLastik
         bad_size = false ;
         if exist(rawapdvmatname, 'file') && ~overwrite
             % load raw data from .mat
-            load(rawapdvmatname, 'acoms', 'pcoms')
-            bad_size = (size(acoms, 1) ~= length(tubi.xp.fileMeta.timePoints)) ; 
+            load(rawapdvmatname, 'apts', 'ppts')
+            bad_size = (size(apts, 1) ~= length(tubi.xp.fileMeta.timePoints)) ; 
         end
 
         if ~exist(rawapdvmatname, 'file') || overwrite || bad_size
             for tidx = 1:length(timePoints)
                 tt = timePoints(tidx) ;
                 %% Load the AP axis determination
-                msg = ['Computing acom, pcom for ' num2str(tt) ] ;
+                msg = ['Computing apts, ppts for ' num2str(tt) ] ;
                 disp(msg)
                 thres = 0.5 ;
                 % load the probabilities for anterior posterior dorsal
@@ -264,23 +261,23 @@ if ~load_from_disk || overwrite
                 % pdat = permute(pdat, axorder) ;
 
                 options.check = preview_com ;
-                disp('Extracting acom')
+                disp('Extracting acom from probability h5 data')
                 options.color = 'red' ;
-
                 acom = com_region(adat, thres, options) ;
-                disp('Extracting pcom')
+                
+                disp('Extracting pcom from probability h5 data')
                 options.color = 'blue' ;
                 pcom = com_region(pdat, thres, options) ;
                 clearvars options
                 % [~, acom] = match_training_to_vertex(adat, thres, vertices, options) ;
                 % [~, pcom] = match_training_to_vertex(pdat, thres, vertices, options) ;
-                acoms(tidx, :) = acom ;
-                pcoms(tidx, :) = pcom ;
+                apts(tidx, :) = acom ;
+                ppts(tidx, :) = pcom ;
                 if preview
                     disp('acom = ')
-                    acoms(tidx, :)
+                    apts(tidx, :)
                     disp('pcom = ')
-                    pcoms(tidx, :)
+                    ppts(tidx, :)
 
                     clf
                     mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
@@ -308,7 +305,7 @@ if ~load_from_disk || overwrite
                     % load current mesh & plot the dorsal dot
                     clf
                     try
-                        dcom = dlmread(tubi.fileName.dcom) ;
+                        dpt = dlmread(tubi.fileName.dpt) ;
                     catch
                         error('Could not load dorsal COM: run tubi.computeAPDVCoords() first')
                     end
@@ -319,7 +316,7 @@ if ~load_from_disk || overwrite
                         hold on;
                         plot3(acom(1) * tubi.ssfactor, acom(2) * tubi.ssfactor, acom(3) * tubi.ssfactor, 'o')
                         plot3(pcom(1) * tubi.ssfactor, pcom(2) * tubi.ssfactor, pcom(3) * tubi.ssfactor, 'o')
-                        plot3(dcom(1) * tubi.ssfactor, dcom(2) * tubi.ssfactor, dcom(3) * tubi.ssfactor, 'o')
+                        plot3(dpt(1) * tubi.ssfactor, dpt(2) * tubi.ssfactor, dpt(3) * tubi.ssfactor, 'o')
                         axis equal
                         if ii == 1
                             view(0, 90)
@@ -329,16 +326,18 @@ if ~load_from_disk || overwrite
                             view(180, 0)
                         end
                     end
-                    sgtitle('APD COMs for APD COMs for centerline')
-                    saveas(gcf, fullfile(tubi.dir.mesh, 'apd_coms_centerline.png'))
+                    legend({'surface', 'anterior pt', 'posterior pt', 'dorsal pt'}, ...
+                'Location', 'northwest')
+                    sgtitle('APD points for centerline extraction')
+                    saveas(gcf, fullfile(tubi.dir.mesh, 'apd_pts_centerline.png'))
                 end
 
             end
             % Save raw data to .mat
-            save(rawapdvmatname, 'acoms', 'pcoms')
+            save(rawapdvmatname, 'apts', 'ppts')
             clearvars adat pdat
         end
-        disp('done determining acoms, pcoms')
+        disp('done determining apts, ppts')
     elseif autoAP
         % No ilastik files used to extract probabilities, instead use mesh
         % elongation axis at t0 and then pointmatch for t>t0 and t<t0.
@@ -381,9 +380,9 @@ if ~load_from_disk || overwrite
         normalToPlane = [0,0,0] ;
         normalToPlane(xIndex) = 1 ; 
         lineDirec = eigvect(:, ind) ;
-        [acom, specialCaseA] = linePlaneIntersection(lineDirec, cntrd, ...
+        [apt, specialCaseA] = linePlaneIntersection(lineDirec, cntrd, ...
             normalToPlane, ptInPlaneA) ;
-        [pcom, specialCaseP] = linePlaneIntersection(lineDirec, cntrd, ...
+        [ppt, specialCaseP] = linePlaneIntersection(lineDirec, cntrd, ...
             normalToPlane, ptInPlaneP) ;
         try
             assert(~specialCaseA && ~specialCaseP)
@@ -394,13 +393,13 @@ if ~load_from_disk || overwrite
         % Assignment for t0
         t0 = tubi.t0set() ;
         tidx0 = tubi.xp.tIdx(t0) ;
-        acoms(tidx0, :) = acom / ssfactor ;
-        pcoms(tidx0, :) = pcom / ssfactor ;
+        apts(tidx0, :) = apt / ssfactor ;
+        ppts(tidx0, :) = ppt / ssfactor ;
                 
         tidxGreater = find(timePoints > t0) ;
         tidxSmaller = find(timePoints < t0) ;
-        prevA = acoms(tidx0, :) * ssfactor ;
-        prevP = pcoms(tidx0, :) * ssfactor ;
+        prevA = apts(tidx0, :) * ssfactor ;
+        prevP = ppts(tidx0, :) * ssfactor ;
         for tidx = tidxGreater
             tubi.setTime(t0) ;
             mesh = tubi.loadCurrentRawMesh() ;
@@ -412,8 +411,8 @@ if ~load_from_disk || overwrite
                 (mesh.v(:,1) - prevP(1)).^2 + ...
                 (mesh.v(:,2) - prevP(2)).^2 + ...
                 (mesh.v(:,3) - prevP(3)).^2);
-            acom = mesh.v(idxA, :) ;
-            pcom = mesh.v(idxP, :) ;
+            apt = mesh.v(idxA, :) ;
+            ppt = mesh.v(idxP, :) ;
             
             % Check that this is working
             clf
@@ -421,18 +420,18 @@ if ~load_from_disk || overwrite
             hold on;
             plot3(prevA(1), prevA(2), prevA(3), 'bo')
             plot3(prevP(1), prevP(2), prevP(3), 'ro')
-            plot3(acoms(:, 1), acoms(:, 2), acoms(:,3), '.-')
-            plot3(pcoms(:, 1), pcoms(:, 2), pcoms(:,3), '.-')
+            plot3(apts(:, 1), apts(:, 2), apts(:,3), '.-')
+            plot3(ppts(:, 1), ppts(:, 2), ppts(:,3), '.-')
             
-            acoms(tidx, :) = acom / ssfactor ;
-            pcoms(tidx, :) = pcom / ssfactor ;
-            prevA = acom ; 
-            prevP = pcom ;
+            apts(tidx, :) = apt / ssfactor ;
+            ppts(tidx, :) = ppt / ssfactor ;
+            prevA = apt ; 
+            prevP = ppt ;
         end
         
         % Now point match backward in time
-        prevA = acoms(tidx0, :) * ssfactor ;
-        prevP = pcoms(tidx0, :) * ssfactor ;
+        prevA = apts(tidx0, :) * ssfactor ;
+        prevP = ppts(tidx0, :) * ssfactor ;
         for tidx = fliplr(tidxSmaller)
             tubi.setTime(timePoints(tidx)) ;
             mesh = tubi.loadCurrentRawMesh() ;
@@ -444,16 +443,21 @@ if ~load_from_disk || overwrite
                 (mesh.v(:,1) - prevP(1)).^2 + ...
                 (mesh.v(:,2) - prevP(2)).^2 + ...
                 (mesh.v(:,3) - prevP(3)).^2);
-            acom = mesh.v(idxA, :) ;
-            pcom = mesh.v(idxP, :) ;
-            acoms(tidx, :) = acom / ssfactor ;
-            pcoms(tidx, :) = pcom / ssfactor ;
-            prevA = acom ; 
-            prevP = pcom ;
+            apt = mesh.v(idxA, :) ;
+            ppt = mesh.v(idxP, :) ;
+            apts(tidx, :) = apt / ssfactor ;
+            ppts(tidx, :) = ppt / ssfactor ;
+            prevA = apt ; 
+            prevP = ppt ;
         end
     else
         % No ilastik files used to extract probabilities, instead just
-        % click on points in 3D on mesh.
+        % click on points in 3D on mesh and use point matching to propagate
+        % forward and backward in time from t0.
+        msg = ['No ilastik files used to extract probabilities, instead just',...
+            'click on points in 3D on mesh and use point matching to propagate',...
+            'forward and backward in time from t0.'] ;
+        disp(msg)
         % First do t0
         ssfactor = tubi.ssfactor ;
         tubi.setTime(tubi.t0set()) ;
@@ -493,14 +497,16 @@ if ~load_from_disk || overwrite
         end
         dcm_obj = datacursormode(h);  
         f = getCursorInfo(dcm_obj);
-        apt = f.Position ;
-        acom = tubi.APDV2xyz(apt) ;
+        aclick = f.Position ;
+        apt = tubi.APDV2xyz(aclick) ;
         hold on;
-        plot3(apt(1), apt(2), apt(3), 'ro') ;
+        plot3(aclick(1), aclick(2), aclick(3), 'ro') ;
         legend({'surface', 'anterior'})
         
         %%%%%%%%  
         % Rotate to see posterior
+        [az, el] = view ;
+        view([az+180,el])
         
         % View ANTERIOR endcap 
         msg = 'Rotate the mesh to view Posterior endcap, then press Enter/return';
@@ -523,22 +529,22 @@ if ~load_from_disk || overwrite
         end
         dcm_obj = datacursormode(h);
         f = getCursorInfo(dcm_obj);
-        ppt = f.Position ;
-        pcom = tubi.APDV2xyz(ppt) ;
+        pclick = f.Position ;
+        ppt = tubi.APDV2xyz(pclick) ;
         hold on;
-        plot3(ppt(1), ppt(2), ppt(3), 'rs') ;
+        plot3(pclick(1), pclick(2), pclick(3), 'rs') ;
         legend({'surface', 'anterior', 'posterior'})
         
         % Assignment for t0
         t0 = tubi.t0set() ;
         tidx0 = tubi.xp.tIdx(t0) ;
-        acoms(tidx0, :) = acom / ssfactor ;
-        pcoms(tidx0, :) = pcom / ssfactor ;
+        apts(tidx0, :) = apt / ssfactor ;
+        ppts(tidx0, :) = ppt / ssfactor ;
                 
         tidxGreater = find(timePoints > t0) ;
         tidxSmaller = find(timePoints < t0) ;
-        prevA = acoms(tidx0, :) * ssfactor ;
-        prevP = pcoms(tidx0, :) * ssfactor ;
+        prevA = apts(tidx0, :) * ssfactor ;
+        prevP = ppts(tidx0, :) * ssfactor ;
         for tidx = tidxGreater
             tubi.setTime(t0) ;
             mesh = tubi.loadCurrentRawMesh() ;
@@ -550,27 +556,27 @@ if ~load_from_disk || overwrite
                 (mesh.v(:,1) - prevP(1)).^2 + ...
                 (mesh.v(:,2) - prevP(2)).^2 + ...
                 (mesh.v(:,3) - prevP(3)).^2);
-            acom = mesh.v(idxA, :) ;
-            pcom = mesh.v(idxP, :) ;
+            apt = mesh.v(idxA, :) ;
+            ppt = mesh.v(idxP, :) ;
             
             % Check that this is working
             clf
             trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none') ;
             hold on;
-            plot3(prevA(1), prevA(2), prevA(3), 'bo')
-            plot3(prevP(1), prevP(2), prevP(3), 'ro')
-            plot3(acoms(:, 1), acoms(:, 2), acoms(:,3), '.-')
-            plot3(pcoms(:, 1), pcoms(:, 2), pcoms(:,3), '.-')
+            plot3(prevA(1), prevA(2), prevA(3), 'ro')
+            plot3(prevP(1), prevP(2), prevP(3), 'bs')
+            plot3(apts(:, 1)*ssfactor, apts(:, 2)*ssfactor, apts(:,3)*ssfactor, '.-')
+            plot3(ppts(:, 1)*ssfactor, ppts(:, 2)*ssfactor, ppts(:,3)*ssfactor, '.-')
             
-            acoms(tidx, :) = acom / ssfactor ;
-            pcoms(tidx, :) = pcom / ssfactor ;
-            prevA = acom ; 
-            prevP = pcom ;
+            apts(tidx, :) = apt / ssfactor ;
+            ppts(tidx, :) = ppt / ssfactor ;
+            prevA = apt ; 
+            prevP = ppt ;
         end
         
         % Now point match backward in time
-        prevA = acoms(tidx0, :) * ssfactor ;
-        prevP = pcoms(tidx0, :) * ssfactor ;
+        prevA = apts(tidx0, :) * ssfactor ;
+        prevP = ppts(tidx0, :) * ssfactor ;
         for tidx = fliplr(tidxSmaller)
             tubi.setTime(timePoints(tidx)) ;
             mesh = tubi.loadCurrentRawMesh() ;
@@ -582,49 +588,49 @@ if ~load_from_disk || overwrite
                 (mesh.v(:,1) - prevP(1)).^2 + ...
                 (mesh.v(:,2) - prevP(2)).^2 + ...
                 (mesh.v(:,3) - prevP(3)).^2);
-            acom = mesh.v(idxA, :) ;
-            pcom = mesh.v(idxP, :) ;
-            acoms(tidx, :) = acom / ssfactor ;
-            pcoms(tidx, :) = pcom / ssfactor ;
-            prevA = acom ; 
-            prevP = pcom ;
+            apt = mesh.v(idxA, :) ;
+            ppt = mesh.v(idxP, :) ;
+            apts(tidx, :) = apt / ssfactor ;
+            ppts(tidx, :) = ppt / ssfactor ;
+            prevA = apt ; 
+            prevP = ppt ;
         end
                 
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Smooth the acom and pcom data
+    %% Smooth the apt and ppt data
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if length(timePoints) > 2 
         if smwindow > 0
-            disp('Smoothing acom and pcom...')
-            acom_sm = 0 * acoms ;
-            pcom_sm = 0 * acoms ;
+            disp('Smoothing apts and ppts...')
+            apts_sm = 0 * apts ;
+            ppts_sm = 0 * apts ;
             % fraction of data for smoothing window
             smfrac = smwindow / double(length(timePoints)) ;  
             if smfrac > 1 
                 smfrac = 1 ;
             end
-            acom_sm(:, 1) = smooth(timePoints, acoms(:, 1), smfrac, 'rloess');
-            pcom_sm(:, 1) = smooth(timePoints, pcoms(:, 1), smfrac, 'rloess');
-            acom_sm(:, 2) = smooth(timePoints, acoms(:, 2), smfrac, 'rloess');
-            pcom_sm(:, 2) = smooth(timePoints, pcoms(:, 2), smfrac, 'rloess');
-            acom_sm(:, 3) = smooth(timePoints, acoms(:, 3), smfrac, 'rloess');
-            pcom_sm(:, 3) = smooth(timePoints, pcoms(:, 3), smfrac, 'rloess');
+            apts_sm(:, 1) = smooth(timePoints, apts(:, 1), smfrac, 'rloess');
+            ppts_sm(:, 1) = smooth(timePoints, ppts(:, 1), smfrac, 'rloess');
+            apts_sm(:, 2) = smooth(timePoints, apts(:, 2), smfrac, 'rloess');
+            ppts_sm(:, 2) = smooth(timePoints, ppts(:, 2), smfrac, 'rloess');
+            apts_sm(:, 3) = smooth(timePoints, apts(:, 3), smfrac, 'rloess');
+            ppts_sm(:, 3) = smooth(timePoints, ppts(:, 3), smfrac, 'rloess');
         else
-            disp('No smoothing to acom and pcom...')
-            acom_sm = acoms ;
-            pcom_sm = pcoms ;
+            disp('No smoothing to acom and ppts...')
+            apts_sm = apts ;
+            ppts_sm = ppts ;
         end
     else
-        acom_sm = acoms ;
-        pcom_sm = pcoms ;
+        apts_sm = apts ;
+        ppts_sm = ppts ;
     end
     
     if preview
-        plot(timePoints, acoms - mean(acoms,1), '.')
+        plot(timePoints, apts - mean(apts,1), '.')
         hold on
-        plot(timePoints, acom_sm - mean(acoms, 1), '-')
+        plot(timePoints, apts_sm - mean(apts, 1), '-')
         sgtitle('Smoothed COMs for AP')
     end
     
@@ -632,37 +638,37 @@ if ~load_from_disk || overwrite
     %% Save smoothed anterior and posterior centers of mass ===============
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     try
-        h5create(rawapdvname, '/acom', size(acoms)) ;
+        h5create(rawapdvname, '/apts', size(apts)) ;
     catch
-        disp('acom already exists as h5 file. Overwriting.')
+        disp('apts already exists as h5 file. Overwriting.')
     end
     try
-        h5create(rawapdvname, '/pcom', size(pcoms)) ;
+        h5create(rawapdvname, '/ppts', size(ppts)) ;
     catch
-        disp('pcom already exists as h5 file. Overwriting.')
+        disp('ppts already exists as h5 file. Overwriting.')
     end
     try
-        h5create(rawapdvname, '/acom_sm', size(acom_sm)) ;
+        h5create(rawapdvname, '/apts_sm', size(apts_sm)) ;
     catch
-        disp('acom_sm already exists as h5 file. Overwriting.')
+        disp('apts_sm already exists as h5 file. Overwriting.')
     end
     try
-        h5create(rawapdvname, '/pcom_sm', size(pcom_sm)) ;
+        h5create(rawapdvname, '/ppts_sm', size(ppts_sm)) ;
     catch
-        disp('pcom_sm already exists as h5 file. Overwriting.')
+        disp('ppts_sm already exists as h5 file. Overwriting.')
     end
-    h5write(rawapdvname, '/acom', acoms) ;
-    h5write(rawapdvname, '/pcom', pcoms) ;
-    h5write(rawapdvname, '/acom_sm', acom_sm) ;
-    h5write(rawapdvname, '/pcom_sm', pcom_sm) ;
+    h5write(rawapdvname, '/apts', apts) ;
+    h5write(rawapdvname, '/ppts', ppts) ;
+    h5write(rawapdvname, '/apts_sm', apts_sm) ;
+    h5write(rawapdvname, '/ppts_sm', ppts_sm) ;
 else
-    disp('Skipping, since already loaded acom_sm and pcom_sm')
+    disp('Skipping, since already loaded apts_sm and ppts_sm')
     if preview
-        acom_sm = h5read(rawapdvname, '/acom_sm');
-        pcom_sm = h5read(rawapdvname, '/pcom_sm');
-        plot3(acom_sm(:, 1), acom_sm(:, 2), acom_sm(:, 3))
+        apts_sm = h5read(rawapdvname, '/apts_sm');
+        ppts_sm = h5read(rawapdvname, '/ppts_sm');
+        plot3(apts_sm(:, 1), apts_sm(:, 2), apts_sm(:, 3))
         hold on;
-        plot3(pcom_sm(:, 1), pcom_sm(:, 2), pcom_sm(:, 3))
+        plot3(ppts_sm(:, 1), ppts_sm(:, 2), ppts_sm(:, 3))
         xlabel('x [subsampled pix]')
         ylabel('y [subsampled pix]')
         zlabel('z [subsampled pix]')
@@ -675,24 +681,24 @@ disp('done with AP COMs')
 
 %% Display APDV COMS over time
 try
-    dcom = dlmread(tubi.fileName.dcom) ;
+    dpt = dlmread(tubi.fileName.dpt) ;
     % [xyzlim, ~, ~, ~] = tubi.getXYZLims() ;
     for tidx = 1:length(timePoints)
         tp = timePoints(tidx) ;
         % Plot the APDV points
         clf
-        plot3(acom_sm(tidx, 1), acom_sm(tidx, 2), acom_sm(tidx, 3), 'ro')
+        plot3(apts_sm(tidx, 1), apts_sm(tidx, 2), apts_sm(tidx, 3), 'ro')
         hold on;
-        plot3(acoms(tidx, 1), acoms(tidx, 2), acoms(tidx, 3), 'r.')
-        plot3(pcom_sm(tidx, 1), pcom_sm(tidx, 2), pcom_sm(tidx, 3), 'b^')
-        plot3(pcoms(tidx, 1), pcoms(tidx, 2), pcoms(tidx, 3), 'b.')
-        plot3(dcom(1, 1), dcom(1, 2), dcom(1, 3), 'cs')
+        plot3(apts(tidx, 1), apts(tidx, 2), apts(tidx, 3), 'r.')
+        plot3(ppts_sm(tidx, 1), ppts_sm(tidx, 2), ppts_sm(tidx, 3), 'b^')
+        plot3(ppts(tidx, 1), ppts(tidx, 2), ppts(tidx, 3), 'b.')
+        plot3(dpt(1, 1), dpt(1, 2), dpt(1, 3), 'cs')
         axis equal
         title(['t = ', num2str(tp)]) 
         pause(0.01)
     end
 catch
-    disp('Could not display aligned meshes -- does dcom exist on file?')
+    disp('Could not display aligned meshes -- does dpt exist on file?')
 end
 
 disp('done')

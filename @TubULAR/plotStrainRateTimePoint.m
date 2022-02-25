@@ -1,5 +1,5 @@
-function plotStrainRateTimePoint(QS, tp, options)
-%plotStrainRateTimePoint(QS, tp, options)
+function plotStrainRateTimePoint(tubi, tp, options)
+%plotStrainRateTimePoint(tubi, tp, options)
 %   Plot the traceful and traceless components of the strain rate tensor
 %   defined on each face, using vertex-based results loaded from disk. 
 %   Note that the vertex-based results are more heavily smoothed (via
@@ -7,21 +7,67 @@ function plotStrainRateTimePoint(QS, tp, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % tp : int 
-%   timepoint in units of (1/QS.timeInterval) * QS.timeUnits
+%   timepoint in units of (1/tubi.timeInterval) * tubi.timeUnits
 % options: struct with fields
+%   overwrite : bool
+%       Overwrite existing results on disk
+%   mesh : struct with fields f,v
+%       current Mesh, allowed to be supplied to allow speedup (prevents
+%       delay from loading cutMesh from disk)
+%   cutMesh : struct with fields f,v, pathPairs, nU, nV
+%       current cutMesh, allowed to be supplied to allow speedup (prevents
+%       delay from loading cutMesh from disk)
+%   clim_trace : 2x1 numeric
+%       color limits for the colormap/bar of the isotropic strain rate
+%   clim_deviatoric : 2x1 numeric
+%       color limits for the colormap/bar of the deviatoric strain rate
+%   samplingResolution : '1x' or 'resampled'
+%       currently only 1x resolution is allowed
+%   averagingStyle : 'Lagrangian' or 'none'
+%       currently we have restricted the velocity averaging style in
+%       tubular to either be Lagrangian averaging or none
+%   debug : bool
+%       if true, show intermediate results
+%   plot_comparison : bool
+%       plot a comparison between trace of measured strain rate and
+%       measured DEC divergence minus H*normal velocity, where H is the
+%       mean curvature. 
+% Additional optional fields of options that are already specified by tubi
+% metadata but can be overwritten by including them in options are:
+%     lambda = tubi.smoothing.lambda ;
+%     lambda_mesh = tubi.smoothing.lambda_mesh ;
+%     nmodes = tubi.smoothing.nmodes ;
+%     zwidth = tubi.smoothing.zwidth ;
 %   
 % 
 % NPMitchell 2020
 
-tidx = QS.xp.tIdx(tp) ;
+tidx = tubi.xp.tIdx(tp) ;
 
 %% Unpack required params
-lambda = options.lambda ;
-lambda_mesh = options.lambda_mesh ;
-nmodes = options.nmodes ;
-zwidth = options.zwidth ;
+lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
+
+if nargin < 3
+    options = struct() ;
+else
+    if isfield(options, 'lambda')
+        lambda = options.lambda ;
+    end
+    if isfield(options, 'lambda')
+        lambda_mesh = options.lambda_mesh ;
+    end
+    if isfield(options, 'nmodes')
+        nmodes = options.nmodes ;
+    end
+    if isfield(options, 'zwidth')
+        zwidth = options.zwidth ;
+    end
+end
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
 debug = false ;
@@ -64,41 +110,38 @@ end
 if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
     doubleResolution = false ;
     sresStr = '' ;
-elseif strcmp(samplingResolution, '2x') || strcmp(samplingResolution, 'double')
-    doubleResolution = true ;
-    sresStr = 'doubleRes_' ;
-else 
-    error("Could not parse samplingResolution: set to '1x' or '2x'")
+else
+    error("Could not parse samplingResolution: set to '1x'")
 end
 
 
-%% Unpack QS
-t0 = QS.t0set() ;
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+%% Unpack tubi
+t0 = tubi.t0set() ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 % Output directory
 egImDir = strrep(sprintf( ...
-    QS.dir.strainRate.smoothing, lambda, lambda_mesh, ...
+    tubi.dir.strainRate.smoothing, lambda, lambda_mesh, ...
     nmodes, zwidth), '.', 'p') ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 
-%% load from QS
+%% load from tubi
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 %% load the metric strain
 % Define metric strain filename        
 if ~isfield(options, 'tre') || ~isfield(options, 'dev') || ...
         ~isfield(options, 'theta')
-    estrainFn = fullfile(strrep(sprintf(QS.dir.strainRate.measurements, ...
+    estrainFn = fullfile(strrep(sprintf(tubi.dir.strainRate.measurements, ...
         lambda, lambda_mesh), '.', 'p'), ...
-        sprintf(QS.fileBase.strainRate, tp)) ;
+        sprintf(tubi.fileBase.strainRate, tp)) ;
     disp(['Loading strainrate results from disk: ' estrainFn])
     load(estrainFn, 'strainrate', 'tre_vtx', 'dev_vtx', 'theta_vtx')
     tre = reshape(tre_vtx(:, 1:end-1), [size(tre_vtx, 1) * (size(tre_vtx,2)-1), 1]) ; 
@@ -139,11 +182,11 @@ pm256 = phasemap(256) ;
 % NOTE: \varepsilon --> ${\boldmath${\varepsilon}$}$
 labels = {'$\frac{1}{2}\mathrm{Tr} [\bf{g}^{-1}\varepsilon] $', ...
     '$||\varepsilon-\frac{1}{2}$Tr$\left[\mathbf{g}^{-1}\varepsilon\right]\bf{g}||$'} ;
-time_in_units = (tp - t0) * QS.timeInterval ;
-tstr = [': $t=$', sprintf('%03d', time_in_units), ' ', QS.timeUnits ];
+time_in_units = (tp - t0) * tubi.timeInterval ;
+tstr = [': $t=$', sprintf('%03d', time_in_units), ' ', tubi.timeUnits ];
 
 %% consider each metric element & plot in 3d
-fn = fullfile(egImDir, 'strainRate3d', sprintf([QS.fileBase.spcutMeshSmRSC '.png'], tp));
+fn = fullfile(egImDir, 'strainRate3d', sprintf([tubi.fileBase.spcutMeshSmRSC '.png'], tp));
 if ~exist(fn, 'file') || overwrite
     clf
     set(gcf, 'visible', 'off') ;
@@ -225,7 +268,7 @@ end
 close all
 set(gcf, 'visible', 'off') ;
 fn = fullfile(egImDir, 'strainRate2d', ...
-        sprintf([QS.fileBase.spcutMeshSm '.png'], tp));
+        sprintf([tubi.fileBase.spcutMeshSm '.png'], tp));
 if ~exist(fn, 'file') || overwrite
     % Panel 1
     subplot(1, 2, 1) ;
@@ -288,10 +331,10 @@ close all
 close all
 set(gcf, 'visible', 'off') ;
 fn = fullfile(egImDir, 'strainRate2d', ...
-        sprintf(['compare_' QS.fileBase.spcutMeshSm '.png'], tp));
+        sprintf(['compare_' tubi.fileBase.spcutMeshSm '.png'], tp));
 if (~exist(fn, 'file') || overwrite) && plot_comparison
     % Load gdot trace from kinematics
-    fn_gdot = sprintf(QS.fullFileBase.metricKinematics.gdot, tp) ;
+    fn_gdot = sprintf(tubi.fullFileBase.metricKinematics.gdot, tp) ;
     load([strrep(fn_gdot, '.', 'p'), '.mat'], 'gdot')
 
     % Panel 1
@@ -336,7 +379,7 @@ close all
 close all
 set(gcf, 'visible', 'off') ;
 fn = fullfile(egImDir, 'strainRate2d', ...
-        sprintf(['compare_fresh_' QS.fileBase.spcutMeshSm '.png'], tp));
+        sprintf(['compare_fresh_' tubi.fileBase.spcutMeshSm '.png'], tp));
 if (~exist(fn, 'file') || overwrite) && debug
     DEC = DiscreteExteriorCalculus(mesh.f, mesh.v) ;
     H3d = sum(mesh.vn .* DEC.laplacian(mesh.v), 2) * 0.5 ;
@@ -349,15 +392,15 @@ if (~exist(fn, 'file') || overwrite) && debug
     % [~, F2V] = meshAveragingOperators(mesh.f, mesh.v) ;
     if strcmp(averagingStyle, 'Lagrangian')
         if doubleResolution
-            dec_tp = load(sprintf(QS.fullFileBase.decAvg2x, tp)) ;
+            dec_tp = load(sprintf(tubi.fullFileBase.decAvg2x, tp)) ;
         else
-            dec_tp = load(sprintf(QS.fullFileBase.decAvg, tp)) ;
+            dec_tp = load(sprintf(tubi.fullFileBase.decAvg, tp)) ;
         end
     else
         if doubleResolution
-            dec_tp = load(sprintf(QS.fullFileBase.decSimAvg2x, tp)) ;
+            dec_tp = load(sprintf(tubi.fullFileBase.decSimAvg2x, tp)) ;
         else
-            dec_tp = load(sprintf(QS.fullFileBase.decSimAvg, tp)) ;
+            dec_tp = load(sprintf(tubi.fullFileBase.decSimAvg, tp)) ;
         end
     end
 

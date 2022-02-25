@@ -3,13 +3,13 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 % ALIGNMESHESAPDV(opts) 
 % Uses anterior, posterior, and dorsal training in ilastik h5 output to
 % align meshes along APDV coordinate system with global rotation matrix 
-% and translation vector. Extracted COMs from the 
+% and translation vector. Extracted pts from the 
 % segmented training is loaded/saved in h5 file opts.rawapdvname (usually
-% "apdv_coms_from_training.h5").
-% Smoothed COMs from the segmented training --> opts.rawapdvname
-% Smoothed rotated scaled COMs              --> opts.outapdvname
+% "apdv_pts_from_training.h5").
+% Smoothed pts from the segmented training --> opts.rawapdvname
+% Smoothed rotated scaled pts              --> opts.outapdvname
 % Note that the global rotation matrix for the QuapSlap instance is defined
-% previously in computeAPDCOMs()
+% previously in ptputeAPdpts()
 % 
 % 
 % This is a function similar to the align_meshes_APDV.m script
@@ -61,11 +61,11 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 % xyzlim_APDV_um.txt
 %   bounding box in rotated frame, in microns. Saved to 
 %   fullfile(meshDir, 'xyzlim_APDV_um.txt')
-% apdv_coms_rs.h5 (outapdvname)
+% apdv_pts_rs.h5 (outapdvname)
 %   Centers of mass for A, P, and D in microns in rotated, scaled APDV
 %   coord system. Note that this coord system is mirrored if flipy==true.
-%   Also contains raw acom,pcom,dcom in subsampled pixels.
-%   Saved to fullfile(meshDir, 'centerline/apdv_coms_rs.h5')
+%   Also contains raw apt,ppt,dpt in subsampled pixels.
+%   Saved to fullfile(meshDir, 'centerline/apdv_pts_rs.h5')
 % startendpt.h5
 %   Starting and ending points
 %   Saved to fullfile(meshDir, 'centerline/startendpt_rs.h5') ;
@@ -76,11 +76,10 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 timePoints = QS.xp.fileMeta.timePoints ;
 meshDir = QS.dir.mesh ;
 resolution = QS.APDV.resolution ;
-[acom_sm, pcom_sm] = QS.getAPCOMSm() ;
+[apt_sm, ppt_sm] = QS.getAPpointsSm() ;
 
 % Default options
 overwrite = false ;
-overwrite_ims = false ;
 preview = false ;
 plot_buffer = 20 ;
 ssfactor = QS.ssfactor ;
@@ -104,9 +103,9 @@ end
 if isfield(opts, 'normal_step')
     normal_step = opts.normal_step ;
 else
-    normal_step = 1e-1 ;  % in pixels, how far to march if pcom is outside mesh
+    normal_step = 1e-1 ;  % in pixels, how far to march if ppt is outside mesh
 end
-dcomname = fullfile(meshDir, 'dcom_for_rot.txt') ;
+dptname = fullfile(meshDir, 'dpt_for_rot.txt') ;
 
 % Default valued options
 timeinterval = 1 ;
@@ -127,7 +126,7 @@ xyzlimname_um = QS.fileName.xyzlim_um ;
 xyzlimname_um_buff = QS.fileName.xyzlim_um_buff ;
 % Name output directory for apdv info
 apdvoutdir = QS.dir.cntrline ;
-outapdvname = fullfile(apdvoutdir, 'apdv_coms_rs.h5') ;
+outapdvname = fullfile(apdvoutdir, 'apdv_pts_rs.h5') ;
 outstartendptname = fullfile(apdvoutdir, 'startendpt.h5') ;
 % Name the directory for outputting aligned_meshes
 alignedMeshDir = QS.dir.alignedMesh ;
@@ -158,12 +157,12 @@ if isfield(opts, 'outapdvname')
     outapdvname = opts.outapdvname ;
 end
 
-% dcomname
-if isfield(opts, 'dcomname')
-    dcomname = opts.dcomname ;
+% dptname
+if isfield(opts, 'dptname')
+    dptname = opts.dptname ;
 end
-if ~strcmp(dcomname(end-3:end), '.txt') 
-    dcomname = [dcomname '.txt'] ;
+if ~strcmp(dptname(end-3:end), '.txt') 
+    dptname = [dptname '.txt'] ;
 end
 if isfield(opts, 'rawapdvname')
     apdvoutdir = opts.apdvOutDir ;
@@ -256,16 +255,16 @@ else
 end
 disp('done')
 
-%% With acoms and pcoms in hand, we compute dorsal and rot/trans ==========
+%% With apts and ppts in hand, we compute dorsal and rot/trans ==========
 overwrite_startendpts = false ;
 for tidx = 1:length(timePoints)
     tic
     tt = timePoints(tidx) ;
     
-    % Pick out the acom and pcom in SUBSAMPLED UNITS from smoothed sequence
+    % Pick out the apt and ppt in SUBSAMPLED UNITS from smoothed sequence
     % NOTE: this is from the RAW data
-    acom = acom_sm(tidx, :) ;
-    pcom = pcom_sm(tidx, :) ; 
+    apt = apt_sm(tidx, :) ;
+    ppt = ppt_sm(tidx, :) ; 
     
     %% Name the output centerline
     fig1outname = fullfile(fig1outdir, sprintf(alignedMeshXYFigBaseName, tt)) ;
@@ -331,11 +330,11 @@ for tidx = 1:length(timePoints)
     if overwrite || ~spt_ept_exist 
         % Point match for aind and pind
         disp(['Point matching mesh ' meshfn])
-        adist2 = sum((vtx_sub - acom) .^ 2, 2);
+        adist2 = sum((vtx_sub - apt) .^ 2, 2);
         %find the smallest distance and use that as an index 
         aind = find(adist2 == min(adist2)) ;
         % Next point match the posterior
-        pdist2 = sum((vtx_sub - pcom) .^ 2, 2);
+        pdist2 = sum((vtx_sub - ppt) .^ 2, 2);
         % find the smallest distance and use that as an index
         pind = find(pdist2 == min(pdist2)) ;
 
@@ -351,13 +350,13 @@ for tidx = 1:length(timePoints)
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Define start point and endpoint 
         disp(['Defining start point and endpoint for tp = ' num2str(tt)])
-        % Check if acom is inside mesh. If so, use that as starting point.
-        ainside = inpolyhedron(fvsub, acom(1), acom(2), acom(3)) ;
-        pinside = inpolyhedron(fvsub, pcom(1), pcom(2), pcom(3)) ;
+        % Check if apt is inside mesh. If so, use that as starting point.
+        ainside = inpolyhedron(fvsub, apt(1), apt(2), apt(3)) ;
+        pinside = inpolyhedron(fvsub, ppt(1), ppt(2), ppt(3)) ;
 
         if ainside
             disp('start point for centerline is inside mesh')
-            startpt = acom' ;
+            startpt = apt' ;
         else
             % move along the inward normal of the mesh from the matched vertex
             vtx = [vtx_sub(aind, 1), vtx_sub(aind, 2), vtx_sub(aind, 3)]' ;
@@ -378,7 +377,7 @@ for tidx = 1:length(timePoints)
         % Define end point
         if pinside
             disp('end point for centerline is inside mesh')
-            endpt = pcom' ;
+            endpt = ppt' ;
         else
             % move along the inward normal of the mesh from the matched vertex
             vtx = [vtx_sub(pind, 1), vtx_sub(pind, 2), vtx_sub(pind, 3)]' ;
@@ -423,43 +422,43 @@ for tidx = 1:length(timePoints)
     %% Grab rot, trans
     disp('Loading rot from disk...')
     rot = dlmread(rotname) ;
-    dcom = dlmread(dcomname) ;
+    dpt = dlmread(dptname) ;
     trans = dlmread(transname, ',');
     
-    %% Rotate and translate (and mirror) acom, pcom, dcom
+    %% Rotate and translate (and mirror) apt, ppt, dpt
     try 
-        apdcoms_rs_exist = true ;
+        apdpts_rs_exist = true ;
         name = sprintf(QS.fileBase.name, tt) ;
-        acom_rs = h5read(outapdvname, ['/' name '/acom_rs']) ;
-        pcom_rs = h5read(outapdvname, ['/' name '/pcom_rs']) ;
-        dcom_rs = h5read(outapdvname, ['/' name '/dcom_rs']) ;
+        apt_rs = h5read(outapdvname, ['/' name '/apt_rs']) ;
+        ppt_rs = h5read(outapdvname, ['/' name '/ppt_rs']) ;
+        dpt_rs = h5read(outapdvname, ['/' name '/dpt_rs']) ;
         
         % Check that matches what is stored
-        acom_rs_new = ((rot * (acom' * ssfactor))' + trans) * resolution ;
-        pcom_rs_new = ((rot * (pcom' * ssfactor))' + trans) * resolution ;
-        dcom_rs_new = ((rot * (dcom' * ssfactor))' + trans) * resolution ;
+        apt_rs_new = ((rot * (apt' * ssfactor))' + trans) * resolution ;
+        ppt_rs_new = ((rot * (ppt' * ssfactor))' + trans) * resolution ;
+        dpt_rs_new = ((rot * (dpt' * ssfactor))' + trans) * resolution ;
         if flipy
-            acom_rs_new = [ acom_rs_new(1) -acom_rs_new(2) acom_rs_new(3) ] ;
-            pcom_rs_new = [ pcom_rs_new(1) -pcom_rs_new(2) pcom_rs_new(3) ] ;
-            dcom_rs_new = [ dcom_rs_new(1) -dcom_rs_new(2) dcom_rs_new(3) ] ;
+            apt_rs_new = [ apt_rs_new(1) -apt_rs_new(2) apt_rs_new(3) ] ;
+            ppt_rs_new = [ ppt_rs_new(1) -ppt_rs_new(2) ppt_rs_new(3) ] ;
+            dpt_rs_new = [ dpt_rs_new(1) -dpt_rs_new(2) dpt_rs_new(3) ] ;
         end
-        assert(all(abs(acom_rs_new - acom_rs) < 1e-6))
-        assert(all(abs(pcom_rs_new - pcom_rs) < 1e-6))
-        assert(all(abs(dcom_rs_new - dcom_rs) < 1e-6))
+        assert(all(abs(apt_rs_new - apt_rs) < 1e-6))
+        assert(all(abs(ppt_rs_new - ppt_rs) < 1e-6))
+        assert(all(abs(dpt_rs_new - dpt_rs) < 1e-6))
     catch
-        disp('Rotated & Scaled APD COMS do not exist or are different on disk')
-        apdcoms_rs_exist = false ;
+        disp('Rotated & Scaled APD ptS do not exist or are different on disk')
+        apdpts_rs_exist = false ;
     end
     
-    if overwrite || ~apdcoms_rs_exist
-        acom_rs = ((rot * (acom' * ssfactor))' + trans) * resolution ;
-        pcom_rs = ((rot * (pcom' * ssfactor))' + trans) * resolution ;
-        dcom_rs = ((rot * (dcom' * ssfactor))' + trans) * resolution ;
+    if overwrite || ~apdpts_rs_exist
+        apt_rs = ((rot * (apt' * ssfactor))' + trans) * resolution ;
+        ppt_rs = ((rot * (ppt' * ssfactor))' + trans) * resolution ;
+        dpt_rs = ((rot * (dpt' * ssfactor))' + trans) * resolution ;
 
         if flipy
-            acom_rs = [ acom_rs(1) -acom_rs(2) acom_rs(3) ] ;
-            pcom_rs = [ pcom_rs(1) -pcom_rs(2) pcom_rs(3) ] ;
-            dcom_rs = [ dcom_rs(1) -dcom_rs(2) dcom_rs(3) ] ;
+            apt_rs = [ apt_rs(1) -apt_rs(2) apt_rs(3) ] ;
+            ppt_rs = [ ppt_rs(1) -ppt_rs(2) ppt_rs(3) ] ;
+            dpt_rs = [ dpt_rs(1) -dpt_rs(2) dpt_rs(3) ] ;
         end
     end
     
@@ -470,8 +469,10 @@ for tidx = 1:length(timePoints)
     vn_rs = (rot * fvsub.normals')' ;
     sptr = (rot * spt')' + trans ; 
     eptr = (rot * ept')' + trans ;
-    dpt = dcom' * ssfactor ;
-    dptr = (rot * (dcom' * ssfactor))' + trans ; 
+    dpto = dpt ;
+    dpt = dpto' * ssfactor ;
+    dptr = (rot * (dpto' * ssfactor))' + trans ; 
+    assert(numel(dptr) == 3) 
     
     % Scale to actual resolution
     sptrs = sptr * resolution ;
@@ -497,7 +498,7 @@ for tidx = 1:length(timePoints)
     
     %% Get a guess for the axis limits if this is first TP
     if tidx == 1 
-        % Check if already saved, and load or recompute
+        % Check if already saved, and load or reptpute
         % fntmp = xyzlimname_um ;
         [~, ~, ~, xyzlim_um_buff] = QS.getXYZLims() ;
         % Expand xyzlimits for plots
@@ -556,9 +557,9 @@ for tidx = 1:length(timePoints)
         plot3(sptrs(1), sptrs(2), sptrs(3), 'ro')
         plot3(eptrs(1), eptrs(2), eptrs(3), 'bo')
         plot3(dptrs(1), dptrs(2), dptrs(3), 'go')
-        plot3(acom(1), acom(2), acom(3), 'rx')
-        plot3(pcom(1), pcom(2), pcom(3), 'bx')
-        plot3(dcom(1), dcom(2), dcom(3), 'gx')
+        plot3(apt(1), apt(2), apt(3), 'rx')
+        plot3(ppt(1), ppt(2), ppt(3), 'bx')
+        plot3(dpt(1), dpt(2), dpt(3), 'gx')
 
         xlabel('x [$\mu$m or pix]', 'Interpreter', 'Latex'); 
         ylabel('y [$\mu$m or pix]', 'Interpreter', 'Latex');
@@ -641,8 +642,8 @@ for tidx = 1:length(timePoints)
         plot3(sptrs(1), sptrs(2), sptrs(3), 'o', 'color', red)
         plot3(eptrs(1), eptrs(2), eptrs(3), 'o', 'color', blue)
         plot3(dptrs(1), dptrs(2), dptrs(3), 'o', 'color', green)
-        plot3(acom_rs(1), acom_rs(2), acom_rs(3), 's', 'color', red)
-        plot3(pcom_rs(1), pcom_rs(2), pcom_rs(3), '^', 'color', blue)
+        plot3(apt_rs(1), apt_rs(2), apt_rs(3), 's', 'color', red)
+        plot3(ppt_rs(1), ppt_rs(2), ppt_rs(3), '^', 'color', blue)
         xlabel('x [$\mu$m]', 'Interpreter', 'Latex'); 
         ylabel('y [$\mu$m]', 'Interpreter', 'Latex');
         zlabel('z [$\mu$m]', 'Interpreter', 'Latex');
@@ -682,7 +683,7 @@ for tidx = 1:length(timePoints)
         close all
     end
     
-    %% Preview and save coms
+    %% Preview and save pts
     % Check the normals 
     if preview 
         close all
@@ -696,55 +697,55 @@ for tidx = 1:length(timePoints)
         axis equal
     end    
     
-    % Save acom, pcom and their aligned counterparts as attributes in an
+    % Save apt, ppt and their aligned counterparts as attributes in an
     % hdf5 file            
     name = sprintf(QS.fileBase.name, tt) ;
     % Save if overwrite
-    if overwrite || ~apdcoms_rs_exist
+    if overwrite || ~apdpts_rs_exist
         try
-            h5create(outapdvname, ['/' name '/acom'], size(acom)) ;
+            h5create(outapdvname, ['/' name '/apt'], size(apt)) ;
         catch
-            disp('acom already exists as h5 file. Overwriting.')
+            disp('apt already exists as h5 file. Overwriting.')
         end
         try
-            h5create(outapdvname, ['/' name '/pcom'], size(pcom)) ;
+            h5create(outapdvname, ['/' name '/ppt'], size(ppt)) ;
         catch
-            disp('pcom already exists as h5 file. Overwriting.')
+            disp('ppt already exists as h5 file. Overwriting.')
         end
         try 
-            h5create(outapdvname, ['/' name '/dcom'], size(dcom)) ;
+            h5create(outapdvname, ['/' name '/dpt'], size(dpt)) ;
         catch
-            disp('dcom already exists as h5 file. Overwriting.')
+            disp('dpt already exists as h5 file. Overwriting.')
         end
         try
-            h5create(outapdvname, ['/' name '/acom_rs'], size(acom_rs)) ;
+            h5create(outapdvname, ['/' name '/apt_rs'], size(apt_rs)) ;
         catch
-            disp('acom_rs already exists as h5 file. Overwriting.')
+            disp('apt_rs already exists as h5 file. Overwriting.')
         end
         try
-            h5create(outapdvname, ['/' name '/pcom_rs'], size(pcom_rs)) ;
+            h5create(outapdvname, ['/' name '/ppt_rs'], size(ppt_rs)) ;
         catch
-            disp('pcom_rs already exists as h5 file. Overwriting.')
+            disp('ppt_rs already exists as h5 file. Overwriting.')
         end
         try 
-            h5create(outapdvname, ['/' name '/dcom_rs'], size(dcom_rs)) ;
+            h5create(outapdvname, ['/' name '/dpt_rs'], size(dpt_rs)) ;
         catch
-            disp('dcom_rs already exists as h5 file. Overwriting.')
+            disp('dpt_rs already exists as h5 file. Overwriting.')
         end
-        h5write(outapdvname, ['/' name '/acom'], acom) ;
-        h5write(outapdvname, ['/' name '/pcom'], pcom) ;
-        h5write(outapdvname, ['/' name '/dcom'], dcom) ;
-        h5write(outapdvname, ['/' name '/acom_rs'], acom_rs) ;
-        h5write(outapdvname, ['/' name '/pcom_rs'], pcom_rs) ;
-        h5write(outapdvname, ['/' name '/dcom_rs'], dcom_rs) ;
+        h5write(outapdvname, ['/' name '/apt'], apt) ;
+        h5write(outapdvname, ['/' name '/ppt'], ppt) ;
+        h5write(outapdvname, ['/' name '/dpt'], dpt) ;
+        h5write(outapdvname, ['/' name '/apt_rs'], apt_rs) ;
+        h5write(outapdvname, ['/' name '/ppt_rs'], ppt_rs) ;
+        h5write(outapdvname, ['/' name '/dpt_rs'], dpt_rs) ;
         % h5disp(outapdvname, ['/' name]);
-        disp('Saved h5: scom pcom dcom acom_rs pcom_rs dcom_rs')
+        disp('Saved h5: spt ppt dpt apt_rs ppt_rs dpt_rs')
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Save the startpt/endpt, both original and rescaled to um ===========
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Save acom, pcom and their aligned counterparts as attributes in an
+    % Save apt, ppt and their aligned counterparts as attributes in an
     % hdf5 file -- these are mesh-dependent since point-matched to vertices
     name = sprintf(QS.fileBase.name, tt) ;
     

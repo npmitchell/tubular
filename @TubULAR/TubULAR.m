@@ -2,7 +2,12 @@ classdef TubULAR < handle
     % Tube-like sUrface Lagrangian Analysis Resource (TubULAR) class
     %
     % Coordinate Systems
-    % ------------------
+    % ------------------    
+    % uv :  (conformal map onto unit square)
+    %       Conformally mapping the cylinderCutMesh onto the unit square 
+    %       in the plane results in the instantaneous uv coordinate system. 
+    %       Corners of the unit square are taken directly from the cutMesh,
+    %       so are liable to include some overall twist.
     % sphi : (proper length x rectified azimuthal coordinate)
     %       quasi-axisymmetric system in which first coordinate is 
     %       proper length along surface and second is a rectified azimuthal
@@ -13,11 +18,6 @@ classdef TubULAR < handle
     %       positions in R^3 (geometric) or based on intensity motion in
     %       pullback space (material/Lagrangian) inferred through 
     %       phasecorrelation of tissue strips around discretized s values.
-    % uv :  (conformal map onto unit square)
-    %       Conformally mapping the cylinderCutMesh onto the unit square 
-    %       in the plane results in the instantaneous uv coordinate system. 
-    %       Corners of the unit square are taken directly from the cutMesh,
-    %       so are liable to include some overall twist.
     % uvprime : (conformal map
     %       [same as uvprime_sm, since uvprime is currently computed via
     %       sphi_sm coordinates]
@@ -44,6 +44,7 @@ classdef TubULAR < handle
     %
     % Properties
     % ----------
+    % imSize        : 2x1 int, size of pullback images to create
     % xyzlim        : 3x2 float, mesh limits in full resolution pixels, in data space
 	% xyzlim_um     : 3x2 float, mesh limits in lab APDV frame in microns
     % resolution    : float, resolution of pixels in um
@@ -111,27 +112,34 @@ classdef TubULAR < handle
                                 % is 1. 
         timeUnits = 'min'       % units of the timeInterval (ex 'min')
         spaceUnits = '$\mu$m'   % units of the embedding space (ex '$\mu$m')
+        imSize                  % size of pullback images to create (default is [a_ratio * 1000, 1000])
         dir                     % str, directory where QuapSlap data lives
-        dirBase                 % 
         fileName                % fileName
-        fileBase
-        fullFileBase
+        fileBase                % fileNames to be populated by timestamp ('...%06d...mat')
+        fullFileBase            % full path of filenames (like fullfile(tubi.dir.X, tubi.fileBase.X))
         ssfactor                % subsampling factor for probabilities 
-        APDV = struct('resolution', [], ...
-            'rot', [], ...
-            'trans', [])
-        flipy                   % whether data is mirror image of lab frame coordinates
-        nV                      % sampling number along circumferential axis
-        nU                      % sampling number along longitudinal axis
-        uvexten                 % naming extension with nU and nV like '_nU0100_nV0100'
-        t0                      % reference time in the experiment
-        normalShift
-        a_fixed                         % aspect ratio for fixed geometry pullback meshes
+        APDV = struct(...
+            'resolution', [], ...       % resolution of data in spaceUnits / pixel
+            'rot', [], ...              % rotation matrix to transform data into APDV frame (rot*v+trans)*resolution
+            'trans', [])                % translation vector to transform data into APDV frame (rot*v+trans)*resolution
+        flipy                           % whether data is mirror image of lab frame coordinates
+        nV                              % sampling number along circumferential axis
+        nU                              % sampling number along longitudinal axis
+        uvexten                         % naming extension with nU and nV like '_nU0100_nV0100'
+        t0                              % reference time in the experiment
+        normalShift = 0                 % shift to apply to meshes in pixel space along normal direction
+        a_fixed = 1                     % aspect ratio for fixed geometry pullback meshes
         phiMethod = '3dcurves'          % method for determining Phi map in pullback mesh creation, with 
                                         % the full map from embedding to pullback being [M'=(Phi)o()o()]. 
                                         % This string specifier must be '3dcurves' (geometric phi stabilization) 
                                         % or 'texture' (optical flow phi stabilization)
-        endcapOptions
+        endcapOptions                   % struct with fields adist, pdist, and tref.
+                                        %   adist : distance around anterior point A which is removed from tubular mesh (sliced off)
+                                        %   pdist : distance around anterior point P which is removed from tubular mesh (sliced off) 
+                                        %   tref : reference time used to define th point on the endcap
+                                        %       at which we cut the cylinder mesh into a cylinderCutMesh (a topological disk/square). 
+                                        %       This "dorsal" point for other timepoints are identified by pointmatching.
+                                        %   Additional fields allowed : 
         plotting = struct('preview', false, ... % display intermediate results
             'save_ims', true, ...       % save images
             'xyzlim_um_buff', [], ...   % xyzlimits in um in RS coord sys with buffer
@@ -139,28 +147,28 @@ classdef TubULAR < handle
             'xyzlim_pix', [], ...       % xyzlimits in pixels RS
             'xyzlim_um', [], ...        % xyzlimits in um in RS coord sys
             'colors', [])               % color cycle for tubi
-        apdvCOM = struct('acom', [], ...
-            'pcom', [], ... 
-            'acom_sm', [], ...
-            'pcom_sm', [], ... 
-            'dcom', [], ... 
-            'acom_rs', [], ... 
-            'pcom_rs', [], ... 
-            'dcom_rs', [])
-        apdvCOMOptions
+        apdvPts = struct('anteriorPts', [], ...
+            'posteriorPts', [], ... 
+            'antPts_sm', [], ...
+            'postPts_sm', [], ... 
+            'dorsalPts', [], ... 
+            'antPts_rs', [], ... 
+            'postPts_rs', [], ... 
+            'dorsPts_rs', [])
+        apdvOptions
         currentTime
-        currentMesh = struct('rawMesh', [], ...
-            'alignedMesh', [], ...     % APDV rotated and scaled mesh         
-            'cylinderMesh', [], ...
-            'cylinderMeshClean', [], ...
-            'cutMesh', [], ...
-            'cutPath', [], ...
-            'spcutMesh', [], ...
-            'spcutMeshSm', [], ...      
-            'spcutMeshSmRS', [], ...    % rectilinear cutMesh in (s,phi) with rotated scaled embedding
-            'spcutMeshSmRSC', [], ...   % rectilinear cutMesh as closed cylinder (topological annulus), in (s,phi) with rotated scaled embedding
-            'ricciMesh', [], ...        % ricci flow result pullback mesh, topological annulus
-            'uvpcutMesh', [])           % rectilinear cutMesh in (u,v) from Dirichlet map result to rectangle 
+        currentMesh = struct('rawMesh', [], ... % original mesh found by surface detection
+            'alignedMesh', [], ...      % APDV rotated and scaled mesh (raw mesh in APDV coordinates)     
+            'cylinderMesh', [], ...     % original mesh with endcaps cut off
+            'cylinderMeshClean', [], ...    % cylinder mesh with "ears" removed (ears give difficulty in mapping to the plane)
+            'cutMesh', [], ...          % cylinder mesh with a seam given by cutPath
+            'cutPath', [], ...          % vertex indices of the cutMesh along which the periodic seam is cut
+            'uvcutMesh', [], ...        % rectilinear cutMesh in (u,v) from Dirichlet map result to rectangle 
+            'spcutMesh', [], ...        % rectilinear cutMesh in (s,phi) 'surface Lagrangian' parameterization
+            'spcutMeshSm', [], ...      % rectilinear cutMesh in (s,phi) smoothed in time
+            'spcutMeshSmRS', [], ...    % rectilinear cutMesh in (s,phi) smoothed in time with rotated scaled embedding
+            'spcutMeshSmRSC', [], ...   % rectilinear cutMesh as closed cylinder (topological annulus), in (s,phi) smoothed, with rotated scaled embedding
+            'ricciMesh', [])            % ricci flow result pullback mesh, topological annulus          
         currentCline = struct('mss', [], ...
             'mcline', [], ...
             'avgpts', []) ;
@@ -172,26 +180,12 @@ classdef TubULAR < handle
             'adjustlow', 0, ...
             'adjusthigh', 0 )           % image intensity data in 3d and scaling
         currentVelocity = struct('piv3d', struct()) ;     
-        currentVelocityMultiChannel = struct('piv3d', cell(1)) ;     
-        currentSegmentation = struct(...
-            'coordSys', 'spsme', ...    % pullback coordinate system in which segmentation is performed
-            'seg2d', [], ...            % 2d pullback segmentation
-            'seg3d', [], ...            % segmentation pushed forward into 3d
-            'seg2dCorrected', [], ...
-            'seg3dCorrected', []) ;     
         piv = struct( ...
             'imCoords', 'sp_sme', ...   % image coord system for measuring PIV / optical flow) ;
             'Lx', [], ...               % width of image, in pixels (x coordinate)
             'Ly', [], ...               % height of image, in pixels (y coordinate)
             'raw', struct(), ...        % raw PIV results from disk/PIVLab
             'smoothed', struct(), ...   % smoothed PIV results after gaussian blur
-            'smoothing_sigma', 1 ) ;    % sigma of gaussian smoothing on PIV, in units of PIV sampling grid pixels
-        pivMultiChannel = struct( ...   % Multi-channel PIV: one measurement for each image channel (for relative motion)
-            'imCoords', 'sp_sme', ...   % image coord system for measuring PIV / optical flow) ;
-            'Lx', [], ...               % width of image, in pixels (x coordinate)
-            'Ly', [], ...               % height of image, in pixels (y coordinate)
-            'raw', cell(1), ...         % raw PIV results from disk/PIVLab
-            'smoothed', cell(1), ...    % smoothed PIV results after gaussian blur
             'smoothing_sigma', 1 ) ;    % sigma of gaussian smoothing on PIV, in units of PIV sampling grid pixels
         velocityAverage = struct(...
             'v3d', [], ...              % 3D velocities in embedding space [pix/dt]
@@ -200,13 +194,10 @@ classdef TubULAR < handle
             'vn', [], ...               % normal velocity in spaceUnits per timeInterval timeUnits
             'vf', [], ...               % velocity vielf on face barycenters after Lagrangian avg
             'vv', []) ;                 % velocity field on vertices after Lagrangian avg
-        cleanCntrlines          % centerlines in embedding space after temporal averaging
-        % pivPullback = 'sp_sme'; % coordinate system used for velocimetry
-        %  ---> instead use tubi.piv.imCoords
+        cleanCntrlines                  % centerlines in embedding space after temporal averaging
         smoothing = struct(...
             'lambda', 0.00, ...             % diffusion const for field smoothing on mesh
             'lambda_mesh', 0.00, ...        % diffusion const for vertex smoothing of mesh itself
-            'lambda_err', 0.00, ...         % diffusion const for fields inferred from already-smoothed fields on mesh
             'nmodes', 7, ...                % number of low freq modes to keep per DV hoop
             'zwidth', 1) ;                  % half-width of tripulse filter applied along zeta/z/s/u direction in pullback space, in units of du/dz/ds/dzeta
         pathlines = struct('t0', [], ...    % timestamp (not an index) at which pathlines form regular grid in space
@@ -222,9 +213,9 @@ classdef TubULAR < handle
                 'fitlerOptions', []));     
        currentStrain = struct(...
             'pathline', ...                 % strain from pathlines
-                struct('t0Pathlines', [], ...   % t=0 timepoint for pathlines in question
-                'strain', [], ...               % strain evaluated along pathlines
-                'beltrami', [])) ;              % beltrami coefficient for pathlines
+            struct('t0Pathlines', [], ...   % t=0 timepoint for pathlines in question
+            'strain', [], ...               % strain evaluated along pathlines
+            'beltrami', [])) ;              % beltrami coefficient for pathlines
     end
     
     % Some methods are hidden from public view. These are used internally
@@ -309,12 +300,6 @@ classdef TubULAR < handle
             tubi.currentData.adjustlow = 0 ;
             tubi.currentData.adjusthigh = 0 ;
             tubi.currentVelocity.piv3d = struct() ;
-            tubi.currentVelocityMultiChannel.piv3d = ...
-                cell(length(tubi.xp.expMeta.channelsUsed), 1) ;
-            tubi.currentSegmentation.seg2d = [] ;
-            tubi.currentSegmentation.seg3d = [] ;
-            tubi.currentSegmentation.seg2dCorrected = [] ;
-            tubi.currentSegmentation.seg3dCorrected = [] ;
         end
         
         function t0 = t0set(tubi, t0)
@@ -383,18 +368,25 @@ classdef TubULAR < handle
             end
         end
         
-        [acom,pcom,dcom] = computeAPDVCoords(tubi, opts)
+        % Obtain global coordinate system for viewing (rotated coord sys)
+        [apt,ppt,dpt] = computeAPDVCoords(tubi, opts)
         
-        function [acom_sm, pcom_sm] = getAPCOMSm(tubi) 
+        function [apts_sm, ppts_sm] = getAPpointsSm(tubi) 
             % Load the anterior and posterior 'centers of mass' ie the
             % endpoints of the object's centerline
             try
-                acom_sm = h5read(tubi.fileName.apdv, '/acom_sm') ;
-                pcom_sm = h5read(tubi.fileName.apdv, '/pcom_sm') ;
-                assert(size(acom_sm, 1) == length(tubi.xp.fileMeta.timePoints))
+                apts_sm = h5read(tubi.fileName.apdv, '/apts_sm') ;
+                ppts_sm = h5read(tubi.fileName.apdv, '/ppts_sm') ;
+                assert(size(apts_sm, 1) == length(tubi.xp.fileMeta.timePoints))
             catch
-                opts = load(tubi.fileName.apdv_options) ;
-                [acom_sm, pcom_sm] = tubi.computeAPDCOMs(opts.apdvOpts) ;
+                disp(['Warning: did not find APpointsSm on disk in ' tubi.fileName.apdv ', recomputing...'])
+                try
+                    opts = load(tubi.fileName.apdvOptions) ;
+                catch
+                    opts = struct() ;
+                    opts.apdvOpts = struct() ;
+                end
+                [apts_sm, ppts_sm] = tubi.computeAPDpoints(opts.apdvOpts) ;
             end
         end
         
@@ -723,39 +715,8 @@ classdef TubULAR < handle
             end
         end
         
-        function vel = getCurrentVelocityMultiChannel(tubi, varargin)
-            % By default, load 1x resolution piv3d for each channel
-            if isempty(tubi.currentTime)
-                error('No currentTime set. Use QuapSlap.setTime()')
-            end
-            if isempty(varargin) 
-                varargin = 'piv3d' ;
-                do_all = false ;
-            else
-                do_all = false ;
-            end
-            
-            no_piv3d = isempty(tubi.currentVelocityMultiChannel.piv3d) ;
-            if ~no_piv3d
-                for qq = 1:length(tubi.xp.expMeta.channelsUsed)
-                    no_piv3d = no_piv3d || ...
-                        isempty(tubi.currentVelocityMultiChannel.piv3d{qq}) ;
-                end
-            end
-            if (do_all || contains(varargin, 'piv3d')) && no_piv3d
-                % Load 3D data for piv results
-                piv3dfn = sprintf(tubi.fullFileBase.pivMultiChannel.v3d, tubi.currentTime) ;
-                load(piv3dfn, 'piv3dstruct') ;
-                tubi.currentVelocityMultiChannel.piv3d = piv3dstruct ;
-            end
-            
-            if nargout
-                vel = tubi.currentVelocityMultiChannel ;
-            end
-        end
-        
         % APDV methods
-        [acom_sm, pcom_sm] = computeAPDCOMs(tubi, opts)
+        [apts_sm, ppts_sm] = computeAPDpoints(tubi, opts)
         function ars = xyz2APDV(tubi, a)
             %ars = xyz2APDV(tubi, a)
             %   Transform 3d coords from XYZ data space to APDV coord sys
@@ -802,16 +763,18 @@ classdef TubULAR < handle
                 dars(:, 2) = - dars(:, 2) ;
             end
         end
-        function setAPDVCOMOptions(tubi, apdvCOMOpts)
-            tubi.apdvCOMOptions = apdvCOMOpts ;
+        function setAPDVOptions(tubi, apdvOpts)
+            tubi.apdvOptions = apdvOpts ;
         end
-        function apdvCOMOptions = loadAPDVCOMOptions(tubi)
-            load(tubi.fileName.apdvCOMOptions, 'apdvCOMOptions')
-            tubi.apdvCOMOptions = apdvCOMOptions ;
+        function apdvOptions = loadAPDVOptions(tubi)
+            load(tubi.fileName.apdvOptions, 'apdvOptions')
+            tubi.apdvOptions = apdvOptions ;
         end     
-        function apdvCOMOptions = saveAPDVCOMOptions(tubi)
-            apdvCOMOptions = tubi.APDVCOMs.apdvCOMOptions ;
-            save(tubi.fileName.apdvCOMOptions, 'apdvCOMOptions')
+        function apdvOptions = saveAPDVOptions(tubi, apdvOptions)
+            if nargin < 2
+                apdvOptions = tubi.APDVs.apdvOptions ;
+            end
+            save(tubi.fileName.apdvOptions, 'apdvOptions')
         end
         [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
             alignMeshesAPDV(tubi, alignAPDVOpts) 
@@ -1334,6 +1297,7 @@ classdef TubULAR < handle
         
         % Pullbacks
         generateCurrentPullbacks(tubi, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
+        
         function doubleCoverPullbackImages(tubi, options)
             % options : struct with fields
             %   coordsys : ('sp', 'uv', 'up')
@@ -1697,83 +1661,8 @@ classdef TubULAR < handle
                 piv = tubi.piv ;
             end
         end
-        measurePIV3d(tubi, options)
-        
-        % Multi-channel PIV --> one struct for each channel
-        function piv = getPIVMultiChannel(tubi, options)
-            % Load PIV results and store in tubi.piv if not already loaded
-            do_load = false ;
-            for qq = 1:length(tubi.xp.expMeta.channelsUsed)
-                ch = tubi.xp.expMeta.channelsUsed(qq) ;
-                if isempty(tubi.pivMultiChannel.raw) || ...
-                        isempty(fieldnames(tubi.pivMultiChannel.raw{qq})) || ...
-                        isempty(tubi.pivMultiChannel.Lx) || ...
-                        isempty(tubi.pivMultiChannel.Ly) 
-                    do_load = do_load || true ;
-                    disp(['ch = ' num2str(ch)])
-                end
-            end
-            if do_load
-                % Load raw PIV results
-                if nargin > 1
-                    tubi.loadPIVMultiChannel(options)
-                else
-                    tubi.loadPIVMultiChannel() 
-                end
-            end
-            
-            if isempty(tubi.pivMultiChannel.smoothed) || ...
-                    isempty(fieldnames(tubi.pivMultiChannel.smoothed{1})) 
-                for qq = 1:length(tubi.xp.expMeta.channelsUsed)
-                    % Additionally smooth the piv output by sigma
-                    if tubi.pivMultiChannel.smoothing_sigma > 0
-                        piv = tubi.pivMultiChannel.raw{qq} ;
-                        disp(['Smoothing piv output with sigma=' num2str(tubi.piv.smoothing_sigma)])
-                        for tidx = 1:length(tubi.xp.fileMeta.timePoints)-1
-                            velx = piv.u_filtered{tidx} ;
-                            vely = piv.v_filtered{tidx} ;
-                            piv.u_filtered{tidx} = imgaussfilt(velx, tubi.piv.smoothing_sigma) ;
-                            piv.v_filtered{tidx} = imgaussfilt(vely, tubi.piv.smoothing_sigma) ;
-                        end
-                        disp('done smoothing')
-                        tubi.pivMultiChannel.smoothed{qq} = piv ;
-                    end
-                end
-            end
-            if nargout > 0 
-                piv = tubi.pivMultiChannel ;
-            end
-        end
-        function piv = loadPIVMultiChannel(tubi, options)
-            % Load PIV results from disk and store in tubi.piv
-            if ~isempty(tubi.pivMultiChannel.raw)
-                if ~isempty(fieldnames(tubi.pivMultiChannel.raw{1})) && ...
-                    isempty(tubi.pivMultiChannel.Lx) ...
-                    && isempty(tubi.pivMultiChannel.Ly) 
-                    
-                    disp("WARNING: Overwriting tubi.pivMultiChannel with results from disk")
-                end
-            end
-            for ch = tubi.xp.expMeta.channelsUsed
-                tubi.pivMultiChannel.raw{ch} = ...
-                    load(sprintf(tubi.fileName.pivRawMultiChannel.raw, ch)) ;  
-            end
-            timePoints = tubi.xp.fileMeta.timePoints ;
-            if strcmp(tubi.pivMultiChannel.imCoords, 'sp_sme')
-                im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, ...
-                    timePoints(1))) ;
-                % for now assume all images are the same size
-                tubi.pivMultiChannel.Lx = size(im0, 1) * ones(length(timePoints), 1) ;
-                tubi.pivMultiChannel.Ly = size(im0, 2) * ones(length(timePoints), 1) ;
-            else
-                error(['Unrecognized imCoords: ' tubi.pivMultiChannel.imCoords])
-            end
-            if nargout > 0
-                piv = tubi.pivMultiChannel ;
-            end
-        end
-        measurePIV3dMultiChannel(tubi, options)
         measurePIV2d(tubi, options)
+        measurePIV3d(tubi, options)
         
         %% Metric
         plotMetric(tubi, options) 
@@ -2029,56 +1918,6 @@ classdef TubULAR < handle
                 tubi.pathlines.vertices3d = tmp.v3dPathlines ;
                 tubi.pathlines.vertices3d.smoothing_sigma = tmp.smoothing_sigma ;
             end
-        end
-        featureIDs = measurePathlineFeatureIDs(tubi, pathlineType, options)
-        function featureIDs = getPathlineFeatureIDs(tubi, pathlineType, options)
-            % featureIDs = GETPATHLINEFEATUREIDS(tubi, pathlineType, options)
-            %   recall, load, or interactively identify feature locations 
-            %   as positions in zeta, the longitudinal pullback coordinate 
-            %
-            if nargin < 2
-                pathlineType = 'vertices' ;
-            end
-            if nargin < 3
-                options = struct() ;
-            end
-            if strcmpi(pathlineType, 'vertices')
-                if isempty(tubi.pathlines.featureIDs.vertices)
-                    featureIDs = measurePathlineFeatureIDs(tubi, ...
-                        pathlineType, options) ;
-                    tubi.pathlines.featureIDs.vertices = featureIDs ;
-                else
-                    featureIDs = tubi.pathlines.featureIDs.vertices ;
-                end
-            else
-                error('Code for this pathlineType here')
-            end
-        end
-        
-        function featureIDs = getUVPrimePathlineFeatureIDs(tubi, pathlineType, options)
-            % featureIDs = getUVPrimePathlineFeatureIDs(tubi, pathlineType, options)
-            %   recall, load, or interactively identify feature locations 
-            %   as positions in zeta, the longitudinal pullback coordinate 
-            %
-            if nargin < 2
-                pathlineType = 'vertices' ;
-            end
-            if nargin < 3
-                options = struct() ;
-            end
-            if strcmpi(pathlineType, 'vertices')
-                if isempty(tubi.pathlines_uvprime.featureIDs.vertices)
-                    options.field2 = 'radius' ;
-                    featureIDs = ...
-                        tubi.measureUVPrimePathlineFeatureIDs( ...
-                        pathlineType, options) ;
-                    tubi.pathlines.featureIDs.vertices = featureIDs ;
-                else
-                    featureIDs = tubi.pathlines_uvprime.featureIDs.vertices ;
-                end
-            else
-                error('Code for this pathlineType here')
-            end            
         end
         
         %% Velocities -- loading Raw / noAveraging
@@ -2357,90 +2196,10 @@ classdef TubULAR < handle
             % Make colorwheel
             
         end
-        
-        % DEPRICATED
-        % compareBeltramiToLinearizedConstriction.m
-        
-        
-        % DEPRICATED -- could integrate rates
-        measurePathlineIntegratedStrain(tubi, options)
-        plotPathlineIntegratedStrain(tubi, options)
-        
-        %% Measurement of relative motion between 2 sets of objects  
-        % (for example, multiple layers of the tissue)
-        measureRelativeMotionTracks(tubi, track1fn, track2fn, Options) 
-        plotRelativeMotionTracks2D(tubi, Options)
-        plotRelativeMotionTracks3D(tubi, Options)
-        measureRelativeMotionTracksLagrangianFrame(tubi, Options)
-        
-               
-        %% Tracking -- manual workflow
-        function tracks = manualTrackingAdd(tubi, options)
-            % Add to current tracks on disk
-            trackOutfn = fullfile(tubi.dir.tracking, 'manualTracks.mat') ;
-            tracks = [] ;
-            timePoints = tubi.xp.fileMeta.timePoints ;
-            imDir = fullfile(tubi.dir.im_sp_sm, 'endoderm') ;
-            imFileBase = tubi.fullFileBase.im_sp_sm ;
-            tracks2Add = length(tracks)+1:length(tracks) + 10 ;
-                
-            if isfield(options, 'trackOutfn')
-                trackOutfn = options.trackOutfn ;
-            end
-            if exist(trackOutfn, 'file')
-                load(trackOutfn, 'tracks')
-            end
-            if isfield(options, 'timePoints')
-                timePoints = options.timePoints ;
-            end
-            if isfield(options, 'imFileBase')
-                imFileBase = options.fileBase ;
-            end
-            if isfield(options, 'tracks2Add')
-                tracks2Add = options.tracks2Add ;
-            end
-            % Decide on tidx0
-            if isfield(options, 'tidx0')
-                tidx0 = options.tidx0 ;
-            elseif all(timePoints == tubi.xp.fileMeta.timePoints)
-                tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
-            else
-                tidx0 = 1 ;
-            end
-            tracks = manualTrack2D(tracks, imFileBase, timePoints, trackOutfn, tracks2Add, tidx0) ;
-        end
-        
-        function manualTrackingCorrect(options)
-            disp('Review tracking results: manualCorrectTracks2D')
-            %% Ensure all pairIDs are good tracks in muscle layer
-            subdir = 'muscle' ;
-            imDir = fullfile(tubi.dir.im_sp_sm, subdir) ;
-            timePoints = 1:60 ;
-            fileBase = fullfile(imDir, tubi.fileBase.im_sp_sm) ;
-            trackOutfn = fullfile(tubi.dir.tracking, 'muscle_tracks.mat') ;
-            load(trackOutfn, 'tracks') ;
-            tracks2Correct = 1:length(tracks) ;
-            if all(timePoints == tubi.xp.fileMeta.timePoints)
-                tidx = tubi.xp.tidx(tubi.t0set()) ;
-            else
-                tidx = 1 ;
-            end
-
-            [newTracks, newG] = manualCorrectTracks2D(tracks, fileBase, timePoints, trackOutfn, tracks2Correct) ;
-        end
-        
-        %% Visualize tracked segmentation
-        % for visualizing T1 transitions
-        visualizeDemoTracks(tubi, Options)
-        visualizeTracking3D(tubi, Options)
-        visualizeSegmentationPatch(tubi, Options)
-        
+                               
         %% timepoint-specific coordinate transformations
         sf = interpolateOntoPullbackXY(tubi, XY, scalar_field, options)
-        
-        %% Reconstruction of experiment via NES simulation 
-        simulateNES(tubi, options)
-        
+                
         %% coordSysDemo
         function coordSystemDemo(tubi, options)
             % Image for publication/presentation on method & coordinate system

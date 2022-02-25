@@ -75,6 +75,16 @@ axisorder = [1 2 3 ];   % Note: we should NOT use QS.data.axisOrder here,
 normal_shift = 0 ;          % how much to shift mesh along vertex normals before rendering
 preTextureLambda = 0 ;      % how much to smooth mesh before rendering
 
+% Overwrite imSize to match tubular attributes
+if isfield(pbOptions, 'imSize')
+    if any(size(pbOptions.imSize) ~= size(tubi.imSize))
+        disp('Warning: overwriting pbOptions.imSize with tubi.imSize')
+    elseif any(pbOptions.imSize ~= tubi.imSize)
+        disp('Warning: overwriting pbOptions.imSize with tubi.imSize')
+    end
+end
+pbOptions.imSize = tubi.imSize ;
+
 % Replace defaults
 if nargin > 4
     disp('Unpacking options for which pullbacks to generate/overwrite')
