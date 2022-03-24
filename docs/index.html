@@ -152,7 +152,8 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <ul>
+  <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
+<ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="TubULAR.html">TubULAR</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
 </ul>
 </li>
@@ -195,8 +196,6 @@
         <article role="main">
           <section id="welcome-to-tubular-s-documentation">
 <h1>Welcome to TubULAR’s documentation!<a class="headerlink" href="#welcome-to-tubular-s-documentation" title="Permalink to this headline">#</a></h1>
-<div class="toctree-wrapper compound">
-</div>
 <section id="what-is-it">
 <h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">#</a></h2>
 <p>TubULAR is a set of tools for working with 3D data of surfaces – potentially complex and dynamic – that can be described as tubes.
@@ -211,61 +210,55 @@ However, there is additional functionality included in the tutorials that use Im
 <section id="let-s-get-going">
 <h2>Let’s get going<a class="headerlink" href="#let-s-get-going" title="Permalink to this headline">#</a></h2>
 <p>Download TubULAR in Mac or Linux, navigate in Terminal to a path where you’d like to place the code, then clone the repository:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">bash</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">tubular</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>cd ~
-git clone <a class="reference external" href="ssh://www.github.com/npmitchell/tubular">ssh://www.github.com/npmitchell/tubular</a></p>
-</div></blockquote>
 <p>There is now a directory called tubular. Open up MATLAB and take a look at some example scripts to get familiar.</p>
 <p>Updates to the code are installed running the following command from the <code class="docutils literal notranslate"><span class="pre">tubular</span></code> directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">bash</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>git pull</p>
-</div></blockquote>
 </section>
 <section id="optional-dependencies-for-extra-functionality">
 <h2>Optional dependencies for extra functionality<a class="headerlink" href="#optional-dependencies-for-extra-functionality" title="Permalink to this headline">#</a></h2>
 <p><strong>ImSAnE</strong></p>
 <p>ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">bash</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">imsane</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>cd ~
-git clone <a class="reference external" href="ssh://www.github.com/npmitchell/imsane">ssh://www.github.com/npmitchell/imsane</a></p>
-</div></blockquote>
 <p>Then, before running an example script that uses ImSAnE, you’ll need to navigate to the ImSAnE repository in MATLAB and run <code class="docutils literal notranslate"><span class="pre">setup.m</span></code> from there.</p>
 <p><strong>Morphsnakes</strong></p>
 <p>Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez. The original version was posted to github here: &lt;<a class="reference external" href="https://github.com/pmneila/morphsnakes">https://github.com/pmneila/morphsnakes</a>&gt;, but to use this with TubULAR and ImSAnE, we use a lightly modified version:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">bash</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">PyMCubes</span>
+
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">morphsnakes</span><span class="o">.</span><span class="n">git</span>
+
+<span class="n">cd</span> <span class="n">morphsnakes</span>
+
+<span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">develop</span>
+
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">morphsnakes_wrapper</span><span class="o">.</span><span class="n">git</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">h5py</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">seaborn</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">matplotlib</span>
+
+<span class="n">cd</span> <span class="n">morphsnakes_wrapper</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>sudo pip3 install PyMCubes
-git clone <a class="reference external" href="https://github.com/npmitchell/morphsnakes.git">https://github.com/npmitchell/morphsnakes.git</a>
-cd morphsnakes
-python3 setup.py develop
-git clone <a class="reference external" href="https://github.com/npmitchell/morphsnakes_wrapper.git">https://github.com/npmitchell/morphsnakes_wrapper.git</a>
-sudo pip3 install h5py
-sudo pip3 install seaborn
-sudo pip3 install matplotlib
-cd morphsnakes_wrapper</p>
-</div></blockquote>
 <p>Edit run_morphsnakes.sh to your liking (setting paths to your data, parameters, etc). Then run it on your data as below. Documentation for parameters is in the bash script (run_morphsnakes.sh).:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">bash</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="n">run_morphsnakes</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>bash run_morphsnakes.sh</p>
-</div></blockquote>
 </section>
 <section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">#</a></h2>
 <div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html">TubULAR</a><ul class="simple">
 </ul>
@@ -276,6 +269,8 @@ cd morphsnakes_wrapper</p>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#module-@TubULAR">Full Contents:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#indices-and-tables">Indices and tables</a></li>
 </ul>
+</div>
+<div class="toctree-wrapper compound">
 </div>
 </section>
 </section>
@@ -340,7 +335,9 @@ cd morphsnakes_wrapper</p>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#let-s-get-going">Let’s get going</a></li>
 <li><a class="reference internal" href="#optional-dependencies-for-extra-functionality">Optional dependencies for extra functionality</a></li>
-<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>

@@ -6,9 +6,6 @@
 Welcome to TubULAR's documentation!
 ===================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
 
 What is it?
@@ -28,8 +25,6 @@ Let's get going
 Download TubULAR in Mac or Linux, navigate in Terminal to a path where you'd like to place the code, then clone the repository::
 
 
-.. code-block:: bash
-
 	cd ~
 	git clone ssh://www.github.com/npmitchell/tubular
 	
@@ -37,8 +32,6 @@ There is now a directory called tubular. Open up MATLAB and take a look at some 
     
 Updates to the code are installed running the following command from the ``tubular`` directory::
 
-
-.. code-block:: bash
 
     git pull
 
@@ -49,9 +42,6 @@ Optional dependencies for extra functionality
 
 ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE::
 
-
-.. code-block:: bash
-
 	cd ~
 	git clone ssh://www.github.com/npmitchell/imsane
 	
@@ -61,36 +51,84 @@ Then, before running an example script that uses ImSAnE, you'll need to navigate
 
 Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez. The original version was posted to github here: <https://github.com/pmneila/morphsnakes>, but to use this with TubULAR and ImSAnE, we use a lightly modified version::
 
+   sudo pip3 install PyMCubes	
 
-.. code-block:: bash
+   git clone https://github.com/npmitchell/morphsnakes.git
 
-	sudo pip3 install PyMCubes
-	git clone https://github.com/npmitchell/morphsnakes.git
-	cd morphsnakes
-	python3 setup.py develop
-	git clone https://github.com/npmitchell/morphsnakes_wrapper.git
-	sudo pip3 install h5py
-	sudo pip3 install seaborn
-	sudo pip3 install matplotlib
-	cd morphsnakes_wrapper
+   cd morphsnakes
+	
+   python3 setup.py develop
+	
+   git clone https://github.com/npmitchell/morphsnakes_wrapper.git
+	
+   sudo pip3 install h5py
+	
+   sudo pip3 install seaborn
+	
+   sudo pip3 install matplotlib
+	
+   cd morphsnakes_wrapper
 
 Edit run_morphsnakes.sh to your liking (setting paths to your data, parameters, etc). Then run it on your data as below. Documentation for parameters is in the bash script (run_morphsnakes.sh).::
 
-.. code-block:: bash
 	
 	bash run_morphsnakes.sh
 	
-Contents
---------
+  
+Example usage with optional dependencies
+----------------------------------------
+**ImSAnE**
+
+To run ImSaNE using TubULAR's functionality for surface detection and fitting, follow this template.
 
 .. toctree::
+  :maxdepth: 2
+  :caption: Auxiliary contents used by principal contents:
+
+  example_usage_imsane_with_tubular
+
+Conversely, to follow a TubULAR pipeline using an ImSaNE Experiment class instance, follow this template.
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Auxiliary contents used by principal contents:
+
+  example_usage_tubular_with_imsane
+  
+
+**ImSAnE + Morphsnakes**
+To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Auxiliary contents used by principal contents:
+
+  example_usage_imsane_morphsnakes_tubular
+  
+  
+   
+
+Overview of contents
+--------------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Principal contents:
 
    TubULAR
    DEC
    TexturePatch
    RicciFlow_MATLAB
-   utility
    
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Auxiliary contents used by principal contents:
+
+  utility
+   
+  
+
 
 Indices and tables
 ==================
