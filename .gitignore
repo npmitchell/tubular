@@ -36,3 +36,6 @@
 *.DS*
 *Thumbs*
 *.venv*
+
+# MATLAB stuff
+*.m~
