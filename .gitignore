@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+
+# Mac stuff
+*.DS*
+*Thumbs*
+*.venv*
