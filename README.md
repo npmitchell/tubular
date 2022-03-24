@@ -1,7 +1,12 @@
 # tubular
-Docs for Tube-like sUrface Lagrangian Analysis Resource (TubULAR)
 
-TubULAR transforms 3D volumentric data with a dynamic surface of interest into 
+
+[![Documentation](https://img.shields.io/badge/Documentation-Link-blue.svg)](https://npmitchell.github.io/tubular/)
+
+> Tube-like sUrface Lagrangian Analysis Resource (TubULAR): for analysis of in-plane and out-of-plane motions of 3D data with dynamic tube-like surfaces of tissues or interfaces.
+
+## Overview
+**TubULAR** transforms 3D volumentric data with a dynamic surface of interest into 
 a tube-like, global parameterization based on the intrinsic geometry of the surface 
 and then builds measurements of mtion on the dynamic surfaces.
 
@@ -23,8 +28,11 @@ Obtaining the surfaces:
 Since different tools will suit different needs, we allow surfaces to be obtained by whatever
 method you choose (see for ex, [1]). However, we also include two methods for computing 
 these surfaces based on active contour methods. 
+
 In the first, we use build-in MATLAB methods for finding level set surfaces [2]. 
+
 In the second, we use a published morphological snakes package in python to find surfaces [3].
+
 Either method can be implemented within the ImSAnE environment [1], and TubULAR can utilize an 
 ImSAnE class instance as an input. However, this is not required.
 
@@ -34,6 +42,7 @@ Tools for visualizing textured data on the surface are provided in TexturePatch.
 The TexturePatch package is integrated into TubULAR so that as you move through a 
 TubULAR pipeline, images of your data on the surface in 3D and in mapped 2D spaces are 
 drawn on demand.
+
 The TexturePatch package can be used as a standalone package as well.
 
 Coordinate system acquisition:
