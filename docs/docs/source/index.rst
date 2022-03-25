@@ -14,6 +14,9 @@ TubULAR is a set of tools for working with 3D data of surfaces -- potentially co
 Developing guts, neural tubes, and pumping hearts can all be treated as tubes, with potentially complex and dynamic shapes.
 With TubULAR, we can describe the tissue motion on the tube-like surface and quantify how it changes over time.
 
+.. image:: images/MegaComposite_withMSGrowEvolve_vtG_vn_085_annotated.png
+   :width: 1200
+
 Usage
 -----
 
@@ -34,6 +37,17 @@ Updates to the code are installed running the following command from the ``tubul
 
 
     git pull
+
+Components
+----------
+A typical **Tubular** pipeline uses several self-contained packages that we have included within TubULAR. We wrote two of these packages: **DEC**  for flow field analysis on curved surfaces, and **TexturePatch** for surface visualization.
+
+**DEC** computes fully covariant Discrete Exterior Calculus measures of flow.
+
+.. image:: images/DEC_diskMesh_output.jpg
+  :width: 891  
+  
+**TexturePatch** visualizes volumetric data on meshes in 3D and handles texture mapping data from one space/surface to another.
 
 
 Optional dependencies for extra functionality
@@ -71,7 +85,6 @@ Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez.
 
 Edit run_morphsnakes.sh to your liking (setting paths to your data, parameters, etc). Then run it on your data as below. Documentation for parameters is in the bash script (run_morphsnakes.sh).::
 
-	
 	bash run_morphsnakes.sh
 	
   
