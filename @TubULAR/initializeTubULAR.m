@@ -130,8 +130,12 @@ tubi.dir.uvCoord = uvDir ;
 
 %% fileBases
 tubi.fileBase.name = xp.fileMeta.filenameFormat(1:end-4) ;
-tubi.fileBase.mesh = ...
-    [xp.detector.options.ofn_smoothply '%06d'] ;
+try
+    tubi.fileBase.mesh = ...
+        [xp.detector.options.ofn_smoothply '%06d'] ;
+catch
+    tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply ;
+end
 tubi.fileBase.alignedMesh = ...
     [tubi.fileBase.mesh '_APDV_um'] ;
 tubi.fileBase.apdProb = [tubi.fileBase.name '_Probabilities_APDVcoords.h5']  ;
