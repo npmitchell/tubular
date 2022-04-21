@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example Usage" href="DEC.html" /><link rel="prev" title="Example for using TubULAR methods within imsane, using morphsnakes for surface detection" href="example_usage_imsane_morphsnakes_tubular.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example Usage" href="DEC.html" /><link rel="prev" title="Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection" href="example_usage_imsane_morphsnakes_tubular.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
         <title>TubULAR - TubULAR 2022 documentation</title>
@@ -153,13 +153,16 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within imsane</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within imsane, using morphsnakes for surface detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul class="current">
@@ -907,33 +910,6 @@ or ‘texture’ (optical flow phi stabilization)</p>
 endpoints of the object’s centerline</p>
 </dd></dl>
 <dl class="mat method">
-<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getCurrentData">
-<span class="sig-name descname"><span class="pre">getCurrentData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">adjustIV</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getCurrentData" title="Permalink to this definition">#</a></dt>
-<dd><p>IV = getCurrentData(tubi, adjustIV)
-Load/return volumetric intensity data for current timepoint
-Note: axis order permutation is applied here upon loading and
-assignment to self (current tubi instance).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tubi</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">tubi</span> <span class="pre">class</span> <span class="pre">instance</span> <span class="pre">(self)</span></code></span>) – </p></li>
-<li><p><strong>adjustIV</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">bool</span> <span class="pre">(default=true)</span></code></span>) – apply the intensity adjustment stored in
-tubi.data.adjustlow/high</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>IV</strong> – volumetric intensity data of current timepoint
-Note this is also assigned to self as tubi.currentData.IV, so
-avoiding a duplicate copy in RAM is useful for large data
-by not returning an argument and instead calling
-tubi.currentData.IV when needed.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>X*Y*Z intensities</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.getCurrentPathlineStrain">
 <span class="sig-name descname"><span class="pre">getCurrentPathlineStrain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">t0Pathlines</span></em>, <em class="sig-param"><span class="pre">varargin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getCurrentPathlineStrain" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -972,6 +948,13 @@ self</p></li>
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.getCurrentSegmentation3DCorrected">
 <span class="sig-name descname"><span class="pre">getCurrentSegmentation3DCorrected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getCurrentSegmentation3DCorrected" title="Permalink to this definition">#</a></dt>
 <dd><p>Obtain the cell segmentation in 3D pullback space</p>
+</dd></dl>
+<dl class="mat method">
+<dt class="sig sig-object mat" id="@TubULAR.TubULAR.getMeshes">
+<span class="sig-name descname"><span class="pre">getMeshes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">detectOptions</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.TubULAR.getMeshes" title="Permalink to this definition">#</a></dt>
+<dd><p>Obtain mesh surfaces of volumetric data (like ImSAnE’s surface
+detection methods), here using integralDetector methods for
+activecontouring</p>
 </dd></dl>
 <dl class="mat method">
 <dt class="sig sig-object mat" id="@TubULAR.TubULAR.getPIV">
@@ -2160,6 +2143,36 @@ pullback images.</p>
 <li><p><em>NPMitchell 2020</em></p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="mat function">
+<dt class="sig sig-object mat" id="@TubULAR.getCurrentData">
+<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">getCurrentData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">adjustIV</span></em>, <em class="sig-param"><span class="pre">varargin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.getCurrentData" title="Permalink to this definition">#</a></dt>
+<dd><p>IV = getCurrentData(tubi, adjustIV)
+Load/return volumetric intensity data for current timepoint
+Note: axis order permutation is applied here upon loading and
+assignment to self (current tubi instance).
+Note that the steps executed by this function depends on whether
+xp is an ImSAnE experiment class or a simple struct belonging to the
+TubULAR class instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tubi</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">tubi</span> <span class="pre">class</span> <span class="pre">instance</span> <span class="pre">(self)</span></code></span>) – </p></li>
+<li><p><strong>adjustIV</strong> (<span><code class="xref mat mat-obj docutils literal notranslate"><span class="pre">bool</span> <span class="pre">(default=true)</span></code></span>) – apply the intensity adjustment stored in
+tubi.data.adjustlow/high</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>IV</strong> – volumetric intensity data of current timepoint
+Note this is also assigned to self as tubi.currentData.IV, so
+avoiding a duplicate copy in RAM is useful for large data
+by not returning an argument and instead calling
+tubi.currentData.IV when needed.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>#channels x 1 cell array of X*Y*Z intensities arrays</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3664,6 +3677,14 @@ qsubsample = 5 ;   % quiver subsampling in pullback space</p>
 <p>NPMitchell 2020</p>
 </dd></dl>
 <dl class="mat function">
+<dt class="sig sig-object mat" id="@TubULAR.prepareIlastik">
+<span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">prepareIlastik</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.prepareIlastik" title="Permalink to this definition">#</a></dt>
+<dd><p>Prepaere stack for Ilastik segmentation. This outputs an h5
+file of subsampled intensity data at isotropic resolution
+on which to train.</p>
+<p>prepareIlastik(stack)</p>
+</dd></dl>
+<dl class="mat function">
 <dt class="sig sig-object mat" id="@TubULAR.pullbackPathlines">
 <span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">pullbackPathlines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">QS</span></em>, <em class="sig-param"><span class="pre">x0</span></em>, <em class="sig-param"><span class="pre">y0</span></em>, <em class="sig-param"><span class="pre">t0</span></em>, <em class="sig-param"><span class="pre">options</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.pullbackPathlines" title="Permalink to this definition">#</a></dt>
 <dd><blockquote>
@@ -3849,7 +3870,7 @@ proportional to spaceUnits/dt (scaled by dilation of map)</p></li>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Example for using TubULAR methods within imsane, using morphsnakes for surface detection</div>
+                <div class="title">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</div>
                 
               </div>
             </a>

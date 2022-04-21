@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR methods within imsane" href="example_usage_imsane_with_tubular.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR after making an ImSAnE experiment instance" href="example_usage_tubular.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
         <title>TubULAR 2022 documentation</title>
@@ -153,13 +153,16 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within imsane</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within imsane, using morphsnakes for surface detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul>
@@ -211,12 +214,13 @@
         <article role="main">
           <section id="welcome-to-tubular-s-documentation">
 <h1>Welcome to TubULAR’s documentation!<a class="headerlink" href="#welcome-to-tubular-s-documentation" title="Permalink to this headline">#</a></h1>
+<p>Note: This site is under construction, with an estimated completion date of May 6, 2022. Certain steps of the workflow may still require dependencies, to be fixed ASAP.</p>
 <section id="what-is-it">
 <h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">#</a></h2>
 <p>TubULAR is a set of tools for working with 3D data of surfaces – potentially complex and dynamic – that can be described as tubes.
 Developing guts, neural tubes, and pumping hearts can all be treated as tubes, with potentially complex and dynamic shapes.
 With TubULAR, we can describe the tissue motion on the tube-like surface and quantify how it changes over time.</p>
-<a class="reference internal image-reference" href="_images/MegaComposite_withMSGrowEvolve_vtG_vn_085_annotated.png"><img alt="_images/MegaComposite_withMSGrowEvolve_vtG_vn_085_annotated.png" src="_images/MegaComposite_withMSGrowEvolve_vtG_vn_085_annotated.png" style="width: 1200px;"/></a>
+<a class="reference internal image-reference" href="_images/fig_tubular_overview_v3.jpg"><img alt="_images/fig_tubular_overview_v3.jpg" src="_images/fig_tubular_overview_v3.jpg" style="width: 1200px;"/></a>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">#</a></h2>
@@ -235,18 +239,28 @@ However, there is additional functionality included in the tutorials that use Im
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span>
 </pre></div>
 </div>
+<p>Now that you’ve downloaded TubULAR, let’s look over the components and walk through an example.</p>
 </section>
 <section id="components">
 <h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">#</a></h2>
 <p>A typical <strong>Tubular</strong> pipeline uses several self-contained packages that we have included within TubULAR. We wrote two of these packages: <strong>DEC</strong>  for flow field analysis on curved surfaces, and <strong>TexturePatch</strong> for surface visualization.</p>
 <p><strong>DEC</strong> computes fully covariant Discrete Exterior Calculus measures of flow.</p>
-<a class="reference internal image-reference" href="_images/DEC_diskMesh_output.jpg"><img alt="_images/DEC_diskMesh_output.jpg" src="_images/DEC_diskMesh_output.jpg" style="width: 891px;"/></a>
-<p><strong>TexturePatch</strong> visualizes volumetric data on meshes in 3D and handles texture mapping data from one space/surface to another.</p>
+<a class="reference internal image-reference" href="_images/fig_tubular_tissueFlow_v2.jpg"><img alt="_images/fig_tubular_tissueFlow_v2.jpg" src="_images/fig_tubular_tissueFlow_v2.jpg" style="width: 891px;"/></a>
+<p><strong>TexturePatch</strong> visualizes volumetric data on meshes in 3D and handles texture mapping data from one space/surface to another, such as the example gut images shown below:</p>
+<a class="reference internal image-reference" href="_images/gut_figSI_morphsnakes_caax_sequence_v3.jpg"><img alt="_images/gut_figSI_morphsnakes_caax_sequence_v3.jpg" src="_images/gut_figSI_morphsnakes_caax_sequence_v3.jpg" style="width: 891px;"/></a>
+</section>
+<section id="let-s-walk-through-an-example-or-two">
+<h2>Let’s walk through an example or two<a class="headerlink" href="#let-s-walk-through-an-example-or-two" title="Permalink to this headline">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+</ul>
+</div>
 </section>
 <section id="optional-dependencies-for-extra-functionality">
 <h2>Optional dependencies for extra functionality<a class="headerlink" href="#optional-dependencies-for-extra-functionality" title="Permalink to this headline">#</a></h2>
 <p><strong>ImSAnE</strong></p>
-<p>ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE:</p>
+<p>ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. Users already familiar with the ImSAnE workflow can access all the power of TubULAR within ImSAnE. If you’ve never heard of this before, you can take a look at <a class="reference external" href="https://www.nature.com/articles/nmeth.3648">this paper</a> for more details, or you can just skip this section without worry. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
 <span class="n">git</span> <span class="n">clone</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">imsane</span>
 </pre></div>
@@ -284,29 +298,20 @@ However, there is additional functionality included in the tutorials that use Im
 <p>To run ImSaNE using TubULAR’s functionality for surface detection and fitting, follow this template.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within imsane</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="example_usage_imsane_with_tubular.html#indices-and-tables">Indices and tables</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 </div>
 <p>Conversely, to follow a TubULAR pipeline using an ImSaNE Experiment class instance, follow this template.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="example_usage_tubular_with_imsane.html#indices-and-tables">Indices and tables</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
 </ul>
 </div>
 <p><strong>Using TubULAR within ImSAnE with Morphsnakes</strong>
 To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within imsane, using morphsnakes for surface detection</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html#indices-and-tables">Indices and tables</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 </div>
 </section>
@@ -349,12 +354,12 @@ To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, fol
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="example_usage_imsane_with_tubular.html">
+          <a class="next-page" href="example_usage_tubular.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Example for using TubULAR methods within imsane</div>
+                <div class="title">Example for using TubULAR after making an ImSAnE experiment instance</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -396,6 +401,7 @@ To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, fol
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#let-s-get-going">Let’s get going</a></li>
 <li><a class="reference internal" href="#components">Components</a></li>
+<li><a class="reference internal" href="#let-s-walk-through-an-example-or-two">Let’s walk through an example or two</a></li>
 <li><a class="reference internal" href="#optional-dependencies-for-extra-functionality">Optional dependencies for extra functionality</a></li>
 <li><a class="reference internal" href="#example-usage-with-optional-dependencies">Example usage with optional dependencies</a><ul>
 </ul>
