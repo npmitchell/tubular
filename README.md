@@ -97,6 +97,12 @@ For demonstrations:
  example_timeseries_heart.m  analyzes a zebrafish heart surface, using morphsnakes to compute surfaces first.
  example_static_neuraltube.m demonstrates texture-patching a tubular surface for 3D visualization
 
+Full Documentation
+------------------
+Click here for the full documentation:
+[![Documentation](https://img.shields.io/badge/Documentation-Link-blue.svg)](https://npmitchell.github.io/tubular/)
+
+
 
 
 [1] Heemskirk & Streichan, Nature Methods (2015)
