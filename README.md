@@ -5,6 +5,11 @@
 
 > Tube-like sUrface Lagrangian Analysis Resource (TubULAR): for analysis of in-plane and out-of-plane motions of 3D data with dynamic tube-like surfaces of tissues or interfaces.
 
+Cite as: 
+Noah Prentice Mitchell & Dillon J Cislo. "TubULAR: Tracking deformations of dynamic tissues and interfaces in 3D". bioRxiv 2022.04.19.488840 doi:10.1101/2022.04.19.488840
+
+![alt text](https://github.com/npmitchell/tubular/blob/gh-pages/docs/_images/fig_tubular_overview_v3.jpg?raw=true)
+
 ## Overview
 **TubULAR** transforms 3D volumentric data with a dynamic surface of interest into 
 a tube-like, global parameterization based on the intrinsic geometry of the surface 
