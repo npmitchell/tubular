@@ -90,13 +90,12 @@ Edit run_morphsnakes.sh to your liking (setting paths to your data, parameters, 
   
 Example usage with optional dependencies
 ----------------------------------------
-**ImSAnE**
+**Using TubULAR within ImSAnE**
 
 To run ImSaNE using TubULAR's functionality for surface detection and fitting, follow this template.
 
 .. toctree::
   :maxdepth: 2
-  :caption: Auxiliary contents used by principal contents:
 
   example_usage_imsane_with_tubular
 
@@ -104,17 +103,15 @@ Conversely, to follow a TubULAR pipeline using an ImSaNE Experiment class instan
 
 .. toctree::
   :maxdepth: 2
-  :caption: Auxiliary contents used by principal contents:
 
   example_usage_tubular_with_imsane
   
 
-**ImSAnE + Morphsnakes**
+**Using TubULAR within ImSAnE with Morphsnakes**
 To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.
 
 .. toctree::
   :maxdepth: 2
-  :caption: Auxiliary contents used by principal contents:
 
   example_usage_imsane_morphsnakes_tubular
   
