@@ -106,8 +106,11 @@ Click here for the full documentation:
 
 
 [1] Heemskirk & Streichan, Nature Methods (2015)
+
 [2] T. Chan and L. Vese, IEEE Transactions on Image Processing 10, 266 (2001).
+
 [3] P. Marquez-Neila, L. Baumela, and L. Alvarez, IEEE Transactions on Pattern Analysis and Machine Intelligence 36, 2 (2014).
+
 [4] Aigerman, N. & Lipman, Y. Orbifold Tutte embeddings. ACM Transactions on Graphics 34, 190:1–190:12 (2015).
 
 
