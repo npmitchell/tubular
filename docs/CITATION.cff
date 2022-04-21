@@ -3,11 +3,12 @@ message: "If you use this software, please cite it as below."
 authors:
   - family-names: Mitchell
     given-names: Noah
-    orcid: https://orcid.org/
+    orcid: https://orcid.org/0000-0003-1922-8470
   - family-names: Cislo
     given-names: Dillon
-    orcid: https://orcid.org/
+    orcid: https://orcid.org/0000-0002-6996-572X
 title: "TubULAR: Tracking deformations of dynamic tissues and interfaces in 3D"
 version: 1.0
 doi: 10.1101/2022.04.19.488840
 date-released: 2022-04-20
+publisher: bioRxiv
