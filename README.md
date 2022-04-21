@@ -1,4 +1,4 @@
-# tubular
+# TubULAR
 
 
 [![Documentation](https://img.shields.io/badge/Documentation-Link-blue.svg)](https://npmitchell.github.io/tubular/)
