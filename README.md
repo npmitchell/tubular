@@ -5,7 +5,12 @@
 
 > Tube-like sUrface Lagrangian Analysis Resource (TubULAR): for analysis of in-plane and out-of-plane motions of 3D data with dynamic tube-like surfaces of tissues or interfaces.
 
+Cite as: 
+> Mitchell, N.P. & Cislo, D.J. "TubULAR: Tracking deformations of dynamic tissues and interfaces in 3D". bioRxiv 2022.04.19.488840 doi:10.1101/2022.04.19.488840
+
+
 ## Overview
+![alt text](https://github.com/npmitchell/tubular/blob/gh-pages/docs/_images/fig_tubular_overview_v3.jpg?raw=true)
 **TubULAR** transforms 3D volumentric data with a dynamic surface of interest into 
 a tube-like, global parameterization based on the intrinsic geometry of the surface 
 and then builds measurements of mtion on the dynamic surfaces.
@@ -92,11 +97,20 @@ For demonstrations:
  example_timeseries_heart.m  analyzes a zebrafish heart surface, using morphsnakes to compute surfaces first.
  example_static_neuraltube.m demonstrates texture-patching a tubular surface for 3D visualization
 
+Full Documentation
+------------------
+Click here for the full documentation:
+[![Documentation](https://img.shields.io/badge/Documentation-Link-blue.svg)](https://npmitchell.github.io/tubular/)
+
+
 
 
 [1] Heemskirk & Streichan, Nature Methods (2015)
+
 [2] T. Chan and L. Vese, IEEE Transactions on Image Processing 10, 266 (2001).
+
 [3] P. Marquez-Neila, L. Baumela, and L. Alvarez, IEEE Transactions on Pattern Analysis and Machine Intelligence 36, 2 (2014).
+
 [4] Aigerman, N. & Lipman, Y. Orbifold Tutte embeddings. ACM Transactions on Graphics 34, 190:1–190:12 (2015).
 
 
