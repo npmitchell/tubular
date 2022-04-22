@@ -6,8 +6,9 @@ function plotSeriesOnSurfaceTexturePatch(tubi,...
 % Parameters
 % ----------
 % tubi : QuapSlap class instance
-% overwrite : bool
 % options : struct with fields
+%   overwrite : bool
+%       overwrite options on disk as .mat 
 %   texture_shift : float (optional, default=0)
 %       shift of texture mesh, but not physical mesh
 % TexturePatchOptions: struct with fields   
@@ -119,6 +120,7 @@ smoothing_lambda = 0.0 ;
 channel = [] ;  % by default, plot all channels
 figoutdir = tubi.dir.texturePatchIm ;
 normal_shift = tubi.normalShift ;
+plot_time_points = [];
 
 timePoints = tubi.xp.fileMeta.timePoints ;
 
@@ -174,6 +176,10 @@ end
 if isfield(options, 'timePoints')
     timePoints = options.timePoints ;
 end
+if isfield(options, 'plot_time_points')
+    plot_time_points = options.plot_time_points;
+end
+
 % Collate boolean plot indicators to decide which views to plot
 plot_view = [plot_dorsal, plot_ventral, plot_left, ...
     plot_right, plot_perspective] ;
@@ -191,8 +197,7 @@ end
 
 %% Load metadat and TexturePatchOptions if not supplied
 metafn = fullfile(figoutdir, 'metadat.mat') ;
-resave_metadat = false ;
-if nargin < 4
+if nargin < 3
     try
         load(metafn, 'Options')
     catch
@@ -238,6 +243,8 @@ else
     metadat = options ;
 end
 
+% Determine xlims, ylims, and zlims either from options or from disk
+% (bounding box of all meshes in timeseries)
 if isfield(metadat, 'xyzlim')
     xyzlim = metadat.xyzlim ;
 else
@@ -285,13 +292,21 @@ zmin = xyzlim(3, 1); zmax = xyzlim(3, 2) ;
 xwidth = 16 ; % cm
 ywidth = 10 ; % cm
 
-tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
-
-tidx_todoA = tidx0:30:length(timePoints) ;
-tidx_todoB = setdiff(tidx0:15:length(timePoints), tidx_todoA) ;
-tidx_todo = [tidx_todoA, tidx_todoB] ;
-tidx_todoC = setdiff(1:length(timePoints), tidx_todo) ;
-tidx_todo = [tidx_todo, tidx_todoC] ;
+if ~isempty(plot_time_points)
+    
+    tidx_todo = plot_time_points;
+    
+else
+    
+    tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
+    
+    tidx_todoA = tidx0:30:length(timePoints) ;
+    tidx_todoB = setdiff(tidx0:15:length(timePoints), tidx_todoA) ;
+    tidx_todo = [tidx_todoA, tidx_todoB] ;
+    tidx_todoC = setdiff(1:length(timePoints), tidx_todo) ;
+    tidx_todo = [tidx_todo, tidx_todoC] ;
+    
+end
 
 for tidx = tidx_todo
     tp = timePoints(tidx) ;
@@ -392,16 +407,27 @@ for tidx = tidx_todo
             disp('rotating...')
             VV = (Options.Rotation * VV')' ;
             Options = rmfield(Options, 'Rotation') ;
+        else
+            disp('WARNING: no rotation supplied, using APDV frame')
+            tubi.getRotTrans()
+            VV = (tubi.APDV.rot * VV')' ;
         end
         if isfield(Options, 'Translation')
             disp('translating...')
             VV = VV + Options.Translation ;
             Options = rmfield(Options, 'Translation') ;
+        else
+            disp('WARNING: no translation supplied, using APDV frame')
+            tubi.getRotTrans()
+            VV = VV + tubi.APDV.trans ;            
         end
         if isfield(Options, 'Dilation')
             disp('dilating...')
             VV = VV * Options.Dilation ;
             Options = rmfield(Options, 'Dilation') ;
+        else
+            disp('WARNING: no dilation supplied, using APDV frame')
+            VV = VV * tubi.APDV.resolution ;
         end
         if flipy
             VV(:, 2) = -VV(:, 2) ;

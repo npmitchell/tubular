@@ -71,6 +71,9 @@ aDistRate = [0, Inf] ;  % [ramp,duration; ramp2,duration2; etc]
                         % APDV coord sys, second number is number of
                         % timepoints to have this ramp
 pDistRate = [0, Inf] ; 
+custom_aidx = [];   % User supplied vertex IDs that will be removed to make the anterior cap
+custom_pidx = [];   % User supplied vertex IDs that will be removed to make the posterior cap
+
 if isfield(opts, 'adist_thres')
     adist_thres = opts.adist_thres ;
 end
@@ -122,6 +125,12 @@ end
 if isfield(opts, 'tref')
     tref = opts.tref ;
 end
+if isfield(opts, 'custom_aidx')
+    custom_aidx = opts.custom_aidx;
+end
+if isfield(opts, 'custom_pidx')
+    custom_pidx = opts.custom_pidx;
+end
 if isfield(methodOpts, 'overwrite')
     overwrite = methodOpts.overwrite ;
 elseif isfield(opts, 'overwrite')
@@ -132,6 +141,14 @@ if isfield(methodOpts, 'save_figs')
 end
 if isfield(methodOpts, 'preview')
     preview = methodOpts.preview;
+end
+
+% Determine if valid custom input had been supplied
+useCustomPts = iscell(custom_aidx) && iscell(custom_pidx) &&...
+    (numel(custom_aidx) == numel(timePoints)) && ...
+    (numel(custom_pidx) == numel(timePoints));
+if useCustomPts
+    disp('Slicing endcaps based on user input');
 end
 
 % Invert rotation for offset
@@ -162,7 +179,7 @@ if ~exist(figoutdir, 'dir')
 end
 
 %% Load AP coms
-[acom_sm, pcom_sm] = QS.getAPCOMSm ;
+[apt_sm, ppt_sm] = QS.getAPpointsSm ;
 trefIDx = QS.xp.tIdx(tref) ;
 
 %% Iterate through each mesh
@@ -172,7 +189,7 @@ trefIDx = QS.xp.tIdx(tref) ;
 % every timepoint. Since the pointmatching is serial, each subsequent pass
 % recomputes meshes for previously done timepoints.
 % ONLY DO THIS IS WE ARE THEN GOING TO OVERWRITE THE QUICK SCAN.
-if overwrite
+if (overwrite && ~useCustomPts)
     if length(timePoints) > 49
         todo = trefIDx:50:length(timePoints); % first preview how slices will look
     else
@@ -195,15 +212,19 @@ else
 end
 % NOTE: begin with tref, advance to end, then return to tref and go
 % backwards
+if useCustomPts
+    todo4 = 1:length(timePoints);
+else
 todo4 = [trefIDx:length(timePoints), fliplr(1:(trefIDx-1)) ] ;
+end
 todo = [todo, todo2, todo3, todo4] ;
 for ii=todo
     tt = timePoints(ii) ;
     Dt = tt - tref ;
     disp(['tt = ' num2str(tt)])
     
-    acom = acom_sm(ii, :) ;
-    pcom = pcom_sm(ii, :) ;
+    apt = apt_sm(ii, :) ;
+    ppt = ppt_sm(ii, :) ;
     
     %% Name the output mesh filename
     name = sprintf(QS.fileBase.mesh, tt) ;
@@ -218,6 +239,7 @@ for ii=todo
     
     % Compute the endcaps if not already saved
     if overwrite || ~exist(outfn, 'file') || ~exist(keepfn, 'file')
+        
         if exist(outfn, 'file')
             disp(['Overwriting cylinder mesh: ' outfn])
         else
@@ -229,323 +251,370 @@ for ii=todo
             disp(['Keep indices not on disk: ' keepfn])
         end
         disp(['Computing endcaps for ' name])
-               
+        
+        % Load raw mesh
         mesh = read_ply_mod(meshfn);
-        % subsample the mesh to match acom, pcom
-        vtx = mesh.v / ssfactor ;
         
         if eulerCharacteristic(mesh) ~= 2
-            disp(['WARNING: input mesh is not topological sphere: Euler Characteristic = ' num2str(eulerCharacteristic(mesh))])
+            disp(['WARNING: input mesh is not topological sphere: Euler Characteristic = ' ...
+                num2str(eulerCharacteristic(mesh))])
             disp('...attempting to continue...')
         end
         
-        % Remove unreferenced vertices
-        [ mesh.f, vtx, ~, oldVertexIDx] = remove_unreferenced_vertices_from_mesh( mesh.f, vtx ) ;
-        fv = struct('f', mesh.f, 'v', vtx, 'vn', mesh.vn(oldVertexIDx, :)) ;
-        disp('loaded closed mesh.')
-        
-        %% Remove anterior endcap    
-        % Measure distance to the posterior
-        % Strategy: remove within distance of acom
-        aOff = aOffXYZ + aOffRateXYZ * Dt ;
-        acomOff = acom + aOff ;
-        acom2 = acom + aOff2XYZ + aOffRate2XYZ * Dt ;
-        if numel(aDistRate) > 6
-            error('Code for more than three ramp rates here')    
-        end
-        
-        if abs(aDistRate(1)) > 0 || numel(aDistRate) > 2
-            if numel(aDistRate) > 2
-                % second column is duration of ramp rate
-                if Dt > aDistRate(1, 2)
-                    % Apply entire first ramp
-                    adist0 = adist_thres + aDistRate(1,2) * aDistRate(1,1) ;
-                    
-                    if (Dt - aDistRate(1,2)) < aDistRate(2, 2)
-                        adist0 = adist0 + (Dt - aDistRate(1,2)) * aDistRate(2,1) ;
-                        disp(['Ramping with second rate, adist = ' num2str(adist0)])
-                    else
-                        adist0 = adist0 + aDistRate(2,2) * aDistRate(2, 1) ;
-                    end
-                    
-                    if Dt > aDistRate(2, 2)
-                        try
-                            adist0 = adist0 + (Dt - aDistRate(1,3)) * aDistRate(3,1) ;
-                            disp(['Done ramping, adist = ' num2str(adist0)])
-                        catch
-                            disp(['Done ramping, adist = ' num2str(adist0)])
+        if useCustomPts
+            
+            rmIDx = [custom_aidx{ii}; custom_pidx{ii}];
+            
+            % Remove custom vertices from mesh
+            [faces, vtx, ~, ~] = ...
+                remove_vertex_from_mesh(mesh.f, mesh.v, rmIDx);
+            
+            % Keep only the largest remaning connected component
+            [faces, vtx, ~, ~] = ...
+                remove_isolated_mesh_components(faces, vtx);
+
+            % Remove any unreferences vertices
+            [faces, vtx, ~, ~] = ...
+                remove_unreferenced_vertices_from_mesh(faces, vtx);
+            
+            % Determine which vertices remain in the sliced mesh
+            keep = knnsearch(mesh.v, vtx);
+            vn = mesh.vn(keep, :);
+            
+            % Save the data in units of pixels (same as original mesh)
+            disp(['Saving cylinder mesh to ' outfn])
+            plywrite_with_normals(outfn, faces, vtx, vn)
+            
+            % Save the indices to keep when cutting off endcaps
+            save(keepfn, 'keep') ;
+            
+            % Subsample the mes to match acom, pcom
+            vtx = vtx / ssfactor;
+            
+            aOff = aOffXYZ + aOffRateXYZ * Dt ;
+            acomOff = apt + aOff ;
+            
+            pOff = pOffXYZ + pOffRateXYZ * (tt - timePoints(1)) ;
+            pcomOff = ppt + pOff ;
+            
+        else
+            
+            mesh = read_ply_mod(meshfn);
+            % subsample the mesh to match acom, pcom
+            vtx = mesh.v / ssfactor ;
+
+            % Remove unreferenced vertices
+            [ mesh.f, vtx, ~, oldVertexIDx] = remove_unreferenced_vertices_from_mesh( mesh.f, vtx ) ;
+            fv = struct('f', mesh.f, 'v', vtx, 'vn', mesh.vn(oldVertexIDx, :)) ;
+            disp('loaded closed mesh.')
+            
+            %% Remove anterior endcap
+            % Measure distance to the posterior
+            % Strategy: remove within distance of acom
+            aOff = aOffXYZ + aOffRateXYZ * Dt ;
+            acomOff = apt + aOff ;
+            acom2 = apt + aOff2XYZ + aOffRate2XYZ * Dt ;
+            if numel(aDistRate) > 6
+                error('Code for more than three ramp rates here')
+            end
+            
+            if abs(aDistRate(1)) > 0 || numel(aDistRate) > 2
+                if numel(aDistRate) > 2
+                    % second column is duration of ramp rate
+                    if Dt > aDistRate(1, 2)
+                        % Apply entire first ramp
+                        adist0 = adist_thres + aDistRate(1,2) * aDistRate(1,1) ;
+                        
+                        if (Dt - aDistRate(1,2)) < aDistRate(2, 2)
+                            adist0 = adist0 + (Dt - aDistRate(1,2)) * aDistRate(2,1) ;
+                            disp(['Ramping with second rate, adist = ' num2str(adist0)])
+                        else
+                            adist0 = adist0 + aDistRate(2,2) * aDistRate(2, 1) ;
                         end
+                        
+                        if Dt > aDistRate(2, 2)
+                            try
+                                adist0 = adist0 + (Dt - aDistRate(1,3)) * aDistRate(3,1) ;
+                                disp(['Done ramping, adist = ' num2str(adist0)])
+                            catch
+                                disp(['Done ramping, adist = ' num2str(adist0)])
+                            end
+                        end
+                    else
+                        adist0 = adist_thres + Dt * aDistRate(1,1) ;
+                        disp(['Ramping with first rate, adist = ' num2str(adist0)])
                     end
                 else
-                    adist0 = adist_thres + Dt * aDistRate(1,1) ;
-                    disp(['Ramping with first rate, adist = ' num2str(adist0)])
+                    disp('Ramping with first value')
+                    adist0 = adist_thres + aDistRate(1) * Dt ;
                 end
             else
-                disp('Ramping with first value')
-                adist0 = adist_thres + aDistRate(1) * Dt ;
+                adist0 = adist_thres ;
             end
-        else
-            adist0 = adist_thres ;
-        end
-        if strcmpi(aCapMethod, 'ball')
-            adist2 = sum((vtx - acomOff) .^ 2, 2);
-            pts_to_remove = find(adist2 < adist0^2) ;
-        elseif strcmpi(aCapMethod, 'cone')
-            % reference: https://stackoverflow.com/questions/12826117/how-can-i-detect-if-a-point-is-inside-a-cone-or-not-in-3d-space
-            apex = acomOff ;
-            % project vertices onto direction of cone (here is ap)s
-            coneDir = -apDir ;
-            cone_dist = sum((vtx - apex) .* (coneDir .* ones(size(vtx))), 2) ;
-            orth_dist = vecnorm(vtx - apex - cone_dist * coneDir, 2, 2) ;
-            cone_radius = cone_dist * adist0 ;
-            insideCone = orth_dist < cone_radius ;
-            pts_to_remove = find(insideCone);
-        elseif strcmpi(aCapMethod, 'ballCone') || strcmpi(aCapMethod, 'coneBall')
-            % reference: https://stackoverflow.com/questions/12826117/how-can-i-detect-if-a-point-is-inside-a-cone-or-not-in-3d-space
-            apex = acomOff ;
-            % project vertices onto direction of cone (here is ap)s
-            coneDir = -apDir ;
-            cone_dist = sum((vtx - apex) .* (coneDir .* ones(size(vtx))), 2) ;
-            orth_dist = vecnorm(vtx - apex - cone_dist * coneDir, 2, 2) ;
-            cone_radius = cone_dist * adist0 ;
-            insideCone = orth_dist < cone_radius ;
-            % Also threshold on absolute distance from COMOffset
-            adist2 = sum((vtx - acom2) .^ 2, 2);
-            pts_to_remove = find(insideCone & (adist2 < adist_thres2^2));
-        elseif strcmpi(aCapMethod, 'xvalue')
-            adist = vtx(:, 1) - acomOff(1) ;
-            pts_to_remove = find(adist < adist0) ;
-        elseif strcmpi(aCapMethod, 'yvalue')
-            adist = vtx(:, 2) - acomOff(2) ;
-            pts_to_remove = find(adist < adist0) ;
-        elseif strcmpi(aCapMethod, 'zvalue')
-            adist = vtx(:, 3) - acomOff(3) ;
-            pts_to_remove = find(adist < adist0) ;
-        end
-        
-        % Check it
-        if preview
-            clf
-            trisurf(triangulation(mesh.f,vtx), ...
-                'edgecolor', 'none', 'facealpha', 0.1); hold on;
-            scatter3(acom(1), acom(2), acom(3), 30, 'filled')
-            scatter3(acom(1)+aOff(1), acom(2)+aOff(2), ...
-                acom(3)+aOff(3), 30, 'filled')
-            scatter3(vtx(pts_to_remove, 1), vtx(pts_to_remove,2), ...
-                vtx(pts_to_remove, 3), 'markeredgealpha', 0.1)
-            axis equal
-            title('Points to remove for anterior face')
-            pause(1)
-            close all
-        end
-        
-        % Make sure that we are removing a connected component
-        % form a mesh from the piece(s) to be removed
-        allpts = 1:length(vtx) ;
-        all_but_acut = uint16(setdiff(allpts', pts_to_remove)) ;
-        [ acutfaces, acutvtx, ~] = remove_vertex_from_mesh( fv.f, fv.v, all_but_acut ) ;
-        [ ~, ~, connected_indices, npieces ] = ...
-            remove_isolated_mesh_components( acutfaces, acutvtx ) ;
-        if any(npieces > 1)
-            disp('Ensuring that only a single component is removed')
-            pts_to_remove = pts_to_remove(connected_indices) ;
-        end
-
-        % Check removed component
-        %trimesh(acutfaces, acutvtx(:, 1), acutvtx(:, 2), acutvtx(:, 3), npieces)
-        
-        % Remove it
-        [faces, vtx, keep_acut] = remove_vertex_from_mesh(fv.f, fv.v, pts_to_remove ) ;
-        vn = fv.vn(keep_acut, :) ;
-        disp(['Removed ' num2str(length(pts_to_remove)) ' vertices with acut'])
-        
-        % CHECK that the output is correct topology
-        % MATLAB-style triangulation
-        meshTri = triangulation( faces, vtx );
-        % The #Ex2 edge connectivity list of the mesh
-        edgeTri = edges( meshTri );
-        % Check that the input mesh is a topological cylinder
-        if ( length(vtx) - length(edgeTri) + length(faces) ) == 1
-            disp('Remaining mesh is topological disk')
-        else
-            disp('Remaining mesh after removing anterior cap is not disk! Removing smaller pieces...')
+            if strcmpi(aCapMethod, 'ball')
+                adist2 = sum((vtx - acomOff) .^ 2, 2);
+                pts_to_remove = find(adist2 < adist0^2) ;
+            elseif strcmpi(aCapMethod, 'cone')
+                % reference: https://stackoverflow.com/questions/12826117/how-can-i-detect-if-a-point-is-inside-a-cone-or-not-in-3d-space
+                apex = acomOff ;
+                % project vertices onto direction of cone (here is ap)s
+                coneDir = -apDir ;
+                cone_dist = sum((vtx - apex) .* (coneDir .* ones(size(vtx))), 2) ;
+                orth_dist = vecnorm(vtx - apex - cone_dist * coneDir, 2, 2) ;
+                cone_radius = cone_dist * adist0 ;
+                insideCone = orth_dist < cone_radius ;
+                pts_to_remove = find(insideCone);
+            elseif strcmpi(aCapMethod, 'ballCone') || strcmpi(aCapMethod, 'coneBall')
+                % reference: https://stackoverflow.com/questions/12826117/how-can-i-detect-if-a-point-is-inside-a-cone-or-not-in-3d-space
+                apex = acomOff ;
+                % project vertices onto direction of cone (here is ap)s
+                coneDir = -apDir ;
+                cone_dist = sum((vtx - apex) .* (coneDir .* ones(size(vtx))), 2) ;
+                orth_dist = vecnorm(vtx - apex - cone_dist * coneDir, 2, 2) ;
+                cone_radius = cone_dist * adist0 ;
+                insideCone = orth_dist < cone_radius ;
+                % Also threshold on absolute distance from COMOffset
+                adist2 = sum((vtx - acom2) .^ 2, 2);
+                pts_to_remove = find(insideCone & (adist2 < adist_thres2^2));
+            elseif strcmpi(aCapMethod, 'xvalue')
+                adist = vtx(:, 1) - acomOff(1) ;
+                pts_to_remove = find(adist < adist0) ;
+            elseif strcmpi(aCapMethod, 'yvalue')
+                adist = vtx(:, 2) - acomOff(2) ;
+                pts_to_remove = find(adist < adist0) ;
+            elseif strcmpi(aCapMethod, 'zvalue')
+                adist = vtx(:, 3) - acomOff(3) ;
+                pts_to_remove = find(adist < adist0) ;
+            end
+            
             % Check it
-            % trisurf(triangulation(faces, vtx), 'edgecolor', 'none')
-            [ faces, vtx, ~, npieces ] = ...
-                remove_isolated_mesh_components( faces, vtx ) ;
+            if preview
+                clf
+                trisurf(triangulation(mesh.f,vtx), ...
+                    'edgecolor', 'none', 'facealpha', 0.1); hold on;
+                scatter3(apt(1), apt(2), apt(3), 30, 'filled')
+                scatter3(apt(1)+aOff(1), apt(2)+aOff(2), ...
+                    apt(3)+aOff(3), 30, 'filled')
+                scatter3(vtx(pts_to_remove, 1), vtx(pts_to_remove,2), ...
+                    vtx(pts_to_remove, 3), 'markeredgealpha', 0.1)
+                axis equal
+                title('Points to remove for anterior face')
+                pause(1)
+                close all
+            end
+            
+            % Make sure that we are removing a connected component
+            % form a mesh from the piece(s) to be removed
+            allpts = 1:length(vtx) ;
+            all_but_acut = uint16(setdiff(allpts', pts_to_remove)) ;
+            [ acutfaces, acutvtx, ~] = remove_vertex_from_mesh( fv.f, fv.v, all_but_acut ) ;
+            [ ~, ~, connected_indices, npieces ] = ...
+                remove_isolated_mesh_components( acutfaces, acutvtx ) ;
+            if any(npieces > 1)
+                disp('Ensuring that only a single component is removed')
+                pts_to_remove = pts_to_remove(connected_indices) ;
+            end
+            
+            % Check removed component
+            %trimesh(acutfaces, acutvtx(:, 1), acutvtx(:, 2), acutvtx(:, 3), npieces)
+            
+            % Remove it
+            [faces, vtx, keep_acut] = remove_vertex_from_mesh(fv.f, fv.v, pts_to_remove ) ;
+            vn = fv.vn(keep_acut, :) ;
+            disp(['Removed ' num2str(length(pts_to_remove)) ' vertices with acut'])
+            
+            % CHECK that the output is correct topology
+            % MATLAB-style triangulation
             meshTri = triangulation( faces, vtx );
             % The #Ex2 edge connectivity list of the mesh
             edgeTri = edges( meshTri );
-            
-            if ( length(vtx) - length(edgeTri) + length(faces) ) ~= 1
-                error('Topology after removing anterior cap is not disk')
-            end
-        end
-        
-        % Inspect
-        % if preview
-        %     fig = figure;
-        %     trimesh(faces, vtx(:, 1), vtx(:, 2), vtx(:, 3))
-        %     view(30,145)
-        %     waitfor(fig)
-        % end
-
-        %% Remove the posterior part as well
-        % Measure distance to the posterior
-        if strcmpi(pCapMethod, 'ball')
-            pdist2 = sum((vtx - pcom) .^ 2, 2);
-        elseif strcmpi(pCapMethod, 'xvalue')
-            pdist2 = (vtx(:, 1) - pcom(1)).^2 ;
-        elseif strcmpi(pCapMethod, 'yvalue')
-            pdist2 = (vtx(:, 2) - pcom(2)).^2 ;
-        elseif strcmpi(pCapMethod, 'zvalue')
-            pdist2 = (vtx(:, 3) - pcom(3)).^2 ;
-        end
-
-        % STRATEGY 1: within distance of pcom
-        pOff = pOffXYZ + pOffRateXYZ * (tt - timePoints(1)) ;
-        pcomOff = pcom + pOff ;
-        pdist_thres_ii = pdist_thres ;
-        pcut_done = false ;
-        while ~pcut_done
-            disp(['finding points within ' num2str(pdist_thres_ii) ' of pcom'])
-            pts_to_remove = find(pdist2 < pdist_thres_ii^2) ;
-
-            loopIdx = 1 ;
-            while numel(pts_to_remove) == 0 && loopIdx < 10
-                disp('Increasing radius by 10% since no points enclosed in pdist')
-                pts_to_remove = find(pdist2 < (pdist_thres_ii * (1 + 0.1 * loopIdx))^2) ;
-                loopIdx = loopIdx + 1 ;
-            end
-
-            if numel(pts_to_remove) == 0
-                error('Cannot find any piece of the mesh near p point even after increasing threshold ball radius by 10% 10 times')
-            end
-            
-            % Remove the posterior cap and check if result is topological
-            % cylinder
-            [faces_postpcut, vtx_postpcut, keep_pcut] = ...
-                remove_vertex_from_mesh(faces, vtx, pts_to_remove ) ;
-
-            % Check if result is cylinder topologically
-            % MATLAB-style triangulation
-            meshTri = triangulation( faces_postpcut, vtx_postpcut );
-            % The #Ex2 edge connectivity list of the mesh
-            edgeTri = edges( meshTri );
             % Check that the input mesh is a topological cylinder
-                
-            if ( length(vtx_postpcut) - length(edgeTri) + length(faces_postpcut) ) == 0
-                disp(['Remaining vertices are cylinder after pcut'])
+            if ( length(vtx) - length(edgeTri) + length(faces) ) == 1
+                disp('Remaining mesh is topological disk')
             else
-                disp(['Selecting largest component of pcut only'])
-                % Make sure that we are removing a connected component
-                % form a mesh from the piece(s) to be removed
-                allpts = linspace(1, length(vtx), length(vtx)) ;
-                all_but_pcut = uint16(setdiff(allpts, pts_to_remove)) ;
-                [ pcutfaces, pcutvtx, ~] = remove_vertex_from_mesh( faces, vtx, all_but_pcut ) ;
-
-                [ pcutfacesLargest, pcutvtxLargest, connected_indices, npieces ] = ...
-                    remove_isolated_mesh_components( pcutfaces, pcutvtx ) ;
-                % If there were more than one piece selected, remove the bigger one only
-                if any(npieces > 1)
-                    pts_to_remove = pts_to_remove(connected_indices) ;
-                else
-                    disp('Posterior cut includes only one region')
+                disp('Remaining mesh after removing anterior cap is not disk! Removing smaller pieces...')
+                % Check it
+                % trisurf(triangulation(faces, vtx), 'edgecolor', 'none')
+                [ faces, vtx, ~, npieces ] = ...
+                    remove_isolated_mesh_components( faces, vtx ) ;
+                meshTri = triangulation( faces, vtx );
+                % The #Ex2 edge connectivity list of the mesh
+                edgeTri = edges( meshTri );
+                
+                if ( length(vtx) - length(edgeTri) + length(faces) ) ~= 1
+                    error('Topology after removing anterior cap is not disk')
                 end
-
-                % Remove the posterior cap
-                [faces_postpcut, vtx_postpcut, keep_pcut] = ...
-                    remove_vertex_from_mesh(faces, vtx, pts_to_remove ) ;
-
-                % % check it
-                % if preview
-                %     fig = figure ;
-                %     scatter3(vtx(:, 1), vtx(:, 2), vtx(:, 3))
-                %     hold on;
-                %     scatter3(vtx(pts_to_remove, 1), vtx(pts_to_remove, 2), vtx(pts_to_remove, 3),  'filled')
-                %     plot3(pcom(1), pcom(2), pcom(3), 's')
-                %     waitfor(fig)
-                % end
             end
-            disp(['Removed ' num2str(length(pts_to_remove)) ' vertices with pcut'])
-            % nremain = length(keep_pcut) ;
-            % nbefore = length(keep_acut) ;
-            % try
-            %     assert(nbefore - nremain == length(pts_to_remove))
-            % catch
-            %     error('Pre vs post posterior cut vertices have different count')
+            
+            % Inspect
+            % if preview
+            %     fig = figure;
+            %     trimesh(faces, vtx(:, 1), vtx(:, 2), vtx(:, 3))
+            %     view(30,145)
+            %     waitfor(fig)
             % end
             
-            % Repeat if no vertices are removed
-            if length(pts_to_remove) > 0
-                % Check also that result is cylinder topologically
+            %% Remove the posterior part as well
+            % Measure distance to the posterior
+            if strcmpi(pCapMethod, 'ball')
+                pdist2 = sum((vtx - ppt) .^ 2, 2);
+            elseif strcmpi(pCapMethod, 'xvalue')
+                pdist2 = (vtx(:, 1) - ppt(1)).^2 ;
+            elseif strcmpi(pCapMethod, 'yvalue')
+                pdist2 = (vtx(:, 2) - ppt(2)).^2 ;
+            elseif strcmpi(pCapMethod, 'zvalue')
+                pdist2 = (vtx(:, 3) - ppt(3)).^2 ;
+            end
+            
+            % STRATEGY 1: within distance of pcom
+            pOff = pOffXYZ + pOffRateXYZ * (tt - timePoints(1)) ;
+            pcomOff = ppt + pOff ;
+            pdist_thres_ii = pdist_thres ;
+            pcut_done = false ;
+            while ~pcut_done
+                disp(['finding points within ' num2str(pdist_thres_ii) ' of pcom'])
+                pts_to_remove = find(pdist2 < pdist_thres_ii^2) ;
+                
+                loopIdx = 1 ;
+                while numel(pts_to_remove) == 0 && loopIdx < 10
+                    disp('Increasing radius by 10% since no points enclosed in pdist')
+                    pts_to_remove = find(pdist2 < (pdist_thres_ii * (1 + 0.1 * loopIdx))^2) ;
+                    loopIdx = loopIdx + 1 ;
+                end
+                
+                if numel(pts_to_remove) == 0
+                    error('Cannot find any piece of the mesh near p point even after increasing threshold ball radius by 10% 10 times')
+                end
+                
+                % Remove the posterior cap and check if result is topological
+                % cylinder
+                [faces_postpcut, vtx_postpcut, keep_pcut] = ...
+                    remove_vertex_from_mesh(faces, vtx, pts_to_remove ) ;
+                
+                % Check if result is cylinder topologically
                 % MATLAB-style triangulation
                 meshTri = triangulation( faces_postpcut, vtx_postpcut );
                 % The #Ex2 edge connectivity list of the mesh
                 edgeTri = edges( meshTri );
                 % Check that the input mesh is a topological cylinder
+                
                 if ( length(vtx_postpcut) - length(edgeTri) + length(faces_postpcut) ) == 0
-                    pcut_done = true ;
+                    disp(['Remaining vertices are cylinder after pcut'])
                 else
-                    % Try simply isolating largest component -- this
-                    % happens sometimes when there is an unreferenced
-                    % vertex.
-                    [ faces_postpcut, vtx_postpcut, ~, npieces ] = ...
-                        remove_isolated_mesh_components( faces_postpcut, vtx_postpcut ) ;
+                    disp(['Selecting largest component of pcut only'])
+                    % Make sure that we are removing a connected component
+                    % form a mesh from the piece(s) to be removed
+                    allpts = linspace(1, length(vtx), length(vtx)) ;
+                    all_but_pcut = uint16(setdiff(allpts, pts_to_remove)) ;
+                    [ pcutfaces, pcutvtx, ~] = remove_vertex_from_mesh( faces, vtx, all_but_pcut ) ;
                     
+                    [ pcutfacesLargest, pcutvtxLargest, connected_indices, npieces ] = ...
+                        remove_isolated_mesh_components( pcutfaces, pcutvtx ) ;
+                    % If there were more than one piece selected, remove the bigger one only
+                    if any(npieces > 1)
+                        pts_to_remove = pts_to_remove(connected_indices) ;
+                    else
+                        disp('Posterior cut includes only one region')
+                    end
+                    
+                    % Remove the posterior cap
+                    [faces_postpcut, vtx_postpcut, keep_pcut] = ...
+                        remove_vertex_from_mesh(faces, vtx, pts_to_remove ) ;
+                    
+                    % % check it
+                    % if preview
+                    %     fig = figure ;
+                    %     scatter3(vtx(:, 1), vtx(:, 2), vtx(:, 3))
+                    %     hold on;
+                    %     scatter3(vtx(pts_to_remove, 1), vtx(pts_to_remove, 2), vtx(pts_to_remove, 3),  'filled')
+                    %     plot3(pcom(1), pcom(2), pcom(3), 's')
+                    %     waitfor(fig)
+                    % end
+                end
+                disp(['Removed ' num2str(length(pts_to_remove)) ' vertices with pcut'])
+                % nremain = length(keep_pcut) ;
+                % nbefore = length(keep_acut) ;
+                % try
+                %     assert(nbefore - nremain == length(pts_to_remove))
+                % catch
+                %     error('Pre vs post posterior cut vertices have different count')
+                % end
+                
+                % Repeat if no vertices are removed
+                if length(pts_to_remove) > 0
+                    % Check also that result is cylinder topologically
+                    % MATLAB-style triangulation
+                    meshTri = triangulation( faces_postpcut, vtx_postpcut );
+                    % The #Ex2 edge connectivity list of the mesh
+                    edgeTri = edges( meshTri );
+                    % Check that the input mesh is a topological cylinder
                     if ( length(vtx_postpcut) - length(edgeTri) + length(faces_postpcut) ) == 0
                         pcut_done = true ;
                     else
-                        close all
-                        trisurf(triangulation(pcutfaces, pcutvtx), 'edgecolor', 'k');
-                        hold on;
-                        trisurf(triangulation(faces_postpcut, vtx_postpcut), 'edgecolor', 'none')
-                        axis equal
-                        waitfor(gcf)
-                        disp('BAD PCUT: NOT TOPOLOGICAL CYLINDER! Trying again with larger threshold')
-                        pdist_thres_ii = pdist_thres_ii * 1.02 ;
+                        % Try simply isolating largest component -- this
+                        % happens sometimes when there is an unreferenced
+                        % vertex.
+                        [ faces_postpcut, vtx_postpcut, ~, npieces ] = ...
+                            remove_isolated_mesh_components( faces_postpcut, vtx_postpcut ) ;
+                        
+                        if ( length(vtx_postpcut) - length(edgeTri) + length(faces_postpcut) ) == 0
+                            pcut_done = true ;
+                        else
+                            close all
+                            trisurf(triangulation(pcutfaces, pcutvtx), 'edgecolor', 'k');
+                            hold on;
+                            trisurf(triangulation(faces_postpcut, vtx_postpcut), 'edgecolor', 'none')
+                            axis equal
+                            waitfor(gcf)
+                            disp('BAD PCUT: NOT TOPOLOGICAL CYLINDER! Trying again with larger threshold')
+                            pdist_thres_ii = pdist_thres_ii * 1.02 ;
+                        end
+                    end
+                else
+                    % repeat with larger threshold
+                    pdist_thres_ii = pdist_thres_ii * 1.02 ;
+                    if pdist_thres_ii > (max(vtx(:)) - min(vtx(:)))
+                        error('Removing entire sample to attain correct topology. Address this.')
                     end
                 end
-            else
-                % repeat with larger threshold
-                pdist_thres_ii = pdist_thres_ii * 1.02 ;
-                if pdist_thres_ii > (max(vtx(:)) - min(vtx(:)))
-                    error('Removing entire sample to attain correct topology. Address this.')
-                end
             end
+            faces = faces_postpcut ;
+            vtx = vtx_postpcut ;
+            vn = vn(keep_pcut, :) ;
+            
+            %% figure out which indices were kept
+            keep = keep_acut(keep_pcut) ;
+            
+            %% Check that the remainder is a single connected component
+            % currently have faces, vtx.
+            [ faces, vtx, keep_final_pass, npieces ] = ...
+                remove_isolated_mesh_components( faces, vtx ) ;
+            nremain = length(keep_final_pass) ;
+            nbefore = length(keep) ;
+            disp(['Removed ' num2str(nbefore - nremain) ' vertices with final pass'])
+            
+            if any(npieces > 1)
+                % Update keep here to reflect final pass
+                keep = keep(keep_final_pass) ;
+                vn = vn(keep_final_pass, :) ;
+            end
+            
+            %% Save the data in units of pixels (same as original mesh)
+            disp(['Saving cylinder mesh to ' outfn])
+            plywrite_with_normals(outfn, faces, vtx * ssfactor, vn)
+            
+            % Save the indices to keep when cutting off endcaps
+            save(keepfn, 'keep') ;
+            
         end
-        faces = faces_postpcut ;
-        vtx = vtx_postpcut ;           
-        vn = vn(keep_pcut, :) ;
-        
-        %% figure out which indices were kept
-        keep = keep_acut(keep_pcut) ;
-        
-        %% Check that the remainder is a single connected component
-        % currently have faces, vtx. 
-        [ faces, vtx, keep_final_pass, npieces ] = ...
-            remove_isolated_mesh_components( faces, vtx ) ;
-        nremain = length(keep_final_pass) ;
-        nbefore = length(keep) ;
-        disp(['Removed ' num2str(nbefore - nremain) ' vertices with final pass'])
-        
-        if any(npieces > 1)
-            % Update keep here to reflect final pass
-            keep = keep(keep_final_pass) ;
-            vn = vn(keep_final_pass, :) ;
-        end
-
-        %% Save the data in units of pixels (same as original mesh)
-        disp(['Saving cylinder mesh to ' outfn])
-        plywrite_with_normals(outfn, faces, vtx * ssfactor, vn)
-        
-        % Save the indices to keep when cutting off endcaps
-        save(keepfn, 'keep') ;
+    
     else
+        
         meshcut = read_ply_mod(outfn) ;
         faces = meshcut.f ;
         vtx = meshcut.v / ssfactor ; 
         vn = meshcut.vn ;
+        
     end
         
     %% Compute dorsal vertex on anterior and posterior free boundaries
@@ -580,8 +649,8 @@ for ii=todo
     % figure out if boundary is anterior or posterior
     % Note that this assumes an elongated structure so that anterior
     % boundary is closer to acom than pcom and vice versa
-    adist = sum((vtx(bb, :) - acom) .^ 2, 2) ;
-    pdist = sum((vtx(bb, :) - pcom) .^ 2, 2) ;
+    adist = sum((vtx(bb, :) - apt) .^ 2, 2) ;
+    pdist = sum((vtx(bb, :) - ppt) .^ 2, 2) ;
     ab = bb(adist < pdist) ;
     pb = bb(adist > pdist) ;
     % check them
@@ -592,8 +661,8 @@ for ii=todo
         hold on;
         plot3(vtx(ab, 1), vtx(ab, 2), vtx(ab, 3), 'b.-')
         plot3(vtx(pb, 1), vtx(pb, 2), vtx(pb, 3), 'r.-')
-        plot3(acom(1), acom(2), acom(3), 'o')
-        plot3(pcom(1), pcom(2), pcom(3), 'o')
+        plot3(apt(1), apt(2), apt(3), 'o')
+        plot3(ppt(1), ppt(2), ppt(3), 'o')
         axis equal
         pause(5)
         close all
@@ -726,8 +795,8 @@ for ii=todo
         hold on
         plot3(vrs(adb, 1), vrs(adb, 2), vrs(adb, 3), 's')
         plot3(vrs(pdb, 1), vrs(pdb, 2), vrs(pdb, 3), '^')
-        acomrs = QS.xyz2APDV(acom * ssfactor) ;
-        pcomrs = QS.xyz2APDV(pcom * ssfactor) ;
+        acomrs = QS.xyz2APDV(apt * ssfactor) ;
+        pcomrs = QS.xyz2APDV(ppt * ssfactor) ;
         acomOffrs = QS.xyz2APDV(acomOff * ssfactor) ;
         pcomOffrs = QS.xyz2APDV(pcomOff * ssfactor) ;
         plot3(acomrs(1), acomrs(2), acomrs(3), 'ks')
@@ -778,13 +847,15 @@ for ii=todo
     meshTri = triangulation( faces, vrs );
     % The #Ex2 edge connectivity list of the mesh
     edgeTri = edges( meshTri );
-    % Check that the input mesh is a topological cylinderChar
+    % Check that the input mesh is a topological cylinder
     eulerChar = ( length(vrs) - length(edgeTri) + length(faces) ) ;
-    if eulerChar ~= 0
+    numBdy = numel(DiscreteRicciFlow.compute_boundaries(faces));
+    if ((eulerChar ~= 0) || (numBdy ~= 2))
         trisurf(meshTri, 'FaceColor', 'none')
         axis equal
-        title(['Input mesh is NOT a topological cylinder: TP=' num2str(tt)])
-        disp(['Euler characteristic = ', num2str(eulerChar)])
+        title(['Input mesh is NOT a topological cylinder: TP=' num2str(tt)]);
+        disp(['Euler characteristic = ', num2str(eulerChar)]);
+        disp(['Number of boundaries = ', num2str(numBdy)]);
         error( 'Input mesh is NOT a topological cylinder!' );
     end
 

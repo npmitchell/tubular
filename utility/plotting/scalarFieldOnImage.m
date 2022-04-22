@@ -79,6 +79,8 @@ end
 %% Unpack options for style (diverging, positive, negative) and cmap
 style = 'diverging' ;     % default is diverging
 label_interpreter = 'Latex' ; % for colorbar label
+title_font_weight = 'bold' ; % For title
+stylestr = [];
 if ~isempty(varargin)
     for i = 1:length(varargin)
         if isa(varargin{i},'double') 
@@ -89,18 +91,24 @@ if ~isempty(varargin)
         end
         if ~isempty(regexp(varargin{i},'^[Ss]tyle','match'))
             stylestr = varargin{i+1} ;
-        elseif ~isempty(regexp(varargin{i},'^[Ii]nterpreter','match'))
+        end
+        if ~isempty(regexp(varargin{i},'^[Ii]nterpreter','match'))
             label_interpreter = varargin{i+1} ;
         end
+        if strcmpi(varargin{i}, 'TitleFontWeight')
+            title_font_weight = varargin{i+1};
+        end
     end
-    if ~isempty(regexp(stylestr,'^[Pp]hasemap','match'))
-        style = 'phasemap' ;
-    elseif ~isempty(regexp(stylestr,'^[Dd]iverging','match'))
-        style = 'diverging' ;
-    elseif ~isempty(regexp(stylestr,'^[Pp]ositive','match'))
-        style = 'positive' ;
-    elseif ~isempty(regexp(stylestr,'^[Nn]egative','match'))
-        style = 'negative' ;
+    if ~isempty(stylestr)
+        if ~isempty(regexp(stylestr,'^[Pp]hasemap','match'))
+            style = 'phasemap' ;
+        elseif ~isempty(regexp(stylestr,'^[Dd]iverging','match'))
+            style = 'diverging' ;
+        elseif ~isempty(regexp(stylestr,'^[Pp]ositive','match'))
+            style = 'positive' ;
+        elseif ~isempty(regexp(stylestr,'^[Nn]egative','match'))
+            style = 'negative' ;
+        end
     end
     
 end
@@ -239,9 +247,10 @@ alpha(alphaVal) ;
 %% Labels
 if ~isempty(titlestr)
     if ~strcmp(label_interpreter, 'default') && ~strcmp(label_interpreter, 'none')
-        title(titlestr, 'Interpreter', label_interpreter) ;
+        title(titlestr, 'Interpreter', label_interpreter, ...
+            'FontWeight', title_font_weight) ;
     else
-        title(titlestr) ;
+        title(titlestr, 'FontWeight', title_font_weight) ;
     end
 end
 if ~isempty(xlabelstr)
@@ -286,3 +295,7 @@ if ~strcmp(label_interpreter, 'default') && ~strcmp(label_interpreter, 'none')
     c.Label.Interpreter = label_interpreter ;
 end
 c.Label.String = label ;
+
+if isfield(labelOptions, 'cbLabelPosition')
+    c.Label.Position = labelOptions.cbLabelPosition;
+end

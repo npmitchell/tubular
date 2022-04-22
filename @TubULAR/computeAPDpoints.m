@@ -10,6 +10,8 @@ function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
 %       For example, the posterior point
 %       might be a point which does NOT form an AP axis  with the 
 %       anteriormost point, as in the illustration of the midgut below:
+%   (4) Directly supplying a custom set of anterior and posterior points
+%       for each time point
 % 
 %         Posterior pt for centerline
 %        _x_         Dorsal pt
@@ -45,6 +47,13 @@ function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
 %   - smwindow : float or int (optional, default=30)
 %       number of timepoints over which we smooth
 %   - preview : bool (optional, default=false)
+%   - autoAP : bool whether or not to extract A-P points using an automatic
+%           method using the moments of inertia of the mesh
+%           (optional, default=false)
+%   - custom_apts : a custom set of 3D anterior points
+%           (optional, default=[])
+%   - custom_ppts : a custom set of 3D posterior points
+%           (optional, default=[])
 %       
 %
 % OUTPUTS
@@ -81,7 +90,24 @@ end
 if isfield(opts, 'ilastikOutputAxisOrder')
     ilastikOutputAxisOrder = opts.ilastikOutputAxisOrder ;
 end
-if isfield(opts, 'use_iLastik')
+if (isfield(opts, 'custom_apts') && isfield(opts, 'custom_ppts'))
+    useCustomPts = ~isempty(opts.custom_apts) && ...
+        ~isempty(opts.custom_ppts);
+    if useCustomPts
+        useCustomPts = isequal(size(opts.custom_apts), ...
+            size(opts.custom_ppts)) && ...
+            (size(opts.custom_apts,1) == length(timePoints)) && ...
+            (size(opts.custom_apts,2) == 3);
+    end
+    if ~useCustomPts
+        disp('Invalid custom input points supplied. Ignoring input');
+    end
+else
+    useCustomPts = false;
+end
+if useCustomPts
+    use_iLastik = false;
+elseif isfield(opts, 'use_iLastik')
     use_iLastik = opts.use_iLastik ;
 else
     use_iLastik = exist(aProbFileName, 'file') && ...
@@ -91,7 +117,7 @@ else
         'was found, so define the centerline endpoints based on the mesh elongation axis'])
     end
 end
-if ~use_iLastik
+if ((~use_iLastik) && (~useCustomPts))
     if isfield(opts, 'autoAP')
         autoAP = opts.autoAP ; % would you like to find automatic points for endcaps A and P?
     else
@@ -192,8 +218,15 @@ disp(['Load from disk? =>', num2str(load_from_disk)])
 %% Compute smoothed apts and ppts if not loaded from disk -- RAW XYZ coords
 if ~load_from_disk || overwrite
     
-    % Compute raw apts and ppts if not loaded from disk -- RAW XYZ coords
-    if use_iLastik
+    
+    if useCustomPts
+        % Use a user supplied set of anterior/posterior points
+        apts = opts.custom_apts / tubi.ssfactor;
+        ppts = opts.custom_ppts / tubi.ssfactor;
+        
+        
+    elseif use_iLastik
+        % Compute raw apts and ppts if not loaded from disk -- RAW XYZ coords
         bad_size = false ;
         if exist(rawapdvmatname, 'file') && ~overwrite
             % load raw data from .mat

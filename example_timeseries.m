@@ -618,7 +618,7 @@ options = struct() ;
 options.overwrite = true ;
 tubi.measurePIV2d(options) ;
 
-%% Measure velocities =============================================
+%% Measure velocities =====================================================
 disp('Making map from pixel to xyz to compute velocities in 3d for smoothed meshes...')
 options = struct() ;
 options.show_v3d_on_data = false ;

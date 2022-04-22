@@ -1,4 +1,4 @@
-function [h1, h2, h3, ax, cax, ax3] = vectorFieldHeatPhaseOnImage(im, ...
+function [h1, h2, h3, ax, cax, pbax] = vectorFieldHeatPhaseOnImage(im, ...
     xyfstruct, vx, vy, vscale, options)
 %VECTORFIELDHEATPHASEONIMAGE(im, xyfstruct, vx, vy, vscale, options)
 %   Plot a vector field (vx,vy) evaluated at grid[xx, yy] on an image im
@@ -91,6 +91,11 @@ visibility = 'off' ;
 axPosition = [0 0.11 0.85 0.8] ;
 cbPosition = [.9 .3 .02 .3] ;
 pbPosition = [0.87, 0.7, 0.1, 0.1] ;
+label_interpreter = 'latex';
+title_font_weight = 'bold';
+quiver_line_width = 1.2;
+title_font_size = [];
+label_font_size = [];
 
 % Unpack options
 if nargin > 5
@@ -144,6 +149,21 @@ if nargin > 5
     end    
     if isfield(options, 'pbPosition') 
         pbPosition = options.pbPosition ;
+    end
+    if isfield(options, 'label_interpreter')
+        label_interpreter = options.label_interpreter;
+    end
+    if isfield(options, 'title_font_weight')
+        title_font_weight = options.title_font_weight;
+    end
+    if isfield(options, 'quiver_line_width')
+        quiver_line_width = options.quiver_line_width;
+    end
+    if isfield(options, 'title_font_size')
+        title_font_size = options.title_font_size;
+    end
+    if isfield(options, 'label_font_size')
+        label_font_size = options.label_font_size;
     end
 else
     options = struct() ;
@@ -317,7 +337,7 @@ if overlay_quiver
     end
     
     h3 = quiver(xg(:), yg(:), qscale * QX(:), qscale * QY(:), 0, ...
-        qcolor, 'LineWidth', 1.2) ;
+        qcolor, 'LineWidth', quiver_line_width) ;
 else
     h3 = [] ;
 end
@@ -329,13 +349,19 @@ end
 colormap('phasemap') ;
 caxis([0, 2*pi]) ;
 if isfield(options, 'ylim')
-    ylim(options.ylim)  
+    ylim(options.ylim)
 end
 if isfield(options, 'xlim')
-    xlim(options.xlim)  
+    xlim(options.xlim)
 end
 if isfield(options, 'title')
-    title(options.title, 'Interpreter', 'Latex')
+    if isempty(title_font_size)
+        title(options.title, 'FontWeight', title_font_weight, ...
+            'Interpreter', label_interpreter)
+    else
+        title(options.title, 'FontWeight', title_font_weight, ...
+            'Interpreter', label_interpreter, 'FontSize', title_font_size);
+    end
 end
 if ~isempty(axPosition)
     set(gca, 'Position', axPosition) ;
@@ -343,7 +369,7 @@ end
 
 % Add phasebar
 if ~isempty(pbPosition)
-    phasebar('location', pbPosition) ;
+    pbax = phasebar('location', pbPosition) ;
 end
 
 % Add colorbar
@@ -353,7 +379,12 @@ if ~isempty(cbPosition)
     imshow(fliplr(double(yyq)/double(max(yyq(:))))) ;
     axis on
     yyaxis right
-    ylabel(labelstr, 'color', 'k', 'Interpreter', 'Latex') ;
+    if isempty(label_font_size)
+        ylabel(labelstr, 'color', 'k', 'Interpreter', label_interpreter) ;
+    else
+        ylabel(labelstr, 'color', 'k', 'Interpreter', label_interpreter, ...
+            'FontSize', label_font_size) ;
+    end
     yticks([0 1])
     yticklabels({'0', num2str(vscale)})
     xticks([])

@@ -16,6 +16,11 @@ overwrite = options.overwrite ;
 plot_flows = options.plot_flows ;
 plot_Hgdot = options.plot_Hgdot ;
 plot_factors = options.plot_factors ;
+if isfield(options, 'axisOn')
+    axisOn = options.axisOn ;
+else
+    axisOn = true ;
+end
 
 % parameter options
 doubleResolution = options.doubleResolution ;
@@ -140,7 +145,7 @@ if isempty(mesh)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Plot the prediction, the measurement, and the difference
+%% Plot the divergence, the out-of-plane deformation, and the difference
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 colors2d = {H2vn2d, divv2d, gdot2d} ; 
 colors3d = {H2vn3d, divv3d, gdot3d} ;
@@ -237,7 +242,16 @@ if plot_flows && redo_prediction
                         'Interpreter', 'Latex')
                     % xticks(cb, [-climit_err, climit_err]) 
                     caxis([-climit_err, climit_err]) 
-               end
+                end
+               
+                % Annotate the axes (added this for publication)
+                if axisOn
+                    axis on
+                    xticks([])
+                    yticks([])
+                    xlabel('$s$', 'interpreter', 'latex')
+                    ylabel('$\phi$', 'interpreter', 'latex')
+                end
             end
         end
 

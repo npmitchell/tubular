@@ -367,7 +367,9 @@ for tt = timePoints
         options.heuristic = weight * DD ;
         % Convert here to the gridspacing of xx,yy,zz
         startpt_transposed = [startpt(2), startpt(1), startpt(3)]' / res ;
+        startpt_transposed = max(startpt_transposed, 1);
         endpt_transposed = [endpt(2), endpt(1), endpt(3)]' / res ;
+        endpt_transposed = max(endpt_transposed, 1);
         
         [D2,S] = perform_fast_marching(DD, startpt_transposed, options);
         

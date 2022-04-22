@@ -487,12 +487,14 @@ if plot_spaceMaps && (~files_exist || overwrite)
         mdivv = squeeze(mean(divv_M(tidx_i, :, :), 1)) ;
         mH2vn = squeeze(mean(H2vn_M(tidx_i, :, :), 1)) ;
         halfgdot = mdivv - mH2vn ;
-        pOptions.labels = {'$2Hv_n$', '$\nabla \cdot v_t$', ...
-            '$\frac{1}{2}\mathrm{Tr}\left[\mathbf{g}^{-1} \dot{\mathbf{g}}\right]=\nabla \cdot v_t-2Hv_n$', ...
+        
+        pOptions.labels = {'$2Hv_n$', '$\nabla \cdot \bf{v_\parallel}$', ...
+            '$\frac{1}{2}\mathrm{Tr}\left[\mathbf{g}^{-1} \dot{\mathbf{g}}\right]=\nabla \cdot {\bf{v}}_\parallel-2Hv_n$', ...
             '', '', ''} ;
         pOptions.cbarlabels = {'', '', '', ...
-            '$2Hv_n$', '$\nabla \cdot v_t$', ...
+            '$2Hv_n$', '$\nabla \cdot \bf{v_\parallel}$', ...
             '$\frac{1}{2}\mathrm{Tr}\left[\mathbf{g}^{-1} \dot{\mathbf{g}}\right]$'} ;
+        
         pOptions.makeCbar = [false, false, false, true, true, true] ;
         % pOptions.cmap = bwr ;
         % pOptions.cmap = twilight_shifted_trueWhite(256) ;
@@ -515,11 +517,20 @@ if plot_spaceMaps && (~files_exist || overwrite)
         for ii = 1:3
             set(gcf, 'CurrentAxes', axs{ii})
             pos{ii} = get(gca, 'position') ;
+            axis on
         end
         for ii = 4:length(axs)
             set(gcf, 'CurrentAxes', axs{ii})
             p2 = get(gca, 'position') ;
             set(gca, 'position', [pos{ii-3}(1), p2(2)-pos{ii-3}(4)*0.1, pos{ii-3}(3), pos{ii-3}(4)])
+            
+            % added this for publication
+            axis on
+            xticks([])
+            yticks([])
+            xlabel('$s$', 'interpreter', 'latex')
+            ylabel('$\phi$', 'interpreter', 'latex')
+            
         end
         
         % Correlation for 10%-90% AP axis

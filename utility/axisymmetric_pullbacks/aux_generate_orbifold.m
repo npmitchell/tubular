@@ -115,6 +115,7 @@ end
 if isfield(Options, 'imSize')
     if length(Options.imSize) > 1
         disp("WARNING: Options.imSize is overwritten by parameter 'a'")
+        imsz = 1000 ;
     else
         imsz = Options.imSize ;
     end

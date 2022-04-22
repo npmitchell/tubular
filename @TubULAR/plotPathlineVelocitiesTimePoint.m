@@ -190,9 +190,6 @@ vy = v2dsmum_ii(:, 2) ;
 % % Check normal velocity and rotations
 % quiver3(piv.x{i}, piv.y{i}, 0*piv.x{i}, vx, vy, vn, 0)
 
-% Get lobes for this timepoint
-foldx = ssfold_frac(tidx, :) * size(im, 2) ;
-
 %% Plot the normal velocity on top at pathlines XX,YY
 if ~exist(vnfn, 'file') || overwrite
     disp(['Saving ' vnfn])

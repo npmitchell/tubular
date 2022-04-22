@@ -17,9 +17,10 @@ function [XX, YY] = pullbackPathlines(QS, x0, y0, t0, options)
 %   x coordinates in pullback pixels to start pathlines at t0
 % y0 : n*m float array 
 %   y coordinates in pullback pixels to start pathlines at t0
-% t0 : 
+% t0 : float 
 %   time at which to begin the pathlines, must be member of
-%   QS.xp.fileMeta.timePoints
+%   QS.xp.fileMeta.timePoints. Note this is not the index of timePoints,
+%   but the element of timePoints (ie a timeStamp)
 % options : struct with fields 
 %   preview : bool
 %       view intermediate results
