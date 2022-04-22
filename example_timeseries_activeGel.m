@@ -17,8 +17,6 @@
 %  - imsane instructions -- tutorial with incorporation 
 %  - do we need gptoolbox? so far just for laplacian_smooth() --> run
 %  without, for vertex_normals use meshAveragingOperators, barycenter
-%  - DEC tutorials --> STANDALONE AND INTEGRATED TUTORIALS
-%  - TexturePatch > part of TubULAR
 %  - Make sure Ricci is not default
 %  - imsane integralDetector vs morphsnakesDetector
 %  - piv 
@@ -28,9 +26,9 @@
 %% Clear workspace ========================================================
 % We start by clearing the memory and closing all figures
 clear; close all; clc;
-% cd /mnt/data/organoids/tube/
-% cd /mnt/data/code/tubular/example/ ;
-cd /mnt/data/tubular_test/activeGel/202203221330_region2_ATayarGel/timesequence/ ;
+% cd /mnt/data/tubular_test/activeGel/202203221330_region2_ATayarGel/timesequence/ ;
+% cd /Volumes/WOON/tubular_test/activeGel/202203221330_region2_ATayarGel/timesequence/ ;
+cd ~/Desktop/tubular_test/activeGel/202203221330_region2_ATayarGel/timesequence/ ;
 
 dataDir = cd ;
 
@@ -47,9 +45,9 @@ addpath(fullfile('utility','plotting'))
 cd(dataDir)
 
 %% DEFINE NEW MASTER SETTINGS
-if ~exist('./masterSettings.mat', 'file') || true
+if ~exist('./masterSettings.mat', 'file') 
     % Metadata about the experiment
-    stackResolution = [1.1610 1.1610 2.2] ;  % resolution in spaceUnits per pixel
+    stackResolution = [1.1 1.1 2.2] ;  % resolution in spaceUnits per pixel
     nChannels = 2 ;             % how many channels is the data (ex 2 for GFP + RFP)
     channelsUsed = [1,2] ;          % which channels are used for analysis
     timePoints = 0:54;       % timepoints to include in the analysis
@@ -117,30 +115,16 @@ end
 dir16bit = fullfile(dataDir) ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PART 1: Surface detection using ImSAnE's integral detector
+%% PART 1: Surface detection using TubULAR's getSurface method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% I. INITIALIZE ImSAnE PROJECT ===========================================
-% Setup a working directory for the project, where extracted surfaces,
+
+%% Setup a working directory for the project, where extracted surfaces,
 % metadata and debugging output will be stored.  Also specifiy the
 % directory containing the data.
 cd(dir16bit)
 dataDir = dir16bit ;
 projectDir = dataDir ;
 
-% Start by creating an experiment object, optionally pass on the project
-% directory (otherwise it will ask), and change into the directory of the
-% data. This serves as a front-end for data loading, detection, fitting
-% etc.
-xp = project.Experiment(projectDir, dataDir);
-
-% Set file and experiment meta data
-%
-% We assume on individual image stack for each time point, labeled by time.
-%  To be able to load the stack, we need to tell the project wehre the data
-%  is, what convention is assumed for the file names, available time
-%  points, and the stack resolution.  Options for modules in ImSAnE are
-%  organized in MATLAB structures, i.e a pair of field names and values are
-%  provided for each option.
 %
 % The following file metadata information is required:
 % * 'directory'         , the project directory (full path)
@@ -165,9 +149,7 @@ fileMeta.timePoints         = timePoints ;
 fileMeta.stackResolution    = stackResolution;
 fileMeta.swapZT             = masterSettings.swapZT;
 
-% Set required additional information on the experiment. A verbal data set
-% description, Jitter correct by translating  the sample, which time point
-% to use for fitting, etc.
+% Set required additional information on the experiment.
 %
 % The following project metadata information is required:
 % * 'channelsUsed'      , the channels used, e.g. [1 3] for RGB
@@ -188,24 +170,12 @@ first_tp = 1 ;
 expMeta                     = struct();
 expMeta.channelsUsed        = channelsUsed ;
 expMeta.channelColor        = 1;
-expMeta.description         = 'Drosophila gut';
+expMeta.description         = 'microtubule-kinesin gel';
 expMeta.dynamicSurface      = 1;
 expMeta.jitterCorrection    = 0;  % 1: Correct for sample translation
 expMeta.fitTime             = fileMeta.timePoints(first_tp);
 expMeta.detectorType        = 'surfaceDetection.integralDetector';
 expMeta.fitterType          = 'surfaceFitting.meshWrapper';
-
-% Now set the meta data in the experiment.
-xp.setFileMeta(fileMeta);
-xp.setExpMeta(expMeta);
-xp.initNew();
-
-clear fileMeta expMeta
-
-%% LOAD THE FIRST TIME POINT ==============================================
-xp.setTime(xp.fileMeta.timePoints(1)) ;
-% xp.loadTime(xp.fileMeta.timePoints(first_tp));
-% xp.rescaleStackToUnitAspect();
 
 %% SET DETECTION OPTIONS ==================================================
 % Load/define the surface detection parameters
@@ -242,12 +212,12 @@ else
         'post_tension', 3, ...
         'exit_thres', 1e-7, ...
         'foreGroundChannel', 1, ...
-        'fileName', sprintf( fn, xp.currentTime ), ...
+        'fileName', fn, ...
         'mslsDir', mslsDir, ...
         'ofn_ls', outputfilename_ls, ...
         'ofn_ply', outputfilename_ply,...
         'ms_scriptDir', ms_scriptDir, ...
-        'timepoint', xp.currentTime, ...
+        'timepoint', timePoints(1), ...
         'zdim', 2, ...
         'ofn_smoothply', outputfilename_smoothply, ...
         'mlxprogram', mlxprogram, ...
@@ -283,68 +253,14 @@ else
 end
 
 % Overwrite certain parameters for script structure
-detectOptions.fileName = sprintf( fn, xp.currentTime ) ;
 mslsDir = detectOptions.mslsDir ;
 
-% Set detect options ------------------------------------------------------
-xp.setDetectOptions( detectOptions );
-disp('done')
 
-%% CREATE THE SUBSAMPLED H5 FILE FOR INPUT TO ILASTIK =====================
-for tt = xp.fileMeta.timePoints
-    if ~exist(fullfile(projectDir, [sprintf(fn, tt) '.h5']), 'file')
-        disp(['Did not find file: ', fullfile(projectDir, [sprintf(fn, tt) '.h5'])])
-        xp.loadTime(tt);
-        xp.rescaleStackToUnitAspect();
-        % make a copy of the detectOptions and change the fileName
-        detectOpts2 = detectOptions ;
-        detectOpts2.fileName = sprintf( fn, xp.currentTime ) ;
-        xp.setDetectOptions( detectOpts2 );
-        xp.detector.prepareIlastik(xp.stack);
-        disp(['done outputting downsampled data h5: tp=' num2str(tt) ' for surface detection'])
-    else
-        disp(['h5 ' num2str(tt) ' was already output, skipping...'])
-    end
-end    
-disp('Open with ilastik if not already done')
+%% Collect options into xp experiment struct
+xp = struct('expMeta', expMeta, 'fileMeta', fileMeta, ...
+    'detectOptions', detectOptions) ;
 
-%% TRAIN NON-STABILIZED DATA IN ILASTIK TO IDENTIFY SURFACE ==============
-% Open ilastik, train on h5s until probabilities and uncertainty are 
-% satisfactory for extracting a mesh. For example, here we train on the
-% membrane (channel 1) and the yolk (channel 2), so that a level set will
-% enclose the yolk but not escape through the membrane.
 
-%% Create MorphSnakes LevelSets from the Probabilities output of ilastik ==
-% Now detect all surfaces
-if strcmp(detectOptions.run_full_dataset, projectDir)
-    disp('Running dataset mode, in which all surfaces are extracted serially using morphsnakes')
-    xp.setTime(xp.fileMeta.timePoints(1));
-    detectOpts2 = detectOptions ;
-    detectOpts2.fileName = sprintf( fn, xp.currentTime ) ;
-    xp.setDetectOptions( detectOpts2 );
-    xp.detectSurface();
-else
-    % Use morphsnakes to extract surfaces for all timepoints INDIVIDUALLY 
-    assert(strcmp(detectOptions.run_full_dataset, 'none'))
-    for tp = xp.fileMeta.timePoints
-        xp.setTime(tp);
-        
-        % make a copy of the detectOptions and change the fileName
-        detectOpts2 = detectOptions ;
-        detectOpts2.timepoint = xp.currentTime ;
-        detectOpts2.fileName = sprintf( fn, xp.currentTime );
-        xp.setDetectOptions( detectOpts2 );
-        xp.detectSurface();
-        
-        % For next time, use the output mesh as an initial mesh, which will
-        % be searched for if init_ls_fn is set to 'none'.
-        detectOpts2.init_ls_fn = 'none' ;
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PART 2: TubULAR -- surface parameterization
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Now we have 3d data volumes and surfaces. Define a TubULAR object. 
 % To visualize data on these surfaces and compute how these surfaces deform
 % we now define TubULAR object.
@@ -384,6 +300,47 @@ for tp = xp.fileMeta.timePoints
     pause(0.1)
 end
 
+
+%% CREATE THE SUBSAMPLED H5 FILE FOR INPUT TO ILASTIK =====================
+tubi.prepareIlastik()
+
+%% TRAIN NON-STABILIZED DATA IN ILASTIK TO IDENTIFY SURFACE ==============
+% Open ilastik, train on h5s until probabilities and uncertainty are 
+% satisfactory for extracting a mesh. For example, here we train on the
+% membrane (channel 1) and the yolk (channel 2), so that a level set will
+% enclose the yolk but not escape through the membrane.
+
+%% Create MorphSnakes LevelSets from the Probabilities output of ilastik ==
+% Now detect all surfaces
+if strcmp(detectOptions.run_full_dataset, projectDir)
+    disp('Running dataset mode, in which all surfaces are extracted serially using morphsnakes')
+    xp.setTime(xp.fileMeta.timePoints(1));
+    detectOpts2 = detectOptions ;
+    detectOpts2.fileName = sprintf( fn, xp.currentTime ) ;
+    xp.setDetectOptions( detectOpts2 );
+    xp.detectSurface();
+else
+    % Use morphsnakes to extract surfaces for all timepoints INDIVIDUALLY 
+    assert(strcmp(detectOptions.run_full_dataset, 'none'))
+    for tp = xp.fileMeta.timePoints
+        xp.setTime(tp);
+        
+        % make a copy of the detectOptions and change the fileName
+        detectOpts2 = detectOptions ;
+        detectOpts2.timepoint = xp.currentTime ;
+        detectOpts2.fileName = sprintf( fn, xp.currentTime );
+        xp.setDetectOptions( detectOpts2 );
+        xp.detectSurface();
+        
+        % For next time, use the output mesh as an initial mesh, which will
+        % be searched for if init_ls_fn is set to 'none'.
+        detectOpts2.init_ls_fn = 'none' ;
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PART 2: TubULAR -- surface parameterization
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Obtain APDV coordinates of the surface. 
 % There are two options for obtaining these coordinates. 
 %   1. Automatically determine A and P by the extremal points of the
