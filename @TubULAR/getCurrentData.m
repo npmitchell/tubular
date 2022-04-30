@@ -47,7 +47,6 @@ function IV = getCurrentData(tubi, adjustIV, varargin)
                 data = loadStackNoBioformats(tubi, varargin{:}) ;
             end
             IV = rescaleToUnitAspect(data, tubi.xp.fileMeta.stackResolution);
-            tubi.currentData.IV = IV ;
         else
             disp('Treating xp as an Experiment class instance')
             tubi.xp.loadTime(tubi.currentTime);
@@ -58,7 +57,12 @@ function IV = getCurrentData(tubi, adjustIV, varargin)
         if adjustIV
             adjustlow = tubi.data.adjustlow ;
             adjusthigh = tubi.data.adjusthigh ;
-            IVtmp = tubi.adjustIV(IV, adjustlow, adjusthigh) ;
+            if (any(adjustlow) ~= 0 || any(adjusthigh) ~=100) && ~any(isnan(adjustlow)) ...
+                    && ~any(isnan(adjusthigh))
+                IVtmp = tubi.adjustIV(IV, adjustlow, adjusthigh) ;
+            else
+                IVtmp = IV ;
+            end
             if ~all(tubi.data.axisOrder == [1 2 3])
                 for ch = 1:length(IVtmp)
                     tubi.currentData.IV{ch} = permute(IVtmp{ch}, tubi.data.axisOrder) ;
@@ -120,14 +124,14 @@ function stacks = rescaleToUnitAspect(data, resolution)
         newnslices = round(size(curr,3)*aspect);
         scaled = zeros([size(curr,1) size(curr,2) newnslices], class(curr));
         for j=1:size(curr,1)
-            debugMsg(1, '.');
-            if rem(j,80) == 0
-                debugMsg(1, '\n');
-            end
+            % debugMsg(1, '.');
+            % if rem(j,80) == 0
+            %     debugMsg(1, '\n');
+            % end
             scaled(j,:,:) = imresize(squeeze(curr(j,:,:)),...
                                         [size(curr,2) newnslices]);
         end
-        debugMsg(1,'\n');
+        % debugMsg(1,'\n');
         
         % permute back to original axis order
         scaled = ipermute(scaled,ii);
@@ -203,7 +207,7 @@ function data = loadStackBioformats(tubi, varargin)
     if isempty(nChannelsUsed)
         error('nChannelsUsed is empty');
     else
-        debugMsg(1, ['Reading ' num2str(nChannelsUsed) ' channels \n'])
+        disp(['Reading ' num2str(nChannelsUsed) ' channels \n'])
     end
     if any(tubi.xp.expMeta.channelsUsed > nChannels)
         error('channelsUsed specifies channel larger than number of channels');
@@ -246,10 +250,8 @@ function data = loadStackBioformats(tubi, varargin)
         % should be read, if there are multiple timepoints, only
         % the correct time should be read
         if nTimePts == 1 || (nTimePts > 1 && this.currentTime == tidx-1)
-
-            debugMsg(1,'.');
             if rem(i,80) == 0
-                debugMsg(1,'\n');
+                disp('...');
             end
 
             dataCidx = find(tubi.xp.expMeta.channelsUsed == cidx);
@@ -335,9 +337,9 @@ function data = loadStackNoBioformats(tubi, varargin)
         end
 
         % progress indicator
-        debugMsg(1,'.');
-        if rem(i,80) == 0
-            debugMsg(1,'\n');
-        end
+        % debugMsg(1,'.');
+        % if rem(i,80) == 0
+        %     debugMsg(1,'\n');
+        % end
     end
 end

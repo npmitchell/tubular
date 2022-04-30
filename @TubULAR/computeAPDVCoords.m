@@ -77,6 +77,14 @@ else
         'was found, so define the APDV axes based on the data axes and the mesh elongation axis'])
     end
 end
+if ~use_iLastik
+    if isfield(opts, 'use_MOI')
+        use_MOI = opts.use_MOI ;
+    else
+        use_MOI = false ;
+    end
+end
+
 % Which timepoint to use to define dorsal and AP axis?
 if isfield(opts, 'tref')
     trefIDx = find(tubi.xp.fileMeta.timePoints == opts.tref) ;
@@ -441,7 +449,7 @@ if redo_rot_calc || overwrite
             dlmwrite(aptname, acom) ;
             dlmwrite(pptname, pcom) ;
         end
-    else
+    elseif use_MOI
         disp('Defining APDV based on datavolume axes, without major alignment/rotation of the object')
         meshfn = sprintf(tubi.fullFileBase.mesh, tt) ;
         disp(['Loading mesh ' meshfn])
@@ -516,7 +524,58 @@ if redo_rot_calc || overwrite
 
         dlmwrite(aptname, acom) ;
         dlmwrite(pptname, pcom) ;    
-        dlmwrite(dptname, dcom) ;    
+        dlmwrite(dptname, dcom) ;   
+    else
+        % Use default axes as APDVCoords
+        tubi.setTime(tt) ;
+        tubi.getCurrentData() ;
+        axSizes = size(tubi.currentData.IV{1}) ;
+        % Define acom and pcom to be endpoints of the data volume
+        acom = [0,0,0] ;
+        pcom = [0,0,0] ;
+        dcom = [0,0,0] ;
+        pcom(1) = axSizes(1) ;
+        dcom(3) = axSizes(3) ;
+        
+        acom = acom / ssfactor ;
+        pcom = pcom / ssfactor ;
+        dcom = dcom / ssfactor ;
+
+        % PLOT APD points on mesh
+        % load current mesh & plot the dorsal dot
+        clf
+        for ii = 1:3
+            subplot(1, 3, ii)
+            mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+            trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
+            hold on;
+            plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')
+            plot3(pcom(1) * ssfactor, pcom(2) * ssfactor, pcom(3) * ssfactor, 'o')
+            plot3(dcom(1) * ssfactor, dcom(2) * ssfactor, dcom(3) * ssfactor, 'o')
+            plot3([acom(1), pcom(1)] * ssfactor, ...
+                    [acom(2), pcom(2)] * ssfactor, ...
+                    [acom(3), pcom(3)] * ssfactor, 'k-')
+            axis equal
+            if ii == 1
+                view(0, 90)
+            elseif ii == 2
+                view(90, 0)
+            else
+                view(180, 0)
+            end
+        end
+        legend({'surface', 'anterior pt', 'posterior pt', 'dorsal pt', 'ap axis'}, ...
+                'Location', 'northwest')
+        sgtitle('APD pts for APDV coordinates')
+        saveas(gcf, fullfile(tubi.dir.mesh, 'apd_pts.png'))
+
+        %% Define "start point" for APDV coords at the anterior
+        startpt = acom ;
+        spt = acom * ssfactor ;
+
+        dlmwrite(aptname, acom) ;
+        dlmwrite(pptname, pcom) ;    
+        dlmwrite(dptname, dcom) ;   
                 
     end
     

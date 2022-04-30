@@ -511,23 +511,30 @@ if ~load_from_disk || overwrite
         msg = 'Rotate the mesh to view Anterior endcap, then press Enter/return';
         disp(msg)
         title(msg)
-        key = 'none' ;
-        while ~strcmpi(key, 'return')
-            waitforbuttonpress;
-            key=get(gcf,'CurrentKey');
-        end
+        % key = 'none' ;
+        % while ~strcmpi(key, 'return')
+        %     waitforbuttonpress;
+        %     key=get(gcf,'CurrentKey');
+        % end
+        
+        c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;
+        uiwait(gcf)
         datacursormode on
         
         % View ANTERIOR endcap 
         msg = "Select Anterior endcap point, then press 'a' (with Fig in foreground)";
         disp(msg)
         title(msg)
-        key = 'none' ;
-        while ~strcmpi(key, 'a')
-            datacursormode on
-            waitforbuttonpress;
-            key=get(gcf,'CurrentKey');
-        end
+        c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;
+        uiwait(gcf)
+                
+        %msg = "Select Anterior endcap point, then press 'a' (with Fig in foreground)";
+        % key = 'none' ;
+        % while ~strcmpi(key, 'a')
+        %     datacursormode on
+        %     waitforbuttonpress;
+        %     key=get(gcf,'CurrentKey');
+        % end
         dcm_obj = datacursormode(h);  
         f = getCursorInfo(dcm_obj);
         aclick = f.Position ;
@@ -541,25 +548,38 @@ if ~load_from_disk || overwrite
         [az, el] = view ;
         view([az+180,el])
         
-        % View ANTERIOR endcap 
-        msg = 'Rotate the mesh to view Posterior endcap, then press Enter/return';
+        % View POSTERIOR endcap         
+        msg = 'Rotate the mesh to view Posterior endcap, then press Continue';
         disp(msg)
         title(msg)
-        key = 'none' ;
-        while ~strcmpi(key, 'return')
-            waitforbuttonpress;
-            key=get(gcf,'CurrentKey');
-        end
+        c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;
+        uiwait(gcf)
+                
+        
+        % msg = 'Rotate the mesh to view Posterior endcap, then press Enter/return';
+        % disp(msg)
+        % title(msg)
+        % key = 'none' ;
+        % while ~strcmpi(key, 'return')
+        %     waitforbuttonpress;
+        %     key=get(gcf,'CurrentKey');
+        % end
         datacursormode on
-        msg = "Select the Posterior endcap point, then press 'p' (with Fig in foreground)";
+        % msg = "Select the Posterior endcap point, then press 'p' (with Fig in foreground)";
+        % disp(msg)
+        % title(msg)
+        % key = 'none' ;
+        % while ~strcmpi(key, 'p')
+        %     datacursormode on
+        %     waitforbuttonpress;
+        %     key=get(gcf,'CurrentKey');
+        % end   
+        msg = "Select the Posterior endcap point, then press 'Continue' (with Fig in foreground)";
         disp(msg)
         title(msg)
-        key = 'none' ;
-        while ~strcmpi(key, 'p')
-            datacursormode on
-            waitforbuttonpress;
-            key=get(gcf,'CurrentKey');
-        end
+        c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;
+        uiwait(gcf)
+        
         dcm_obj = datacursormode(h);
         f = getCursorInfo(dcm_obj);
         pclick = f.Position ;

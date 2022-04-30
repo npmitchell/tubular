@@ -121,6 +121,7 @@ channel = [] ;  % by default, plot all channels
 figoutdir = tubi.dir.texturePatchIm ;
 normal_shift = tubi.normalShift ;
 plot_time_points = [];
+perspective_angle = [ -20, 20 ] ;
 
 timePoints = tubi.xp.fileMeta.timePoints ;
 
@@ -142,6 +143,8 @@ if isfield(options, 'texture_shift')
 end
 if isfield(options, 'blackFigure')
     blackFigure = options.blackFigure ;
+elseif isfield(options, 'black_figure')
+    blackFigure = options.black_figure ;    
 end
 if isfield(options, 'makeColorbar')
     makeColorbar = options.makeColorbar ;
@@ -151,21 +154,24 @@ if isfield(options, 'figOutDir')
     figoutdir = options.figOutDir ;
 elseif isfield(options, 'outDir')
     figoutdir = options.outDir ;
-end
+end 
 if isfield(options, 'plot_dorsal')
     plot_dorsal = options.plot_dorsal ;
 end
 if isfield(options, 'plot_ventral')
     plot_ventral = options.plot_ventral ;
 end
-if isfield(options, 'plot_dorsal')
+if isfield(options, 'plot_left')
     plot_left = options.plot_left ;
 end
-if isfield(options, 'plot_dorsal')
+if isfield(options, 'plot_right')
     plot_right = options.plot_right ;
 end
 if isfield(options, 'plot_perspective')
     plot_perspective = options.plot_perspective ;
+end
+if isfield(options, 'perspective_angle')
+    perspective_angle = options.perspective_angle ;
 end
 if isfield(options, 'smoothing_lambda')
     smoothing_lambda = options.smoothing_lambda ;
@@ -178,6 +184,9 @@ if isfield(options, 'timePoints')
 end
 if isfield(options, 'plot_time_points')
     plot_time_points = options.plot_time_points;
+end
+if ~isfield(TexturePatchOptions, 'EdgeColor')
+    TexturePatchOptions.EdgeColor = 'none';
 end
 
 % Collate boolean plot indicators to decide which views to plot
@@ -222,7 +231,7 @@ if nargin < 3
         load(metafn, 'metadat')
     catch
         % Define & Save metadata
-        [~, ~, ~, ~, xyzbuff] = tubi.getXYZLims() ;
+        [~, ~, ~, xyzbuff] = tubi.getXYZLims() ;
         metadat.normal_shift = tubi.normalShift ;             % normal push, in pixels, along normals defined in data XYZ space
         metadat.xyzlim = xyzbuff ;                          % xyzlimits
         metadat.texture_axis_order = tubi.data.axisOrder ;    % texture space sampling
@@ -409,7 +418,7 @@ for tidx = tidx_todo
             Options = rmfield(Options, 'Rotation') ;
         else
             disp('WARNING: no rotation supplied, using APDV frame')
-            tubi.getRotTrans()
+            tubi.getRotTrans() ;
             VV = (tubi.APDV.rot * VV')' ;
         end
         if isfield(Options, 'Translation')
@@ -418,7 +427,7 @@ for tidx = tidx_todo
             Options = rmfield(Options, 'Translation') ;
         else
             disp('WARNING: no translation supplied, using APDV frame')
-            tubi.getRotTrans()
+            tubi.getRotTrans() ;
             VV = VV + tubi.APDV.trans ;            
         end
         if isfield(Options, 'Dilation')
@@ -452,16 +461,16 @@ for tidx = tidx_todo
         xlim([xmin, xmax])
         ylim([ymin, ymax])
         zlim([zmin, zmax])
-        colormap bone
+        colormap gray
         titlestr = ['$t = $' num2str(tp*timeinterval-t0) ' ' timeunits] ;
         if blackFigure
             title(titlestr, 'Interpreter', 'Latex', 'Color', 'white') 
         else
             title(titlestr, 'Interpreter', 'Latex', 'Color', 'k') 
         end
-        xlabel('AP position [$\mu$m]', 'Interpreter', 'Latex')
-        ylabel('lateral position [$\mu$m]', 'Interpreter', 'Latex')
-        zlabel('DV position [$\mu$m]', 'Interpreter', 'Latex')
+        xlabel(['x position [' tubi.spaceUnits ']'], 'Interpreter', 'Latex')
+        ylabel(['y position [' tubi.spaceUnits ']'], 'Interpreter', 'Latex')
+        zlabel(['z position [' tubi.spaceUnits ']'], 'Interpreter', 'Latex')
 
         % Rotate the camera angle using rotation and translation 
         % camorbit(theta, phi)
@@ -512,7 +521,7 @@ for tidx = tidx_todo
                 elseif ii == 5
                     % perspective view
                     disp(['saving perspective image: ' sprintf(fns{ii}, tp)])
-                    view(-20, 20)
+                    view(perspective_angle)
                 else
                     error(['Exhausted DorsalVentralLeftRight indices. ',...
                         'What is going on here?'])

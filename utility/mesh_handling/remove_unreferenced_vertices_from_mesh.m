@@ -23,7 +23,6 @@ function [ face, vertex, unreferenced, oldVertexIDx, newVertexIDx ] = ...
 
 unreferenced = [] ;
 oldVertexIDx = 1:size(vertex, 1) ;
-newVertexIDx = 1:size(vertex, 1) ;
 if ~isempty(setdiff(1:length(vertex), face(:)))
     unreferenced = setdiff(1:size(vertex, 1), face(:)) ;
     [ face, vertex, oldVertexIDx, newVertexIDx] = ...

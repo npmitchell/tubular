@@ -40,6 +40,16 @@ function initializeTubULAR(tubi, xp, opts)
 % NPMitchell 2020
 
 %% PROPERTIES
+
+% Build timepoint index lookup table if not already baked into xp as an
+% ImSAnE experiment class instance:
+if isa(xp, 'struct')
+    if ~isfield(xp, 'tIdx')
+        xp.tIdx = containers.Map(xp.fileMeta.timePoints, ...
+            1:length(xp.fileMeta.timePoints)) ;
+    end
+end
+
 tubi.xp = xp ;
 tubi.flipy = opts.flipy ;
 meshDir = opts.meshDir ;
@@ -130,11 +140,27 @@ tubi.dir.uvCoord = uvDir ;
 
 %% fileBases
 tubi.fileBase.name = xp.fileMeta.filenameFormat(1:end-4) ;
+tubi.fullFileBase.name = fullfile(tubi.dir.data, tubi.fileBase.name) ;
+if ~strcmp(tubi.fullFileBase.name(end-4:end), '.tif') || ...
+    ~strcmp(tubi.fullFileBase.name(end-5:end), '.tiff') 
+    tubi.fullFileBase.name = [tubi.fullFileBase.name '.tif'] ;
+end
 try
     tubi.fileBase.mesh = ...
         [xp.detector.options.ofn_smoothply '%06d'] ;
 catch
-    tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply ;
+    if contains(xp.detectOptions.ofn_smoothply, '%') && ...
+             contains(xp.detectOptions.ofn_smoothply, 'd')
+        if contains(xp.detectOptions.ofn_smoothply, '.ply')
+         tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply(1:end-4) ;
+        else
+         tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply ;
+        end
+    else
+         tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply '%06d'] ;
+    end
+            
+         
 end
 tubi.fileBase.alignedMesh = ...
     [tubi.fileBase.mesh '_APDV_um'] ;
