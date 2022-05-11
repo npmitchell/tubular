@@ -27,6 +27,13 @@ function getMeshes(tubi, overwrite)
     end
     
     opts = tubi.xp.detectOptions ;
+    
+    if isfield(opts, 'preview')
+        preview = opts.preview ;
+    else
+        preview = true ;
+    end
+    
     if isfield(opts, 'pressure')
         pressure = opts.pressure ;
     else
@@ -84,7 +91,6 @@ function getMeshes(tubi, overwrite)
     ofn_ply = opts.ofn_ply ;
     ofn_ls = opts.ofn_ls ;
     channel = opts.channel ;
-    ms_scriptDir = opts.ms_scriptDir ;
     % tpstamp = fileMeta.timePoints(first_tp);
     timepoint = opts.timepoint ;
     ofn_smoothply = opts.ofn_smoothply ;
@@ -210,14 +216,20 @@ function getMeshes(tubi, overwrite)
             else
                 % The guess for the initial levelset does NOT exist, so use
                 % a sphere for the guess.
-                disp(['Using default sphere for init_ls -- no such file on disk: ' fullfile(mslsDir, [ init_ls_fn '.h5'])])
-                init_ls = zeros(size(squeeze(file(:, :, :, opts.foreGroundChannel)))) ;
+                disp(['Using default sphere of radius ' num2str(radius_guess) ...
+                    ' for init_ls -- no such file on disk: ' fullfile(mslsDir, [ init_ls_fn '.h5'])])
+                init_ls = zeros(size(squeeze(pred(:, :, :, opts.foreGroundChannel)))) ;
                 SE = strel("sphere", radius_guess) ;
                 SE = SE.Neighborhood ;
                 se0 = size(SE, 1) ;
                 rad = ceil(se0*0.5) ;
                 assert( all(size(SE) == se0)) ;
-                centers = str2num(center_guess) ;
+                if isempty(center_guess)
+                    centers = size(pred) * 0.5 ;
+                    centers = centers(1:3) ;
+                else
+                    centers = str2num(center_guess) ;
+                end
                 dd = centers - rad ;
                 xmin = max(1, dd(1)) ;
                 ymin = max(1, dd(2)) ;
@@ -284,10 +296,10 @@ function getMeshes(tubi, overwrite)
                 init_ls = imdilate(init_ls, SE) ;
             end
             
-            data = file(:, :, :, opts.foreGroundChannel) ;
+            data = pred(:, :, :, opts.foreGroundChannel) ;
             BW = activecontour(data, init_ls, niter_ii, 'Chan-Vese', ...
                 'SmoothFactor', tension, 'ContractionBias', pressure) ;
-            
+                        
             % Post processing
             if post_pressure < 0
                 disp('eroding result by post_pressure...')
@@ -299,6 +311,28 @@ function getMeshes(tubi, overwrite)
                 BW = imdilate(BW, SE) ;
             end
 
+            % preview current results
+            if preview
+                clf
+                if centers(3) < size(BW, 3) && centers(3) > 0.5 
+                    subplot(1, 2, 1) ; 
+                    imagesc(squeeze(BW(:, :,round(centers(3))))); 
+                    subplot(1, 2, 2); 
+                    imagesc(squeeze(data(:,:,round(centers(3)))))
+                    sgtitle('level set found...')
+                else
+                    zframe = round(size(BW, 3) * 0.5) ;
+                    subplot(1, 2, 1) ; 
+                    imagesc(squeeze(BW(:, :, zframe))); 
+                    subplot(1, 2, 2); 
+                    imagesc(squeeze(data(:,:,zframe)))
+                    sgtitle('level set found...')
+
+                end
+                % pause to draw the figure and show it in foreground
+                pause(1e-5)
+            end
+            
             % Remove all but biggest component
             if enforceSingleComponent
                 CC = bwconncomp(BW);

@@ -249,7 +249,7 @@ function data = loadStackBioformats(tubi, varargin)
         % see above: if there is only one timepoint all the planes
         % should be read, if there are multiple timepoints, only
         % the correct time should be read
-        if nTimePts == 1 || (nTimePts > 1 && this.currentTime == tidx-1)
+        if nTimePts == 1 
             if rem(i,80) == 0
                 disp('...');
             end
@@ -262,6 +262,8 @@ function data = loadStackBioformats(tubi, varargin)
             else
                 fprintf('skipping channel and z plane')
             end
+        else
+            error('More than one timepoint in the TIFF image. Check if swapZT in masterSettings should be toggled to true/false to swap Z and T axes')
         end
     end
     fprintf('\n');
