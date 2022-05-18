@@ -108,6 +108,10 @@ end
 
 while( iter < max_iter && (iter == 0 || max(abs(U(:)-U_prev(:)))>tol*h))
     
+    % if mod(iter, 2) == 1
+        disp(['relaxing mesh spikes: iteration ' num2str(iter) '/ maxIter:' num2str(max_iter) ])
+    % send
+    
     U_prev = U; % Store a copy of the previous iteration
     
     % Update geometric Laplacian operator

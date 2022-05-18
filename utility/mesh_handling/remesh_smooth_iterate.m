@@ -1,5 +1,5 @@
 function [V,F] = remesh_smooth_iterate(V,F, lambda,... 
-    tar_length, num_iter, protect_constraints, enforceQuality)
+    tar_length, num_iter, protect_constraints, enforceQuality, maxIterRelaxMeshSpikes)
 % [V,F] = remesh_smooth_iterate(V,F, lambda, tar_length, num_iter, protect_constraints)
 % Isotropically remesh the surface and smooth it.
 %
@@ -20,6 +20,8 @@ function [V,F] = remesh_smooth_iterate(V,F, lambda,...
 % enforceQuality : bool
 %   error out if there are boundaries, mesh intersections, or if not
 %   spherical topology
+% maxIterRelaxMeshSpikes : int >=0 
+%   maximum number of iterations of relaxing mesh spikes 
 %
 % Returns
 % -------
@@ -48,8 +50,10 @@ if ~enforceQuality
     % Simpler case, with smoothing steps
     
     % Attempt to remove localized mesh spikes by Laplacian relaxation
-    V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
-        'uniform', [], 2, 'implicit', 1000);
+    if maxIterRelaxMeshSpikes > 0 
+        V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
+            'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
+    end
     
     V = laplacian_smooth(V, F, 'cotan', [], lambda, 'implicit', V, 10);
 else
@@ -64,7 +68,7 @@ else
 
     % Attempt to remove localized mesh spikes by Laplacian relaxation
     V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
-        'uniform', [], 2, 'implicit', 1000);
+        'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
 
     % Try to remove self-intersections
     [intersects, ~] = mesh_self_intersection_3d(F, V);
@@ -82,7 +86,7 @@ else
 
             % Another round of spike relaxation
             V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
-                'uniform', [], 2, 'implicit', 1000);
+                'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
 
             [intersects, ~] = mesh_self_intersection_3d(F, V);
 
