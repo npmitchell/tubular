@@ -733,6 +733,9 @@ if dynamic
 
 end
 
+%% PCA and mode analysis
+tubi.dir.PCAoverTime = fullfile(tubi.dir.mesh, 'PCAoverTime') ;
+
 %% Ensure directories
 dirs2make = struct2cell(tubi.dir) ;
 for ii=1:length(dirs2make)

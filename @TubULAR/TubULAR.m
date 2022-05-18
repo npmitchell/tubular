@@ -2035,6 +2035,12 @@ classdef TubULAR < handle
         %% Velocities -- Lagrangian Averaging
         timeAverageVelocities(tubi, samplingResolution, options)
         function vels = loadVelocityAverage(tubi, varargin)
+            % Retreive the Velocity on each vertex/face barycenter of the
+            % (s,phi) meshes.
+            % NOTE: that these are nearly Lagrangian, but not as Lagrangian
+            % as tubi.getPullbackPathlines(t0), which corrects for any
+            % residual motion in the pullback plane.
+            
             % Load and pack into struct
             if isempty(varargin)
                 varargin = {'v3d', 'v2dum', 'v2d', 'vn', 'vf', 'vv'};
@@ -2072,6 +2078,7 @@ classdef TubULAR < handle
             % todo: check if all varargin are already loaded
             vels = loadVelocityAverage(tubi, varargin{:}) ;
         end
+        
         plotTimeAvgVelocities(tubi, options)
         helmholtzHodge(tubi, options)
         measurePathlineVelocities(tubi, options)
@@ -2452,6 +2459,14 @@ classdef TubULAR < handle
             export_fig(fullfile(QS.dir.uvCoord, [sprintf(...
                 'coordSystemDemo_%06d_', QS.currentTime) style exten]), ...
                 '-nocrop','-r600')
+        end
+        
+        pcaResults = computePCAoverTime(tubi, options) 
+        function pcaResults = getPCAoverTime(tubi, options)
+            if nargin < 2
+                options = struct() ;
+            end
+            pcaResults = computePCAoverTime(tubi, options) ;            
         end
     end
     

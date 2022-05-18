@@ -122,6 +122,7 @@ figoutdir = tubi.dir.texturePatchIm ;
 normal_shift = tubi.normalShift ;
 plot_time_points = [];
 perspective_angle = [ -20, 20 ] ;
+directory_extension = '' ;
 
 timePoints = tubi.xp.fileMeta.timePoints ;
 
@@ -169,6 +170,9 @@ if isfield(options, 'plot_right')
 end
 if isfield(options, 'plot_perspective')
     plot_perspective = options.plot_perspective ;
+end
+if isfield(options, 'directory_extension')
+    directory_extension = options.directory_extension ;
 end
 if isfield(options, 'perspective_angle')
     perspective_angle = options.perspective_angle ;
@@ -268,11 +272,11 @@ save(metafn, 'metadat', 'Options')
 texture_axis_order = options.texture_axis_order ;
 
 %% Name output directories
-figdDir = fullfile(figoutdir, 'dorsal') ;
-figvDir = fullfile(figoutdir, 'ventral') ;
-figlat1Dir = fullfile(figoutdir, 'lateral1') ;
-figlat2Dir = fullfile(figoutdir, 'lateral2') ;
-figPerspDir = fullfile(figoutdir, 'perspective') ;
+figdDir = fullfile(figoutdir, ['dorsal' directory_extension]) ;
+figvDir = fullfile(figoutdir, ['ventral' directory_extension]) ;
+figlat1Dir = fullfile(figoutdir, ['lateral1' directory_extension]) ;
+figlat2Dir = fullfile(figoutdir, ['lateral2' directory_extension]) ;
+figPerspDir = fullfile(figoutdir, ['perspective' directory_extension]) ;
 dirs = {figoutdir, figdDir, figvDir, figlat1Dir, figlat2Dir, figPerspDir} ;
 for i = 1:length(dirs)
     if ~exist(dirs{i}, 'dir')
