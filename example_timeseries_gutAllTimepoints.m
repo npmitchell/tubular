@@ -29,6 +29,13 @@ clear; close all; clc;
 % cd /mnt/data/code/tubular/example/ ;
 % cd /mnt/data/tubular_test/fly_midgut_allTimepoints/ ;
 cd /mnt/data/48Ygal4UASCAAXmCherry/201902072000_excellent/Time6views_60sec_1p4um_25x_obis1p5_2/data/deconvolved_16bit/
+zwidth =1 ;
+% cd /mnt/data/48Ygal4-UAShistRFP/201904031830_great/Time4views_60sec_1p4um_25x_1p0mW_exp0p35_2/data/deconvolved_16bit/
+% zwidth = 1 ;
+% cd /mnt/data/handGAL4klarHandGFPhistGFP/202105072030_1mWGFP/deconvolved_16bit/
+% % cd /mnt/data/mef2GAL4klarUASCAAXmChHiFP/202003151700_1p4um_0p5ms3msexp/
+% zwidth = 2 ;
+
 
 dataDir = cd ;
 
@@ -46,266 +53,306 @@ addpath(fullfile('utility','plotting'))
 % go back to the data
 cd(dataDir)
 
-%% DEFINE NEW MASTER SETTINGS
-if ~exist('./masterSettings.mat', 'file')
-    % Metadata about the experiment
-    stackResolution = [.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
-    nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
-    channelsUsed = 1 ;          % which channels are used for analysis
-    timePoints = 10:263;       % timepoints to include in the analysis
-    ssfactor = 4 ;              % subsampling factor
-    flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
-    timeInterval = 1 ;          % physical interval between timepoints
-    timeUnits = 'min' ;         % physical unit of time between timepoints
-    spaceUnits = [char(956) 'm'] ;     % physical unit of time between timepoints
-    fn = 'Time_%06d_c1_stab';        % filename string pattern
-    set_preilastikaxisorder = 'xyzc' ; % data axis order for subsampled h5 data (ilastik input)
-    swapZT = 1 ;                % whether to swap the z and t dimensions
-    masterSettings = struct('stackResolution', stackResolution, ...
-        'nChannels', nChannels, ...
-        'channelsUsed', channelsUsed, ...
-        'timePoints', timePoints, ...
-        'ssfactor', ssfactor, ...
-        'flipy', flipy, ...
-        'timeInterval', timeInterval, ...
-        'timeUnits', timeUnits, ...
-        'spaceUnits', spaceUnits, ...
-        'fn', fn,...
-        'swapZT', swapZT, ...
-        'set_preilastikaxisorder', set_preilastikaxisorder, ...
-        'nU', 100, ...  
-        'nV', 100); 
-    disp('Saving masterSettings to ./masterSettings.mat')
-    if exist('./masterSettings.mat', 'file')
-        ui = input('This will overwrite the masterSettings. Proceed (Y/n)?', 's') ;
-        if ~isempty(ui) && (strcmp(ui(1), 'Y') || strcmp(ui(1), 'y'))
+if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
+    %% DEFINE NEW MASTER SETTINGS
+    if ~exist('./masterSettings.mat', 'file')
+        % Metadata about the experiment
+        stackResolution = [.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
+        nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
+        channelsUsed = 1 ;          % which channels are used for analysis
+        timePoints = 10:263;       % timepoints to include in the analysis
+        ssfactor = 4 ;              % subsampling factor
+        flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
+        timeInterval = 1 ;          % physical interval between timepoints
+        timeUnits = 'min' ;         % physical unit of time between timepoints
+        spaceUnits = [char(956) 'm'] ;     % physical unit of time between timepoints
+        fn = 'Time_%06d_c1_stab';        % filename string pattern
+        set_preilastikaxisorder = 'xyzc' ; % data axis order for subsampled h5 data (ilastik input)
+        swapZT = 1 ;                % whether to swap the z and t dimensions
+        masterSettings = struct('stackResolution', stackResolution, ...
+            'nChannels', nChannels, ...
+            'channelsUsed', channelsUsed, ...
+            'timePoints', timePoints, ...
+            'ssfactor', ssfactor, ...
+            'flipy', flipy, ...
+            'timeInterval', timeInterval, ...
+            'timeUnits', timeUnits, ...
+            'spaceUnits', spaceUnits, ...
+            'fn', fn,...
+            'swapZT', swapZT, ...
+            'set_preilastikaxisorder', set_preilastikaxisorder, ...
+            'nU', 100, ...  
+            'nV', 100); 
+        disp('Saving masterSettings to ./masterSettings.mat')
+        if exist('./masterSettings.mat', 'file')
+            ui = input('This will overwrite the masterSettings. Proceed (Y/n)?', 's') ;
+            if ~isempty(ui) && (strcmp(ui(1), 'Y') || strcmp(ui(1), 'y'))
+                save('./masterSettings.mat', 'masterSettings')
+                loadMaster = false ;
+            else
+                disp('Loading masterSettings from disk instead of overwriting')
+                loadMaster = true ;
+            end
+        else
             save('./masterSettings.mat', 'masterSettings')
             loadMaster = false ;
-        else
-            disp('Loading masterSettings from disk instead of overwriting')
-            loadMaster = true ;
         end
     else
-        save('./masterSettings.mat', 'masterSettings')
-        loadMaster = false ;
+        loadMaster = true ;
     end
-else
-    loadMaster = true ;
-end
 
-if loadMaster
-    % LOAD EXISTING MASTER SETTINGS
-    disp('Loading masterSettings from ./masterSettings.mat')
-    load('./masterSettings.mat', 'masterSettings')
-    % Unpack existing master settings
-    stackResolution = masterSettings.stackResolution ;
-    nChannels = masterSettings.nChannels ;
-    channelsUsed = masterSettings.channelsUsed ;
-    timePoints = masterSettings.timePoints ;
-    ssfactor = masterSettings.ssfactor ;
-    % whether the data is stored inverted relative to real position
-    flipy = masterSettings.flipy ; 
-    timeInterval = masterSettings.timeInterval ;  % physical interval between timepoints
-    timeUnits = masterSettings.timeUnits ; % physical unit of time between timepoints
-    spaceUnits = masterSettings.spaceUnits ; % unit of distance of full resolution data pixels ('$\mu$m')
-    fn = masterSettings.fn ;
-    set_preilastikaxisorder = masterSettings.set_preilastikaxisorder ;
-    swapZT = masterSettings.swapZT ;
+    if loadMaster
+        % LOAD EXISTING MASTER SETTINGS
+        disp('Loading masterSettings from ./masterSettings.mat')
+        load('./masterSettings.mat', 'masterSettings')
+        % Unpack existing master settings
+        stackResolution = masterSettings.stackResolution ;
+        nChannels = masterSettings.nChannels ;
+        channelsUsed = masterSettings.channelsUsed ;
+        timePoints = masterSettings.timePoints ;
+        ssfactor = masterSettings.ssfactor ;
+        % whether the data is stored inverted relative to real position
+        flipy = masterSettings.flipy ; 
+        timeInterval = masterSettings.timeInterval ;  % physical interval between timepoints
+        timeUnits = masterSettings.timeUnits ; % physical unit of time between timepoints
+        spaceUnits = masterSettings.spaceUnits ; % unit of distance of full resolution data pixels ('$\mu$m')
+        fn = masterSettings.fn ;
+        set_preilastikaxisorder = masterSettings.set_preilastikaxisorder ;
+        swapZT = masterSettings.swapZT ;
+        nU = masterSettings.nU ;
+        nV = masterSettings.nV ;
+    end
+    dir16bit = fullfile(dataDir) ;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% PART 1: Define the metadata for the project
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    cd(dir16bit)
+    dataDir = cd ;
+    projectDir = dataDir ;
+
+    % Set file and experiment meta data
+    %
+    % We assume on individual image stack for each time point, labeled by time.
+    %  To be able to load the stack, we need to tell the project wehre the data
+    %  is, what convention is assumed for the file names, available time
+    %  points, and the stack resolution.  Options for modules in ImSAnE are
+    %  organized in MATLAB structures, i.e a pair of field names and values are
+    %  provided for each option.
+    %
+    % The following file metadata information is required:
+    % * 'directory'         , the project directory (full path)
+    % * 'dataDir'           , the data directory (full path)
+    % * 'filenameFormat'    , fprintf type format spec of file name
+    % * 'timePoints'        , list of itmes available stored as a vector
+    % * 'stackResolution'   , stack resolution in microns, e.g. [0.25 0.25 1]
+    %
+    % The following file metadata information is optional:
+    % * 'imageSpace'        , bit depth of image, such as uint16 etc., defined
+    %                         in Stack class
+    % * 'stackSize'         , size of stack in pixels per dimension 
+    %                         [xSize ySize zSize]
+    % * 'swapZT'            , set=1 if time is 3rd dimension and z is 4th
+
+    % A filename base template - to be used throughout this script
+    fileMeta                    = struct();
+    fileMeta.dataDir            = dataDir;
+    fileMeta.filenameFormat     = [fn, '.tif'];
+    fileMeta.nChannels          = nChannels;
+    fileMeta.timePoints         = timePoints ;
+    fileMeta.stackResolution    = stackResolution;
+    fileMeta.swapZT             = masterSettings.swapZT;
+
+    % Set required additional information on the experiment. A verbal data set
+    % description, Jitter correct by translating  the sample, which time point
+    % to use for fitting, etc.
+    %
+    % The following project metadata information is required:
+    % * 'channelsUsed'      , the channels used, e.g. [1 3] for RGB
+    % * 'channelColor'      , mapping from element in channels used to RGB = 123
+    % * 'dynamicSurface'    , Not implemented yet, future plan: boolean, false: static surface
+    % * 'detectorType'      , name of detector class, e.g. radielEdgeDetector
+    %                         ,(user threshholded), fastCylinderDetector
+    % * 'fitterType'        , name of fitter class
+    %
+    % The following project meta data information is optional:
+    % * 'description'     , string describing the data set set experiments metadata, 
+    %                                such as a description, and if the surface is dynamic,
+    %                                or requires drift correction of the sample.
+    % * 'jitterCorrection', Boolean, false: No fft based jitter correction 
+
+    % first_tp is also required, which sets the tp to do individually.
+    first_tp = 1 ;
+    expMeta                     = struct();
+    expMeta.channelsUsed        = channelsUsed ;
+    expMeta.channelColor        = 1;
+    expMeta.description         = 'Drosophila gut';
+    expMeta.dynamicSurface      = 1;
+    expMeta.jitterCorrection    = 0;  % 1: Correct for sample translation
+    expMeta.fitTime             = fileMeta.timePoints(first_tp);
+
+
+    %% SET DETECTION OPTIONS ==================================================
+    % Load/define the surface detection parameters
+    msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
+    if exist(msls_detOpts_fn, 'file')
+        disp('loading detectOptions')
+        load(msls_detOpts_fn, 'detectOptions')
+    else
+        outputfilename_ply='mesh_ms_' ;
+        outputfilename_ls='msls_' ;
+        outputfilename_smoothply = 'mesh_' ;
+        ms_scriptDir='/mnt/data/code/morphsnakes_wrapper/morphsnakes_wrapper/' ;   
+        init_ls_fn = 'msls_initguess' ;
+        meshlabCodeDir = '/mnt/data/code/meshlab_codes/';
+        mlxprogram = fullfile(meshlabCodeDir, ...
+            'laplace_surface_rm_resample30k_reconstruct_LS3_1p2pc_ssfactor4.mlx') ;
+        prob_searchstr = '_stab_Probabilities.h5' ;
+        preilastikaxisorder = set_preilastikaxisorder; ... % axis order in input to ilastik as h5s. To keep as saved coords use xyzc
+        ilastikaxisorder= 'cxyz'; ... % axis order as output by ilastik probabilities h5
+        imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
+
+        % Name the output mesh directory --------------------------------------
+        mslsDir = [fullfile(projectDir, 'msls_output') filesep];
+
+        % Surface detection parameters ----------------------------------------
+        detectOptions = struct( 'channel', 1, ...
+            'ssfactor', 4, ...
+            'niter', 35,...
+            'niter0', 160, ...
+            'pre_pressure', -5, ...
+            'pre_tension', 0, ...
+            'pressure', 0, ...
+            'tension', 0.5, ...
+            'post_pressure', 2, ...
+            'post_tension', 3, ...
+            'exit_thres', 1e-7, ...
+            'foreGroundChannel', 1, ...
+            'fileName', sprintf( fn, xp.currentTime ), ...
+            'mslsDir', mslsDir, ...
+            'ofn_ls', outputfilename_ls, ...
+            'ofn_ply', outputfilename_ply,...
+            'ms_scriptDir', ms_scriptDir, ...
+            'timepoint', xp.currentTime, ...
+            'zdim', 2, ...
+            'ofn_smoothply', outputfilename_smoothply, ...
+            'mlxprogram', mlxprogram, ...
+            'init_ls_fn', init_ls_fn, ... % set to none to load prev tp
+            'run_full_dataset', projectDir,... % projectDir, ... % set to 'none' for single tp
+            'radius_guess', 40, ...
+            'dset_name', 'exported_data',...
+            'center_guess', '200,75,75',... % xyz of the initial guess sphere ;
+            'save', true, ... % whether to save images of debugging output
+            'plot_mesh3d', false, ...
+            'dtype', 'h5',...
+            'mask', 'none',...
+            'mesh_from_pointcloud', false, ...
+            'prob_searchstr', prob_searchstr, ...
+            'preilastikaxisorder', preilastikaxisorder, ... 
+            'ilastikaxisorder', ilastikaxisorder, ... 
+            'physicalaxisorder', imsaneaxisorder, ... 
+            'include_boundary_faces', true, ...
+            'smooth_with_matlab', -1, ...  % set this to >0 to use matlab laplacian filter instead of meshlab
+            'pythonVersion', '2') ;
+
+        % save options
+        if exist(msls_detOpts_fn, 'file')
+            disp('Overwriting detectOptions --> renaming existing as backup')
+            backupfn1 = [msls_detOpts_fn '_backup1'] ;
+            if exist(backupfn1, 'file')
+                backupfn2 = [msls_detOpts_fn '_backup2'] ; 
+                system(['mv ' backupfn1 ' ' backupfn2])
+            end
+            system(['mv ' msls_detOpts_fn ' ' backupfn1])
+        end
+        disp('Saving detect Options to disk')
+        save(msls_detOpts_fn, 'detectOptions') ;
+    end
+
+    % Overwrite certain parameters for script structure
+    mslsDir = detectOptions.mslsDir ;
+
+    %% Define Experiment as struct
+    xp = struct('fileMeta', fileMeta, ...
+        'expMeta', expMeta, 'detectOptions', detectOptions) ;
+    disp('done')
+    
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% PART 2: TubULAR -- surface parameterization
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Now we have 3d data volumes and surfaces. Define a TubULAR object. 
+    % To visualize data on these surfaces and compute how these surfaces deform
+    % we now define TubULAR object.
     nU = masterSettings.nU ;
     nV = masterSettings.nV ;
-end
-dir16bit = fullfile(dataDir) ;
+    opts = struct() ;
+    opts.meshDir = mslsDir ;        % Directory where meshes reside
+    opts.flipy = flipy ;            % Set to true if data volume axes are inverted in chirality wrt physical lab coordinates
+    opts.timeInterval = timeInterval ; % Spacing between adjacent timepoints in units of timeUnits 
+    opts.timeUnits = timeUnits ;    % units of time, so that adjacent timepoints are timeUnits * timeInterval apart
+    opts.spaceUnits = spaceUnits ;  % Units of space in LaTeX, for ex '$mu$m' for micron
+    opts.nU = nU ;                  % How many points along the longitudinal axis to sample surface
+    opts.nV = nV ;                  % How many points along the circumferential axis to sample surface
+    opts.normalShift = 10 ;         % Additional dilation acting on surface for texture mapping
+    opts.a_fixed = 2.0 ;            % Fixed aspect ratio of pullback images. Setting to 1.0 is most conformal mapping option.
+    opts.adjustlow = 1.00 ;         % floor for intensity adjustment
+    opts.adjusthigh = 99.9 ;        % ceil for intensity adjustment (clip)
+    opts.phiMethod = 'curves3d' ;   % Method for following surface in surface-Lagrangian mapping [(s,phi) coordinates]
+    opts.lambda_mesh = 0.00 ;       % Smoothing applied to the mesh before DEC measurements
+    opts.lambda = 0.0 ;             % Smoothing applied to computed values on the surface
+    opts.lambda_err = 0.0 ;         % Additional smoothing parameter, optional
+    opts.zwidth = zwidth ;
+    opts.nmodes = 7 ;
+    % opts.t0 = xp.fileMeta.timePoints(1) ;   % reference timepoint used to define surface-Lagrangian and Lagrangian measurements
+    % opts.t0 = 123 ;
+    % opts.t0 = 37 ;
+    % opts.t0 = 1 ;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PART 1: Surface detection using ImSAnE's integral detector
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-cd(dir16bit)
-dataDir = cd ;
-projectDir = dataDir ;
-
-% Set file and experiment meta data
-%
-% We assume on individual image stack for each time point, labeled by time.
-%  To be able to load the stack, we need to tell the project wehre the data
-%  is, what convention is assumed for the file names, available time
-%  points, and the stack resolution.  Options for modules in ImSAnE are
-%  organized in MATLAB structures, i.e a pair of field names and values are
-%  provided for each option.
-%
-% The following file metadata information is required:
-% * 'directory'         , the project directory (full path)
-% * 'dataDir'           , the data directory (full path)
-% * 'filenameFormat'    , fprintf type format spec of file name
-% * 'timePoints'        , list of itmes available stored as a vector
-% * 'stackResolution'   , stack resolution in microns, e.g. [0.25 0.25 1]
-%
-% The following file metadata information is optional:
-% * 'imageSpace'        , bit depth of image, such as uint16 etc., defined
-%                         in Stack class
-% * 'stackSize'         , size of stack in pixels per dimension 
-%                         [xSize ySize zSize]
-% * 'swapZT'            , set=1 if time is 3rd dimension and z is 4th
-
-% A filename base template - to be used throughout this script
-fileMeta                    = struct();
-fileMeta.dataDir            = dataDir;
-fileMeta.filenameFormat     = [fn, '.tif'];
-fileMeta.nChannels          = nChannels;
-fileMeta.timePoints         = timePoints ;
-fileMeta.stackResolution    = stackResolution;
-fileMeta.swapZT             = masterSettings.swapZT;
-
-% Set required additional information on the experiment. A verbal data set
-% description, Jitter correct by translating  the sample, which time point
-% to use for fitting, etc.
-%
-% The following project metadata information is required:
-% * 'channelsUsed'      , the channels used, e.g. [1 3] for RGB
-% * 'channelColor'      , mapping from element in channels used to RGB = 123
-% * 'dynamicSurface'    , Not implemented yet, future plan: boolean, false: static surface
-% * 'detectorType'      , name of detector class, e.g. radielEdgeDetector
-%                         ,(user threshholded), fastCylinderDetector
-% * 'fitterType'        , name of fitter class
-%
-% The following project meta data information is optional:
-% * 'description'     , string describing the data set set experiments metadata, 
-%                                such as a description, and if the surface is dynamic,
-%                                or requires drift correction of the sample.
-% * 'jitterCorrection', Boolean, false: No fft based jitter correction 
-
-% first_tp is also required, which sets the tp to do individually.
-first_tp = 1 ;
-expMeta                     = struct();
-expMeta.channelsUsed        = channelsUsed ;
-expMeta.channelColor        = 1;
-expMeta.description         = 'Drosophila gut';
-expMeta.dynamicSurface      = 1;
-expMeta.jitterCorrection    = 0;  % 1: Correct for sample translation
-expMeta.fitTime             = fileMeta.timePoints(first_tp);
-
-
-%% SET DETECTION OPTIONS ==================================================
-% Load/define the surface detection parameters
-msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
-if exist(msls_detOpts_fn, 'file')
-    disp('loading detectOptions')
-    load(msls_detOpts_fn, 'detectOptions')
+    disp('saving xp struct and opts to disk')
+    save(fullfile(dataDir, 'xp.mat'), 'xp', 'opts')
 else
-    outputfilename_ply='mesh_ms_' ;
-    outputfilename_ls='msls_' ;
-    outputfilename_smoothply = 'mesh_' ;
-    ms_scriptDir='/mnt/data/code/morphsnakes_wrapper/morphsnakes_wrapper/' ;   
-    init_ls_fn = 'msls_initguess' ;
-    meshlabCodeDir = '/mnt/data/code/meshlab_codes/';
-    mlxprogram = fullfile(meshlabCodeDir, ...
-        'laplace_surface_rm_resample30k_reconstruct_LS3_1p2pc_ssfactor4.mlx') ;
-    prob_searchstr = '_stab_Probabilities.h5' ;
-    preilastikaxisorder = set_preilastikaxisorder; ... % axis order in input to ilastik as h5s. To keep as saved coords use xyzc
-    ilastikaxisorder= 'cxyz'; ... % axis order as output by ilastik probabilities h5
-    imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
-    
-    % Name the output mesh directory --------------------------------------
-    mslsDir = [fullfile(projectDir, 'msls_output') filesep];
-
-    % Surface detection parameters ----------------------------------------
-    detectOptions = struct( 'channel', 1, ...
-        'ssfactor', 4, ...
-        'niter', 35,...
-        'niter0', 160, ...
-        'lambda1', 1, ...
-        'lambda2', 1, ...
-        'pressure', 0, ...
-        'tension', 0.5, ...
-        'pre_pressure', -5, ...
-        'pre_tension', 0, ...
-        'post_pressure', 2, ...
-        'post_tension', 3, ...
-        'exit_thres', 1e-7, ...
-        'foreGroundChannel', 1, ...
-        'fileName', sprintf( fn, xp.currentTime ), ...
-        'mslsDir', mslsDir, ...
-        'ofn_ls', outputfilename_ls, ...
-        'ofn_ply', outputfilename_ply,...
-        'ms_scriptDir', ms_scriptDir, ...
-        'timepoint', xp.currentTime, ...
-        'zdim', 2, ...
-        'ofn_smoothply', outputfilename_smoothply, ...
-        'mlxprogram', mlxprogram, ...
-        'init_ls_fn', init_ls_fn, ... % set to none to load prev tp
-        'run_full_dataset', projectDir,... % projectDir, ... % set to 'none' for single tp
-        'radius_guess', 40, ...
-        'dset_name', 'exported_data',...
-        'center_guess', '200,75,75',... % xyz of the initial guess sphere ;
-        'save', true, ... % whether to save images of debugging output
-        'plot_mesh3d', false, ...
-        'dtype', 'h5',...
-        'mask', 'none',...
-        'mesh_from_pointcloud', false, ...
-        'prob_searchstr', prob_searchstr, ...
-        'preilastikaxisorder', preilastikaxisorder, ... 
-        'ilastikaxisorder', ilastikaxisorder, ... 
-        'physicalaxisorder', imsaneaxisorder, ... 
-        'include_boundary_faces', true, ...
-        'smooth_with_matlab', -1, ...  % set this to >0 to use matlab laplacian filter instead of meshlab
-        'pythonVersion', '2') ;
-
-    % save options
-    if exist(msls_detOpts_fn, 'file')
-        disp('Overwriting detectOptions --> renaming existing as backup')
-        backupfn1 = [msls_detOpts_fn '_backup1'] ;
-        if exist(backupfn1, 'file')
-            backupfn2 = [msls_detOpts_fn '_backup2'] ; 
-            system(['mv ' backupfn1 ' ' backupfn2])
-        end
-        system(['mv ' msls_detOpts_fn ' ' backupfn1])
-    end
-    disp('Saving detect Options to disk')
-    save(msls_detOpts_fn, 'detectOptions') ;
+    disp('loading xp struct from disk')
+    load(fullfile(dataDir, 'xp.mat'), 'xp', 'opts')
 end
 
-% Overwrite certain parameters for script structure
-mslsDir = detectOptions.mslsDir ;
-
-%% Define Experiment as struct
-xp = struct('fileMeta', fileMeta, ...
-    'expMeta', expMeta, 'detectOptions', detectOptions) ;
-disp('done')
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PART 2: TubULAR -- surface parameterization
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Now we have 3d data volumes and surfaces. Define a TubULAR object. 
-% To visualize data on these surfaces and compute how these surfaces deform
-% we now define TubULAR object.
-nU = masterSettings.nU ;
-nV = masterSettings.nV ;
-opts.meshDir = mslsDir ;        % Directory where meshes reside
-opts.flipy = flipy ;            % Set to true if data volume axes are inverted in chirality wrt physical lab coordinates
-opts.timeInterval = timeInterval ; % Spacing between adjacent timepoints in units of timeUnits 
-opts.timeUnits = timeUnits ;    % units of time, so that adjacent timepoints are timeUnits * timeInterval apart
-opts.spaceUnits = spaceUnits ;  % Units of space in LaTeX, for ex '$mu$m' for micron
-opts.nU = nU ;                  % How many points along the longitudinal axis to sample surface
-opts.nV = nV ;                  % How many points along the circumferential axis to sample surface
-opts.t0 = xp.fileMeta.timePoints(1) ;   % reference timepoint used to define surface-Lagrangian and Lagrangian measurements
-opts.normalShift = 10 ;         % Additional dilation acting on surface for texture mapping
-opts.a_fixed = 2.0 ;            % Fixed aspect ratio of pullback images. Setting to 1.0 is most conformal mapping option.
-opts.adjustlow = 1.00 ;         % floor for intensity adjustment
-opts.adjusthigh = 99.9 ;        % ceil for intensity adjustment (clip)
-opts.phiMethod = 'curves3d' ;   % Method for following surface in surface-Lagrangian mapping [(s,phi) coordinates]
-opts.lambda_mesh = 0.00 ;       % Smoothing applied to the mesh before DEC measurements
-opts.lambda = 0.0 ;             % Smoothing applied to computed values on the surface
-opts.lambda_err = 0.0 ;         % Additional smoothing parameter, optional
-opts.t0 = 123 ;
+%% TubULAR class instance
 disp('defining TubULAR class instance (tubi= tubular instance)')
 tubi = TubULAR(xp, opts) ;
 disp('done defining TubULAR instance')
 
 
 %% PCA decomposition
+pcaTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
 options = struct('overwrite', true, ...
-    'overwriteImages', false) ;
+    'overwriteImages', true) ;
+options.pcaTypes = pcaTypes ;
+% options.meshStyles = 'sphi' ;
+tubi.spaceUnits = [char(181) 'm'] ;
 tubi.getPCAoverTime(options)
+
+%% Laplace-Beltrami Spectral (LBS) decomposition
+
+lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+% lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+options = struct('overwrite', true, ...
+    'overwriteImages', true) ;
+options.lbsTypes = lbsTypes ;
+% options.meshStyles = 'sphi' ;
+tubi.spaceUnits = [char(181) 'm'] ;
+tubi.getLBSoverTime(options)
+
+
+
+%%
+error('stop here for PCA only')
+
+
+%% 
+[vrms, timestamps] = tubi.measureRMSvelocityOverTime ;
+
 
 
 

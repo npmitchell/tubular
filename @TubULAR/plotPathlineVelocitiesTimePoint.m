@@ -24,7 +24,12 @@ function plotPathlineVelocitiesTimePoint(QS, tp, options)
 %       the opacity of the heatmap to overlay
 %   invertImage : bool
 %       invert the data pullback under the velocity map
-%
+%   qscale : float
+%       scale for quiver arrows
+%   sampleIDx : int array (default=[])
+%       vertex indices at which to draw vectors. If not empty, uses
+%       'custom' for subsamplingMethod. If empty, computes new
+%       farthestPointSearch sampling
 %
 % NPMitchell 2020
 
@@ -33,12 +38,15 @@ overwrite = false ;
 vtscale = 5 ;      % um / min
 vnscale = 2 ;      % um / min
 vscale = 5 ;       % um / min
+qscale = 10 ;
 alphaVal = 0.7 ;   % alpha for normal velocity heatmap
 washout2d = .5 ;   % lightening factor for data if < 1
 qsubsample = 5 ;   % quiver subsampling in pullback space 
 pivimCoords = QS.piv.imCoords ;  % coordinate system of the pullback images used in PIV
 samplingResolution = '1x' ;      % 1x or 2x, resolution of 
 gridTopology = 'triangulated' ;  % ('rectilinear' or 'triangulated') triangulate anew each timepoint or keep grid structure
+sampleIDx = [] ;  % THis is populated only at the end by options.sampleIDx if needed
+
 
 %% Unpack options
 if isfield(options, 'pivimCoords')
@@ -55,6 +63,9 @@ if isfield(options, 'vscale')
 end
 if isfield(options, 'alphaVal')
     alphaVal = options.alphaVal ;
+end
+if isfield(options, 'qscale')
+    qscale = options.qscale ;
 end
 if isfield(options, 'qsubsample')
     qsubsample = options.qsubsample ;
@@ -145,7 +156,7 @@ if ~exist(speedfn, 'file') || overwrite
             'outerposition', [0 0 1 1], 'visible', 'off') ;
     colormap parula ;
     labelOpts.label = '$|v|$ [$\mu$m/min]' ;
-    labelOpts.title = ['speed, $|v|$: $t=$' num2str(tp - t0) tunit] ;
+    labelOpts.title = ['speed, $|v|$: $t=$' num2str((tp - t0)*QS.timeInterval) tunit] ;
     xyf.v = [XX(:), YY(:)] ;
     if contains(lower(gridTopology), 'rect')
         % OPTION 1: keep rectilinear grid topology
@@ -197,7 +208,7 @@ if ~exist(vnfn, 'file') || overwrite
     fig = figure('units', 'normalized', ...
             'outerposition', [0 0 1 1], 'visible', 'off') ;
     labelOpts.label = '$v_n$ [$\mu$m/min]' ;
-    labelOpts.title = ['normal velocity, $v_n$: $t=$' num2str(tp - t0) tunit] ;
+    labelOpts.title = ['normal velocity, $v_n$: $t=$' num2str((tp - t0)*QS.timeInterval) tunit] ;
     
     xyf.v = [XX(:), YY(:)] ;
     if contains(lower(gridTopology), 'rect')
@@ -234,7 +245,8 @@ if ~exist(vthfn, 'file') || overwrite
     qopts.overlay_quiver = true ;
     qopts.qscale = 10 ;
     qopts.label = '$v_t$ [$\mu$m/min]' ;
-    qopts.title = ['tangential velocity, $v_t$: $t=$' num2str(tp - t0) tunit] ;
+    qopts.title = ['tangential velocity, $v_t$: $t=$' ...
+        num2str((tp - t0)*QS.timeInterval) tunit] ;
     qopts.outfn = vthfn ;
     qopts.ylim = ylims ;
     qopts.nPts = 200 ;
@@ -264,7 +276,7 @@ if ~exist(vthfn, 'file') || overwrite
     %% Now plot it
     xyf.x = xyf.v(:, 1) ;
     xyf.y = xyf.v(:, 2) ;
-    qopts.subsamplingMethod = 'random'; 
+    qopts.vscale = qscale ;
     vectorFieldHeatPhaseOnImage(imw, xyf, vx, vy, vtscale, qopts) ;
     clear qopts 
 end

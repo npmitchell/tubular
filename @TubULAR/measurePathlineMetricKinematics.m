@@ -1,5 +1,5 @@
-function measurePathlineMetricKinematics(QS, options)
-% measurePathlineMetricKinematics(QS, options)
+function measurePathlineMetricKinematics(tubi, options)
+% measurePathlineMetricKinematics(tubi, options)
 %   Query the metric Kinematics along lagrangian pathlines.
 %   Plot results as kymographs and correlation plots.
 %   Out-of-plane motion is v_n * 2H, where v_n is normal velocity and H is
@@ -12,7 +12,7 @@ function measurePathlineMetricKinematics(QS, options)
 % 
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields
 %   plot_kymographs : bool
 %   plot_kymographs_cumsum : bool
@@ -31,11 +31,11 @@ plot_gdot_correlations = false ;
 plot_gdot_decomp = true ;
 
 %% Parameter options
-lambda = QS.smoothing.lambda ; 
-lambda_mesh = QS.smoothing.lambda_mesh ;
-lambda_err = QS.smoothing.lambda_err ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ; 
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+lambda_err = tubi.smoothing.lambda_err ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 climit = 0.2 ;
 climit_err = 0.2 ;
 climit_veln = climit * 10 ;
@@ -43,8 +43,8 @@ climit_H = climit * 2 ;
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
 averagingStyle = "Lagrangian" ;
-QS.t0set() ;
-t0Pathline = QS.t0 ;
+tubi.t0set() ;
+t0Pathline = tubi.t0 ;
 
 %% Unpack options & assign defaults
 if nargin < 2
@@ -122,41 +122,41 @@ else
 end
 
 %% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 if strcmp(averagingStyle, 'Lagrangian')
-    mKDir = fullfile(QS.dir.metricKinematics.root, ...
+    mKDir = fullfile(tubi.dir.metricKinematics.root, ...
         strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02d'], ...
         lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 else
-    mKDir = fullfile(QS.dir.metricKinematicsSimple, ...
+    mKDir = fullfile(tubi.dir.metricKinematicsSimple, ...
         strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02'], ...
         lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 end
 
 %% load from QS
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 %% Build timepoint list so that we first do every 10, then fill in details
-lastIdx = length(QS.xp.fileMeta.timePoints) - 1 ;
+lastIdx = length(tubi.xp.fileMeta.timePoints) - 1 ;
 coarseIdx = 1:10:lastIdx ;
 fineIdx = setdiff(1:lastIdx, coarseIdx) ;
 allIdx = [coarseIdx, fineIdx ] ;
-tp2do = QS.xp.fileMeta.timePoints(allIdx) ;
+tp2do = tubi.xp.fileMeta.timePoints(allIdx) ;
 
 % DONE WITH PREPARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load pathlines to build Kymographs along pathlines
-QS.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
-vP = QS.pathlines.vertices ;
+tubi.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
+vP = tubi.pathlines.vertices ;
 
 % Output directory is inside metricKinematics dir
 mKPDir = fullfile(mKDir, sprintf('pathline_%04dt0', t0Pathline)) ;
@@ -165,13 +165,14 @@ if ~exist(outdir, 'dir')
     mkdir(outdir)
 end
 % Data for kinematics on meshes (defined on vertices)
+% Note this is the same as: tubi.dir.metricKinematics.pathline.measurements
 mdatdir = fullfile(mKDir, 'measurements') ;
 
 % Load Lx, Ly by loadingPIV
-QS.loadPIV()
+tubi.loadPIV()
 
 % Discern if piv measurements are done on a double covering or the meshes
-if strcmp(QS.piv.imCoords(end), 'e')
+if strcmp(tubi.piv.imCoords(end), 'e')
     doubleCovered = true ;
 end
 
@@ -179,8 +180,8 @@ end
 for tp = tp2do
     close all
     disp(['t = ' num2str(tp)])
-    tidx = QS.xp.tIdx(tp) ;
-    QS.setTime(tp) ;
+    tidx = tubi.xp.tIdx(tp) ;
+    tubi.setTime(tp) ;
     
     % Check for timepoint measurement on disk
     Hfn = fullfile(outdir, sprintf('HH_pathline%04d_%06d.mat', t0Pathline, tp))   ;
@@ -234,13 +235,13 @@ for tp = tp2do
         Ly = vP.Ly(tidx) ;
         options.Lx = Lx ;
         options.Ly = Ly ;
-        XY = QS.doubleToSingleCover(XY, Ly) ;
-        HH = QS.interpolateOntoPullbackXY(XY, HH, options) ;
-        gdot = QS.interpolateOntoPullbackXY(XY, gdot, options) ;
-        divv = QS.interpolateOntoPullbackXY(XY, divv, options) ;
-        veln = QS.interpolateOntoPullbackXY(XY, veln, options) ;
-        H2vn = QS.interpolateOntoPullbackXY(XY, H2vn, options) ;
-        radius = QS.interpolateOntoPullbackXY(XY, radius, options) ;
+        XY = tubi.doubleToSingleCover(XY, Ly) ;
+        HH = tubi.interpolateOntoPullbackXY(XY, HH, options) ;
+        gdot = tubi.interpolateOntoPullbackXY(XY, gdot, options) ;
+        divv = tubi.interpolateOntoPullbackXY(XY, divv, options) ;
+        veln = tubi.interpolateOntoPullbackXY(XY, veln, options) ;
+        H2vn = tubi.interpolateOntoPullbackXY(XY, H2vn, options) ;
+        radius = tubi.interpolateOntoPullbackXY(XY, radius, options) ;
                 
         % OPTION 1: simply reshape, tracing each XY dot to its t0Pathline
         % grid coordinate
@@ -340,10 +341,10 @@ files_exist = exist(apKymoFn, 'file') && ...
     exist(lKymoFn, 'file') && exist(rKymoFn, 'file') && ...
     exist(dKymoFn, 'file') && exist(vKymoFn, 'file') ;
 if ~files_exist || overwrite
-    for tp = QS.xp.fileMeta.timePoints(1:end-1)
+    for tp = tubi.xp.fileMeta.timePoints(1:end-1)
         close all
         disp(['t = ' num2str(tp)])
-        tidx = QS.xp.tIdx(tp) ;
+        tidx = tubi.xp.tIdx(tp) ;
 
         % Check for timepoint measurement on disk
         Hfn = fullfile(outdir, sprintf('HH_pathline%04d_%06d.mat', t0Pathline, tp))   ;

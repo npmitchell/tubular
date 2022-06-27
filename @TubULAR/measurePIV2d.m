@@ -3,6 +3,10 @@ function measurePIV2d(tubi, options)
 %   Measure 2d PIV on pullbacks in some coordinate system (coordSys),
 %   either using PIVLab (default is use_PIVLab=true) or using a simple
 %   phasecorrelation with a single pass at a single fixed window size.
+% 
+%   Note that this code does NOT use the time interval tubi.timeInterval
+%   between frames, since the 2D PIV connects the optical flow of adjacent 
+%   frames and does not measure velocity in any physical sense.
 %
 % Parameters
 % ----------

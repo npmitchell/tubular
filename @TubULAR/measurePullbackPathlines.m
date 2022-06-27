@@ -612,13 +612,169 @@ if ~exist(plinevXY, 'file') || overwrite
     mesh0 = mesh0.spcutMeshSm ;
     umax0 = max(mesh0.u(:, 1)) ;
     vmax0 = max(mesh0.u(:, 2)) ;
-    m0XY = QS.uv2XY([Lx(tIdx0), Ly(tIdx0)], mesh0.u, doubleCovered, ...
-        umax0, vmax0) ;
+    Ly0 = Ly(tIdx0) ;
+    
+    if doubleCovered
+        % Assume here that the mesh is rectilinear at mesh0's timepoint.
+        % Then we can index the rows by their y values and use this as a
+        % "vertex quality" field for which to average the displacement of
+        % identical quality rows in different branch cuts of the periodic
+        % image.
+        mesh0.vertex_quality = round(mesh0.u(:, 2) * (QS.nV-1) + 1);
+        assert(numel(unique(mesh0.vertex_quality)) == QS.nV)
+        [ ~, TV2D, ~, TVQ, tileNum ] = tileAnnularCutMesh2D(mesh0, [1,1]) ;
+        if any(diff(TV2D(:, 2))< 0)
+            % Note that as of 2022, we must invert the pair Ids to have monotonic
+            % increase in y coordinate across tiled XY coordinates. 
+            mesh0.pathPairs = mesh0.pathPairs(:, [2,1]) ;
+            [ ~, TV2D, ~, TVQ, tileNum ] = tileAnnularCutMesh2D(mesh0, [1,1]) ;
+            assert(~any(diff(TV2D(:, 2))<0))
+        end
+        keep = find(TV2D(:, 2) > (-0.5*vmax0-eps) & TV2D(:, 2) < (1.5*vmax0+eps)) ;
+        tV = TV2D(keep, :) ;
+        tQ = TVQ(keep, :) ;
+        tileNum = tileNum(keep, :) ;
+        m0XY = QS.uv2XY([Lx(tIdx0), Ly0], tV, doubleCovered, ...
+            umax0, vmax0) ;
+    else
+        m0XY = QS.uv2XY([Lx(tIdx0), Ly0], mesh0.u, doubleCovered, ...
+            umax0, vmax0) ;
+    end
     m0X = m0XY(:, 1) ;
     m0Y = m0XY(:, 2) ;
     
     % Create pathlines emanating from vertex positions (vX,vY) at t=t0
     [vX, vY] = QS.pullbackPathlines(m0X, m0Y, t0, options) ;
+    disp('created pathlines for spcutmesh vertices in XY pb space')
+    
+    if preview
+        % check 
+        for qq = 1:size(vX, 1)
+            plot(vX(qq, :), vY(qq, :), '.')
+            pause(0.0001)
+        end
+    end
+    
+    if doubleCovered
+        % Now average the two covers: ramp from weight=0 to 1 starting at 1/4
+        % of the double covered pullback. Use tQ to keep track of which rows we
+        % average.
+        % 1.0|_             ________
+        %    |            /          \
+        % 0.5|_         /              \
+        %    |        /                  \
+        % 0  |_ ____/                      \______
+        %          |       |        |      |
+        %   0     .25     .75     1.25    1.75   2.  <-- units of single cover
+        %   0    .125    .375     .625    .875   1.  <-- units of pullback
+        %
+        % tQ: row (0.75,1)*nV at Y<0.5*Ly averages with (0.75,1)*nV at Y>0.5*Ly
+        % tQ: row (0,0.25)*nV at Y<0.5*Ly averages with (1,1.25)*nV at Y>0.5*Ly
+
+        % Could handle the binning into weights differently if nV is
+        % even/odd. However, I think it should be symmetric in the image,
+        % so no matter whether even or odd, they should line up.
+
+        % numRows = 2*QS.nV-2 ;
+        % vXT = reshape(vX, [length(timePoints), QS.nU, numRows]) ;
+        % vYT = reshape(vY, [length(timePoints), QS.nU, numRows]) ;
+
+        % Cut off points by their position in XY space (could use uv
+        % space instead)
+        disp(['Converting double to single cover with displacement ',...
+            'averaging at the edges to match periodicity'])
+        assert(max(tQ) == QS.nV)
+        % ramp rows from weight 0 to 1
+        q1 = find(m0Y > Ly0*0.125 & m0Y < Ly0*0.375) ;
+        % ceil(numRows * 0.125):ceil(numRows*0.375);
+        denom = Ly0*(0.375 - 0.125) ;
+        w1 = (m0Y(q1) - (Ly0*0.125)) / denom ;
+        % hold rows at weight 1, then ramp down on reciprocal/periodic side
+        q2 = find(m0Y > Ly0*0.625 & m0Y < Ly0*0.875) ;
+        w2 = 1 - w1 ;
+        assert(all(abs(w1 + (1-(m0Y(q2) - (Ly0*0.625)) / denom ) - 1) < 1e-2))
+
+        % There are two possibilities:
+        % Either tQ spans (2, nV) or (1, nV-1).
+        % Either way, the quality values for q1 should match q2. 
+        assert(all(tQ(q1) == tQ(q2)))
+        
+        % For each timepoint, average the displacements
+        vX0 = squeeze(vX(tIdx0, :))' ;
+        vY0 = squeeze(vY(tIdx0, :))' ;
+        dispX = vX - vX0' ;
+        dispY = vY - vY0' ;
+        for tidx = 1:size(vX, 1)
+            vX(tidx,q1) = (w1.*dispX(tidx, q1)' + w2.*dispX(tidx, q2)') + vX0(q1) ;
+            vX(tidx,q2) = (w1.*dispX(tidx, q1)' + w2.*dispX(tidx, q2)') + vX0(q2) ;
+            vY(tidx,q1) = (w1.*dispY(tidx, q1)' + w2.*dispY(tidx, q2)') + vY0(q1) ;
+            vY(tidx,q2) = (w1.*dispY(tidx, q1)' + w2.*dispY(tidx, q2)') + vY0(q2) ;
+        end
+        
+        % check 
+        if preview
+            for tidx = 1:size(vX, 1)
+                plot(vX(tidx, :), vY(tidx, :), '.')
+                pause(0.01)
+                xlim([0, Lx(tidx)])
+                ylim([0, Ly(tidx)])
+            end
+        end
+        
+        % Select only a single cover of the mesh
+        singleIndx = find(tileNum == 2) ;
+        if length(singleIndx) ~= QS.nU * QS.nV 
+            % also grab the top row of the previous cover (lower Y values)
+            if min(tQ) == 2
+                assert(length(find(tQ==QS.nV)) == 2*QS.nU)
+                % nV   .---------.
+                %      |         |<----- we cut here earlier
+                %  2   |         |
+                % nV   |         |
+                %      |         |
+                %  2   |         |
+                % nV   |         |<--- add this row
+                %      |         |<----- we cut here earlier
+                %  2   .---------.
+                addRow = find(tQ == QS.nV & tileNum == 1) ;
+                singleIndx = [addRow; singleIndx] ;
+            elseif max(tQ) == QS.nV-1
+                assert(isempty(find(tQ==QS.nV, 1)))
+                % nV   .---------.
+                %      |         |<----- we cut here earlier
+                %  1   |         |
+                % nV-1 |         |
+                %      |         |
+                %  1   |         |
+                % nV-1 |         |<--- add this row
+                %      |         |<----- we cut here earlier
+                %  1   .---------.
+                addRow = find(tQ == 1 & tileNum == 3) ;
+                singleIndx = [singleIndx; addRow] ;
+            else
+                error('Could not understand the tiling that it being collapsed here')
+            end
+        end
+        
+        % Truncate to single cover
+        vX = vX(:, singleIndx) ;
+        vY = vY(:, singleIndx) ;
+        
+        % Check that pathPairs have identical dispX, dispY displacements
+        dispX = vX - vX0(singleIndx)' ;
+        dispY = vY - vY0(singleIndx)' ;
+        try
+            assert(all(all(dispX(:, mesh0.pathPairs(:, 1)) == ...
+                dispX(:, mesh0.pathPairs(:, 1))))) ;
+            assert(all(all(dispY(:, mesh0.pathPairs(:, 1)) == ...
+                dispY(:, mesh0.pathPairs(:, 1))))) ;
+        catch
+            error('Pathline displacements at periodic edge of cutMesh are not equal. Debug here.')
+        end
+    else
+        disp('Vertices are reported to be single cover...')
+    end
+    
     vX = reshape(vX, [length(timePoints), QS.nU, QS.nV]) ;
     vY = reshape(vY, [length(timePoints), QS.nU, QS.nV]) ;
     

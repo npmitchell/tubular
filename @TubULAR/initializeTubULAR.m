@@ -66,12 +66,19 @@ elseif isfield(opts, 'timeinterval')
 else
     tubi.timeInterval = 1 ;
 end
+
+% Define reference time t0
+tubi.fileName.t0 = fullfile(meshDir, 't0_referenceTime.txt') ;
 if isfield(opts, 't0')
     tubi.t0 = opts.t0 ;
     t0supplied_in_opts = true ;
 else
-    tubi.t0 = tubi.xp.fileMeta.timePoints(1) ;
     t0supplied_in_opts = false ;
+    if exist(tubi.fileName.t0, 'file')
+        tubi.t0 = dlmread(tubi.fileName.t0, ',', 1, 0) ;
+    else
+        tubi.t0 = tubi.xp.fileMeta.timePoints(1) ;
+    end
 end
 dynamic = length(tubi.xp.fileMeta.timePoints) > 1 ;
 tubi.dynamic = dynamic ; 
@@ -310,7 +317,6 @@ tubi.fileName.rot = fullfile(meshDir, 'rotation_APDV.txt') ;
 tubi.fileName.trans = fullfile(meshDir, 'translation_APDV.txt') ;
 tubi.fileName.xyzlim_raw = fullfile(meshDir, 'xyzlim_raw.txt') ;
 tubi.fileName.xyzlim_pix = fullfile(meshDir, 'xyzlim_APDV.txt') ;
-tubi.fileName.t0 = fullfile(meshDir, 't0_referenceTime.txt') ;
 tubi.fileName.xyzlim_um = ...
     fullfile(meshDir, 'xyzlim_APDV_um.txt') ;
 tubi.fileName.xyzlim_um_buff = ...
@@ -736,6 +742,9 @@ end
 %% PCA and mode analysis
 tubi.dir.PCAoverTime = fullfile(tubi.dir.mesh, 'PCAoverTime') ;
 
+%% LBS decomposition analysis
+tubi.dir.LBSoverTime = fullfile(tubi.dir.mesh, 'LBSoverTime') ;
+
 %% Ensure directories
 dirs2make = struct2cell(tubi.dir) ;
 for ii=1:length(dirs2make)
@@ -774,6 +783,7 @@ end
 
 % Save t0 if supplied
 if t0supplied_in_opts
+    disp(['Writing t0 to disk: ' tubi.fileName.t0])
     write_txt_with_header(tubi.fileName.t0, tubi.t0, 't0, the reference timestamp')
 end
 

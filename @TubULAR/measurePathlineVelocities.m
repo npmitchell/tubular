@@ -1,4 +1,4 @@
-function measurePathlineVelocities(QS, options)
+function outStruct = measurePathlineVelocities(QS, options)
 %measurePullbackStreamlines(QS, options)
 %   Use pathlines of optical flow in pullback space to query velocities
 %   and average along pathlines.
@@ -15,14 +15,41 @@ function measurePathlineVelocities(QS, options)
 %       timestamp at which the pathlines form a grid onto mesh vertices, 
 %       mesh face barycenters, or PIV evaluation points
 %
+% Returns
+% -------
+% outStruct = struct('v2dum', v2dMum, ...
+%     'v2d', v2dM, ...
+%     'vn', vnM, ...
+%     'v3d', vM, ...
+%     'vf', vfM, ... 
+%     'vv', vvM, ...
+%     'v2dsmum', v2dsmMum, ... 
+%     'v2dsm', v2dsmM, ...
+%     'vnsm', vnsmM, ...
+%     'v3dsm', vsmM, ...
+%     'vfsm', vfsmM, ... 
+%     'vvsm', vvsmM ) ;
+% 
+% Saves to disk
+% -------------
+% fvsmM   = sprintf(QS.fileName.pathlines.velocities.v3dsm, t0) ;
+% fvfsmM  = sprintf(QS.fileName.pathlines.velocities.vfsm, t0) ;
+% fvnsmM  = sprintf(QS.fileName.pathlines.velocities.vnsm, t0) ;
+% fvvsmM  = sprintf(QS.fileName.pathlines.velocities.vvsm, t0) ;
+% fv2dsmM = sprintf(QS.fileName.pathlines.velocities.v2dsm, t0) ;
+% fv2dsmMum = sprintf(QS.fileName.pathlines.velocities.v2dsmum, t0) ;
 %
 % NPMitchell 2020
 
 %% Default options
 overwrite = false ;
+overwriteImages = false ;
 timePoints = QS.xp.fileMeta.timePoints ;
 samplingResolution = '1x' ;
 imethod = 'linear' ;
+if nargin < 2
+    options = struct() ;
+end
 
 %% Unpack options
 % Default values for options are to use sphi smoothed extended coords
@@ -31,6 +58,9 @@ pivimCoords = QS.piv.imCoords ;
 
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
+end
+if isfield(options, 'overwriteImages')
+    overwriteImages = options.overwriteImages ;
 end
 if isfield(options, 'timePoints')
     timePoints = options.timePoints ;
@@ -172,46 +202,53 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         Fx = griddedInterpolant(x0', y0', v0_rsX', imethod, 'nearest') ;
         Fy = griddedInterpolant(x0', y0', v0_rsY', imethod, 'nearest') ;
         Fz = griddedInterpolant(x0', y0', v0_rsZ', imethod, 'nearest') ;
-        % Query velocities
+        % Query velocities at PIV evaluation pathlines
         v0_rs = [Fx(XX(:), YY(:)), Fy(XX(:), YY(:)), Fz(XX(:), YY(:))] ;
         
         % 2. Interpolate velocities onto face barycenter pathlines 
-        % Query velocities
+        % Query velocities on face barycenters
         v3dfaces_rs = [Fx(fX(:), fY(:)), Fy(fX(:), fY(:)), Fz(fX(:), fY(:))] ;
 
-        % 3. Interpolate v0n_rs
+        % 3. Interpolate v0n_rs onto PIV evaluation pt pathlines
         v0nrsN = reshape(piv3d.v0n_rs, size(x0)) ;
         Fn = griddedInterpolant(x0', y0', v0nrsN', imethod, 'nearest') ;
-        % Query velocities
+        % Query velocities on PIV evaluation pathlines
         v0n_rs = Fn(XX(:), YY(:)) ;
 
         % 4. Interpolate onto mesh vertices (v3dvertices)
-        % Query velocities
+        % Query velocities on vertices
         v3dvertices = [Fx(vX(:), vY(:)), Fy(vX(:), vY(:)), Fz(vX(:), vY(:))] ;
+        
+        % 4b: Could Query velocities on PIV evaluation pathlines
+        % Chose to instead rely on metric kinematics measurement for this,
+        % which resides in:
+        %    fullfile(tubi.dir.metricKinematics.pathline.measurements, ...
+        %       sprintf('veln_pathline%04d_%06d.mat', t0Pathline, tp)))
+        % v0nvertices_rs = Fn(vX(:), vY(:)) ;   --> see above     
 
-        % 5. Interpolate v0t2d
+        % 5. Interpolate v0t2d onto PIV evaluation pt pathlines
         v0t2dX = reshape(piv3d.v0t2d(:, 1), size(x0)) ;
         v0t2dY = reshape(piv3d.v0t2d(:, 2), size(x0)) ;
         Fx = griddedInterpolant(x0', y0', v0t2dX', imethod, 'nearest') ;
         Fy = griddedInterpolant(x0', y0', v0t2dY', imethod, 'nearest') ;
-        % Query velocities
+        % Query velocities at PIV evaluation pt pathlines
         v0t2d = [Fx(XX(:), YY(:)), Fy(XX(:), YY(:))] ;
 
-        % 6. Interpolate v0t2dum
+        % 6. Interpolate v0t2dum onto PIV evaluation pt pathlines
         v0t2dx = reshape(piv3d.v0t2d(:, 1) ./ piv3d.dilation, size(x0)) ;
         v0t2dy = reshape(piv3d.v0t2d(:, 2) ./ piv3d.dilation, size(x0)) ;
         Fx = griddedInterpolant(x0', y0', v0t2dx', imethod, 'nearest') ;
         Fy = griddedInterpolant(x0', y0', v0t2dy', imethod, 'nearest') ;
-        % Query velocities
+        % Query velocities at PIV evaluation pt pathlines
         v0t2dum = [Fx(XX(:), YY(:)), Fy(XX(:), YY(:))] ;
 
         %% BUILD ARRAYS
-        vM(tidx, :, :) = v0_rs ;             % in um/dt rs at PIV evaluation points
+        vM(tidx, :, :) = v0_rs ;             % in um/dt rs at PIV evaluation pathlines
         vfM(tidx, :, :) = v3dfaces_rs ;      % in um/dt rs at face barycenters
-        vnM(tidx, :, :) = v0n_rs ;           % in um/dt rs at 
-        vvM(tidx, :, :) = v3dvertices ;      % in um/min rs
-        v2dM(tidx, :, :) = v0t2d ;           % in pixels/ min
-        v2dMum(tidx, :, :) = v0t2dum ;       % in scaled pix/min, but proportional to um/min
+        vnM(tidx, :, :) = v0n_rs ;           % in um/dt rs at PIV evaluation pathlines
+        vvM(tidx, :, :) = v3dvertices ;      % in um/min rs at vertex pathlines
+        v2dM(tidx, :, :) = v0t2d ;           % in pixels/ min at PIV evaluation pathlines
+        v2dMum(tidx, :, :) = v0t2dum ;       % in scaled pix/min, but proportional to um/min at PIV evaluation pathlines
         
     end
     
@@ -287,27 +324,103 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
     disp(['Saving: ' fv2dsmMum])
     save(fv2dsmMum, 'v2dsmMum') ;  % in scaled pix/min, proportional to um/min 
     
-    %% Plot this timepoint
-    for tidx = 1:ntps
-        close all
-        % Load streamline positions at this timePoint
-        plotOptions.XX = pivPathlines.XX(tidx, :, :) ;
-        plotOptions.YY = pivPathlines.YY(tidx, :, :) ;
-        plotOptions.fX = facePathlines.fX(tidx, :, :) ;
-        plotOptions.fY = facePathlines.fY(tidx, :, :) ;
-        plotOptions.vX = vertexPathlines.vX(tidx, :, :) ;
-        plotOptions.vY = vertexPathlines.vY(tidx, :, :) ;
-        % Load velocities to plot
-        plotOptions.vsm = squeeze(vsmM(tidx, :, :))  ;
-        plotOptions.vnsm = squeeze(vnsmM(tidx, :, :))  ;
-        plotOptions.v2dsm = squeeze(v2dsmM(tidx, :, :)) ;
-        plotOptions.v2dsmum = squeeze(v2dsmMum(tidx, :, :)) ;
-        plotOptions.overwrite = overwrite ;
-        QS.plotPathlineVelocitiesTimePoint(tp, plotOptions) ;
+    overwriteImages = true ;
+    
+    % package into struct for output
+    if nargout > 0
+        outStruct = struct('v2dum', v2dMum, ...
+            'v2d', v2dM, ...
+            'vn', vnM, ...
+            'v3d', vM, ...
+            'vf', vfM, ... 
+            'vv', vvM, ...
+            'v2dsmum', v2dsmMum, ... 
+            'v2dsm', v2dsmM, ...
+            'vnsm', vnsmM, ...
+            'v3dsm', vsmM, ...
+            'vfsm', vfsmM, ... 
+            'vvsm', vvsmM ) ;
     end
     
     disp('done')
 else
     disp('Lagrangian-pathline-averaged velocities already found on disk.')
+    
+    % Load these in case we plot them
+    if nargout > 0 || overwriteImages
+        load(fileNames.v2dsmum, 'v2dsmMum') ; 
+        load(fileNames.vnsm, 'vnsmM') ; 
+        load(fileNames.v3dsm, 'vsmM')  ;
+    end
+    if nargout > 0
+        load(fileNames.v2dum, 'v2dMum') ;
+        load(fileNames.v2d, 'v2dM') ;
+        load(fileNames.vn, 'vnM') ;
+        load(fileNames.v3d, 'vM') ;
+        load(fileNames.vf, 'vfM') ; 
+        load(fileNames.vv, 'vvM')  ;
+        load(fileNames.v2dsm, 'v2dsmM')  ;
+        load(fileNames.vfsm, 'vfsmM') ; 
+        load(fileNames.vvsm, 'vvsmM') ; 
+        outStruct = struct('v2dum', v2dMum, ...
+            'v2d', v2dM, ...
+            'vn', vnM, ...
+            'v3d', vM, ...
+            'vf', vfM, ... 
+            'vv', vvM, ...
+            'v2dsmum', v2dsmMum, ... 
+            'v2dsm', v2dsmM, ...
+            'vnsm', vnsmM, ...
+            'v3dsm', vsmM, ...
+            'vfsm', vfsmM, ... 
+            'vvsm', vvsmM ) ;
+    end
 end
 
+
+%% Plot each timepoint's pathline velocity
+if overwriteImages
+    disp('Loading pathlines for velocity computation: XY')
+    load(sprintf(QS.fileName.pathlines.XY, t0), 'pivPathlines')
+    % load(sprintf(QS.fileName.pathlines.vXY, t0), 'vertexPathlines')
+    % load(sprintf(QS.fileName.pathlines.fXY, t0), 'facePathlines')
+    
+    sampleIDxFn = fullfile(sprintf(QS.dir.pathlines.velocities, t0), ...
+        'sampleIDx_for_plotting_XY.mat') ;
+    if ~exist(sampleIDxFn, 'file')
+        xx = pivPathlines.XX(QS.xp.tIdx(t0), :, :) ;
+        yy = pivPathlines.YY(QS.xp.tIdx(t0), :, :) ;
+        disp('defining points at which to draw arrows')
+        if length(xx(:)) > 200
+            % seed a point in the center
+            findpt = [mean(xx(:)), mean(yy(:))] ;
+            seedIDx = pointMatch(findpt, [xx(:), yy(:)]) ;
+            % Define faces for farthest point search
+            ff = delaunay(xx(:), yy(:)) ;
+            sampleIDx = farthestPointVertexSampling(200, ...
+                [xx(:), yy(:)], ff, seedIDx, struct('preview', true)) ;
+        else
+            sampleIDx = 1:length(xx(:)) ;
+        end
+        save(sampleIDxFn, 'sampleIDx')
+    else
+        disp('Loading vertex IDs at which to plot vector field')
+        load(sampleIDxFn, 'sampleIDx')
+    end
+    
+    for tidx = 1:length(timePoints)-1
+        tp = timePoints(tidx) ;
+        QS.setTime(tp) ;
+        close all
+        % Load streamline positions at this timePoint
+        plotOptions.XX = pivPathlines.XX(tidx, :, :) ;
+        plotOptions.YY = pivPathlines.YY(tidx, :, :) ;
+        % Load velocities to plot
+        plotOptions.vsm = squeeze(vsmM(tidx, :, :))  ;
+        plotOptions.vnsm = squeeze(vnsmM(tidx, :, :))  ;
+        plotOptions.v2dsmum = squeeze(v2dsmMum(tidx, :, :)) ;
+        plotOptions.overwrite = overwriteImages ;
+        plotOptions.sampleIDx = sampleIDx ;
+        QS.plotPathlineVelocitiesTimePoint(tp, plotOptions) ;
+    end
+end

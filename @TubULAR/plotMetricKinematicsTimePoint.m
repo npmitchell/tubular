@@ -19,7 +19,7 @@ plot_factors = options.plot_factors ;
 if isfield(options, 'axisOn')
     axisOn = options.axisOn ;
 else
-    axisOn = true ;
+    axisOn = false ;
 end
 
 % parameter options
@@ -247,8 +247,14 @@ if plot_flows && redo_prediction
                 % Annotate the axes (added this for publication)
                 if axisOn
                     axis on
+                    grid off
                     xticks([])
                     yticks([])
+                    try
+                        zticks([])
+                    catch
+                        % image is 2D
+                    end
                     xlabel('$s$', 'interpreter', 'latex')
                     ylabel('$\phi$', 'interpreter', 'latex')
                 end

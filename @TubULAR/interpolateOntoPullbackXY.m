@@ -1,5 +1,5 @@
-function sf = interpolateOntoPullbackXY(QS, XY, scalar_field, options)
-% interpolateOntoPullbackXY(QS, XY, scalar_field, options)    
+function sf = interpolateOntoPullbackXY(tubi, XY, scalar_field, options)
+% interpolateOntoPullbackXY(tubi, XY, scalar_field, options)    
 %   Interpolate scalar field defined on current mesh onto 
 %   supplied pullback coordinates. Input scalar_field may be
 %   defined on vertices or faces. Automatically detects whether
@@ -9,8 +9,8 @@ function sf = interpolateOntoPullbackXY(QS, XY, scalar_field, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
-%   
+% tubi : TubULAR class instance
+%   class for which to interpolate onto the pullback XY
 % XY : Nx2 numeric array
 %   positions at which to evaluate scalar field
 % scalar_field : Nx1 float array
@@ -34,7 +34,7 @@ function sf = interpolateOntoPullbackXY(QS, XY, scalar_field, options)
 %   scalar field evaluated onto pullback coordinates
 
 % default options
-coordSys = QS.piv.imCoords;  % coodinate system for pullback, default is (s,phi) smoothed extended
+coordSys = tubi.piv.imCoords;  % coodinate system for pullback, default is (s,phi) smoothed extended
 sfLocation = 'vertices' ;    % whether scalar field is on vertices or faces
 iMethod = 'linear' ;         % interpolation method for scalar field
 % Unpack options
@@ -49,11 +49,11 @@ if isfield(options, 'Lx') && isfield(options, 'Ly')
     Lx = options.Lx ;
     Ly = options.Ly ;
 else
-    im0 = QS.loadCurrentPullback(coordSys) ;
+    im0 = tubi.loadCurrentPullback(coordSys) ;
     [Lx, Ly] = size(im0) ;
 end
-nU = QS.nU ;
-nV = QS.nV ;
+nU = tubi.nU ;
+nV = tubi.nV ;
 
 % Obtain coordinates from which to interpolate
 if strcmp(coordSys, 'sp_sme')
@@ -74,11 +74,11 @@ if strcmp(coordSys, 'sp_sme')
     [TV2Du, TV2Dv] = ndgrid(uspace, vspace) ;
     TV2D = [TV2Du(:), TV2Dv(:)];
     if doubleCovered
-        mXY = QS.uv2XY([Lx, 1.5 * Ly], TV2D, false, 1, 1) ;
+        mXY = tubi.uv2XY([Lx, 1.5 * Ly], TV2D, false, 1, 1) ;
         mXY(:, 2) = mXY(:, 2) - 0.25 * Ly ;
     else
         error('Make 3 tiles of XY, so should span from approx -Ly to 2Ly.')
-        mXY = QS.uv2XY([Lx, 3 * Ly], TV2D, false, 1, 1) ;
+        mXY = tubi.uv2XY([Lx, 3 * Ly], TV2D, false, 1, 1) ;
     end
 else
     error(['handle this coordSys here: ' coordSys])

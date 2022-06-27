@@ -276,9 +276,11 @@ for i = 1:sum(abs(tileCount))
     face( ~bottomSeamLoc(:) ) = face( ~bottomSeamLoc(:) ) + size(TV2D,1);
            
     % Part 3: Update face list
+    assert(~any(ismember(unreferenced, face(:))))
+    face0 = face ;
     for pp = 1:length(unreferenced)
         pt2rm = unreferenced(pp) ;
-        face( face > pt2rm ) = face( face > pt2rm ) - 1 ;
+        face( face0 > pt2rm ) = face( face0 > pt2rm ) - 1 ;
     end
     
     % Reshape the face connectivity list

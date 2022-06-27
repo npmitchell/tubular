@@ -1,5 +1,4 @@
-function [V,F] = remesh_smooth_iterate(V,F, lambda,... 
-    tar_length, num_iter, protect_constraints, enforceQuality, maxIterRelaxMeshSpikes)
+function [V,F] = remesh_smooth_iterate(V, F, options)
 % [V,F] = remesh_smooth_iterate(V,F, lambda, tar_length, num_iter, protect_constraints)
 % Isotropically remesh the surface and smooth it.
 %
@@ -22,6 +21,10 @@ function [V,F] = remesh_smooth_iterate(V,F, lambda,...
 %   spherical topology
 % maxIterRelaxMeshSpikes : int >=0 
 %   maximum number of iterations of relaxing mesh spikes 
+% enforceTopology : bool
+%   enforce the topology of the mesh to match targetEulerCharacteristic
+% targetEulerCharacteristic : int
+%   required topology of the mesh if enforceTopology == true    
 %
 % Returns
 % -------
@@ -33,17 +36,42 @@ function [V,F] = remesh_smooth_iterate(V,F, lambda,...
 % DJ Cislo & NPMitchell 2022
 
 % Input processing
+lambda = 0.025 ;
+tar_length = 1;
+num_iter = 5;
+protect_constraints = false;
+enforceQuality = true ;
+maxIterRelaxMeshSpikes = 10 ;
+enforceTopology = false ;
+targetEulerCharacteristic = 2 ;
+
 if nargin < 3
-    lambda = 0.025 ;
+    options = struct() ;
 end
-if nargin  < 4
-    tar_length = 1;
+
+if isfield(options, 'lambda')
+    lambda = options.lambda ;
 end
-if nargin < 5
-    num_iter = 5;
+if isfield(options, 'tar_length')
+    tar_length = options.tar_length ;
 end
-if nargin < 6
-    protect_constraints = false;
+if isfield(options, 'num_iter')
+    num_iter = options.num_iter ;
+end
+if isfield(options, 'protect_constraints')
+    protect_constraints = options.protect_constraints ;
+end
+if isfield(options, 'enforceQuality')
+    enforceQuality = options.enforceQuality ;
+end
+if isfield(options, 'maxIterRelaxMeshSpikes')
+    maxIterRelaxMeshSpikes = options.maxIterRelaxMeshSpikes ;
+end
+if isfield(options, 'enforceTopology')
+    enforceTopology = options.enforceTopology ;
+end
+if isfield(options, 'targetEulerCharacteristic')
+    targetEulerCharacteristic = options.targetEulerCharacteristic ;
 end
 
 if ~enforceQuality
@@ -51,12 +79,25 @@ if ~enforceQuality
     
     % Attempt to remove localized mesh spikes by Laplacian relaxation
     if maxIterRelaxMeshSpikes > 0 
-        V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
-            'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
+        try
+            V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
+                'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
+        catch
+            disp('WARNING: could not run relax_mesh_spikes')
+        end
     end
     
-    V = laplacian_smooth(V, F, 'cotan', [], lambda, 'implicit', V, 10);
+    tr = triangulation(F, V) ;
+    fb = tr.freeBoundary ;
+    fb = fb(:, 1) ;
+    V = laplacian_smooth(V, F, 'cotan', fb, lambda, 'implicit', V, 10);
 else
+    
+    % Boundary indices
+    tr = triangulation(F, V) ;
+    fb = tr.freeBoundary ;
+    fb = fb(:, 1) ;
+    
     % Isotropically remesh the surface
     try
         [F, V, ~, ~] = isotropic_remeshing( F, V, ...
@@ -67,8 +108,12 @@ else
     end
 
     % Attempt to remove localized mesh spikes by Laplacian relaxation
-    V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
-        'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
+    try 
+        V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
+            'uniform', fb, lambda, 'implicit', maxIterRelaxMeshSpikes);
+    catch
+        disp('WARNING: could not run relax_mesh_spikes')
+    end
 
     % Try to remove self-intersections
     [intersects, ~] = mesh_self_intersection_3d(F, V);
@@ -81,13 +126,22 @@ else
                 'SmallTriangles', 'remove');
 
             % Peform a another isotropic remeshing
-            [F, V, ~, ~] = isotropic_remeshing(F, V, ...
-                tar_length, num_iter, protect_constraints);
+            try
+                [F, V, ~, ~] = isotropic_remeshing( F, V, ...
+                    tar_length, num_iter, protect_constraints);
+            catch
+                 [F, V, ~, ~] = isotropic_remeshing( F, V, ...
+                        tar_length, num_iter);
+            end
 
             % Another round of spike relaxation
-            V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
-                'uniform', [], 2, 'implicit', maxIterRelaxMeshSpikes);
-
+            try
+                V = relax_mesh_spikes(F, V, deg2rad(60), pi/2, ...
+                    'uniform', fb, lambda, 'implicit', maxIterRelaxMeshSpikes);
+            catch
+                disp('WARNING: could not run relax_mesh_spikes')
+            end
+            
             [intersects, ~] = mesh_self_intersection_3d(F, V);
 
             intCount = intCount + 1;
@@ -119,9 +173,9 @@ else
 
     % Smooth the entire mesh fixing the boundary
     try
-        V = laplacian_smooth(V, F, 'cotan', [], lambda, 'implicit', V, 10);
+        V = laplacian_smooth(V, F, 'cotan', fb, lambda, 'implicit', V, 10);
     catch
-        disp('Could not smooth additional iteration')
+        disp('WARNING: Could not smooth additional iteration')
     end
 
     % Peform a final isotropic remeshing
@@ -136,18 +190,20 @@ else
     end
 
     % Mesh quality checks ---------------------------------------------
-    E = edges(triangulation(F, V));
+    if enforceTopology
+        E = edges(triangulation(F, V));
 
-    numBdy = numel(DiscreteRicciFlow.compute_boundaries(F));
-    if (numBdy ~= 0)
-        error( ['Mesh has %d ' ...
-            'boundary components'], t, numBdy );
-    end
-
-    eulerChi = size(F,1) + size(V,1) - size(E,1);
-    if (eulerChi ~= 2)
-        error( ['Mesh is not ' ...
-            'a topological sphere'] );
+        numBdy = numel(DiscreteRicciFlow.compute_boundaries(F));
+        if (numBdy ~= 0)
+            error( ['Mesh has %d ' ...
+                'boundary components'], numBdy );
+        end
+        
+        eulerChi = size(F,1) + size(V,1) - size(E,1);
+        if (eulerChi ~= targetEulerCharacteristic)
+            error( ['Mesh is not ' ...
+                'a topological sphere'] );
+        end
     end
 
     [intersects, intx] = mesh_self_intersection_3d(F, V);

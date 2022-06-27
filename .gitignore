@@ -40,3 +40,6 @@
 # MATLAB stuff
 *.m~
 *~
+
+# Stuff to ignore
+*.ignore*

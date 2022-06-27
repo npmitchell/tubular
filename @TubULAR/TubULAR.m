@@ -1,5 +1,7 @@
 classdef TubULAR < handle
-    % Tube-like sUrface Lagrangian Analysis Resource (TubULAR) class
+    % Tube-like sUrface Lagrangian Analysis Resource (TubULAR) class. 
+    % Note that TubULAR is fully documented, with docs accessible via:
+    %   doc TubULAR
     %
     % Coordinate Systems
     % ------------------    
@@ -101,7 +103,7 @@ classdef TubULAR < handle
     %
     % 
     properties
-        xp                      % ImSAnE experiment class instance or struct with fields
+        xp                      % struct with fields or ImSAnE experiment class instance 
                                 %   expMeta : struct with fields
                                 %   fileMeta : struct with fields
         dynamic                 % true if multiple timepoints, false if fixed
@@ -114,11 +116,11 @@ classdef TubULAR < handle
         spaceUnits = '$\mu$m'   % units of the embedding space (ex '$\mu$m')
         imSize                  % size of pullback images to create (default is [a_ratio * 1000, 1000])
         dir                     % str, directory where QuapSlap data lives
-        fileName                % fileName
+        fileName                % fileName struct with fields such as rot, trans, etc where measurements/parameters are stored on disk
         fileBase                % fileNames to be populated by timestamp ('...%06d...mat')
         fullFileBase            % full path of filenames (like fullfile(tubi.dir.X, tubi.fileBase.X))
         ssfactor                % subsampling factor for probabilities 
-        APDV = struct(...
+        APDV = struct(...               % specification of transformation from data frame to aligned APDV frame, as struct with fields
             'resolution', [], ...       % resolution of data in spaceUnits / pixel
             'rot', [], ...              % rotation matrix to transform data into APDV frame (rot*v+trans)*resolution
             'trans', [])                % translation vector to transform data into APDV frame (rot*v+trans)*resolution
@@ -140,14 +142,16 @@ classdef TubULAR < handle
                                         %       at which we cut the cylinder mesh into a cylinderCutMesh (a topological disk/square). 
                                         %       This "dorsal" point for other timepoints are identified by pointmatching.
                                         %   Additional fields allowed : 
-        plotting = struct('preview', false, ... % display intermediate results
+        plotting = struct(...           % parameters and options for plotting during method calls
+            'preview', false, ...       % display intermediate results
             'save_ims', true, ...       % save images
             'xyzlim_um_buff', [], ...   % xyzlimits in um in RS coord sys with buffer
             'xyzlim_raw', [], ...       % xyzlimits in pixels
             'xyzlim_pix', [], ...       % xyzlimits in pixels RS
             'xyzlim_um', [], ...        % xyzlimits in um in RS coord sys
             'colors', [])               % color cycle for tubi
-        apdvPts = struct('anteriorPts', [], ...
+        apdvPts = struct(...            % The coordinates used to compute the APDV frame and the dyanamics of those points over time
+            'anteriorPts', [], ... 
             'posteriorPts', [], ... 
             'antPts_sm', [], ...
             'postPts_sm', [], ... 
@@ -155,9 +159,10 @@ classdef TubULAR < handle
             'antPts_rs', [], ... 
             'postPts_rs', [], ... 
             'dorsPts_rs', [])
-        apdvOptions
-        currentTime
-        currentMesh = struct('rawMesh', [], ... % original mesh found by surface detection
+        apdvOptions                     % Options for computing the APDV frame
+        currentTime                     % int, the timepoint of the current frame under examination (this can be set with setTime and changes during many method calls)
+        currentMesh = struct(...        % struct with fields for possible meshes to load/examine at current timepoint
+            'rawMesh', [], ...          % original mesh found by surface detection
             'alignedMesh', [], ...      % APDV rotated and scaled mesh (raw mesh in APDV coordinates)     
             'cylinderMesh', [], ...     % original mesh with endcaps cut off
             'cylinderMeshClean', [], ...    % cylinder mesh with "ears" removed (ears give difficulty in mapping to the plane)
@@ -169,32 +174,35 @@ classdef TubULAR < handle
             'spcutMeshSmRS', [], ...    % rectilinear cutMesh in (s,phi) smoothed in time with rotated scaled embedding
             'spcutMeshSmRSC', [], ...   % rectilinear cutMesh as closed cylinder (topological annulus), in (s,phi) smoothed, with rotated scaled embedding
             'ricciMesh', [])            % ricci flow result pullback mesh, topological annulus          
-        currentCline = struct('mss', [], ...
+        currentCline = struct(...       % struct with fields for the objects' centerline at the current timepoint
+            'mss', [], ...
             'mcline', [], ...
             'avgpts', []) ;
-        data = struct('adjustlow', 0, ...
+        data = struct(...               % struct with fields, options for LUT and axis order of data when loaded
+            'adjustlow', 0, ...
             'adjusthigh', 0, ...
             'axisOrder', [1 2 3], ...
             'ilastikOutputAxisOrder', 'cxyz') % options for scaling and transposing image intensity data
-        currentData = struct('IV', [], ...
+        currentData = struct(...        % struct with fields IV for current intensity values (as a cell) and the LUT used
+            'IV', [], ...
             'adjustlow', 0, ...
             'adjusthigh', 0 )           % image intensity data in 3d and scaling
         currentVelocity = struct('piv3d', struct()) ;     
-        piv = struct( ...
+        piv = struct( ...               % struct with details of the Particle Image Velocimetry computed for all timepoints
             'imCoords', 'sp_sme', ...   % image coord system for measuring PIV / optical flow) ;
             'Lx', [], ...               % width of image, in pixels (x coordinate)
             'Ly', [], ...               % height of image, in pixels (y coordinate)
             'raw', struct(), ...        % raw PIV results from disk/PIVLab
             'smoothed', struct(), ...   % smoothed PIV results after gaussian blur
             'smoothing_sigma', 1 ) ;    % sigma of gaussian smoothing on PIV, in units of PIV sampling grid pixels
-        velocityAverage = struct(...
+        velocityAverage = struct(...    % velocities for all timepoints with measurements averaged along short, local Lagrangian tracks spanning several timepoints
             'v3d', [], ...              % 3D velocities in embedding space [pix/dt]
             'v2d', [], ...              % 2D tangential velocities in pullback
             'v2dum', [], ...            % 2D tangential velocity scaled by speed in true embedding space
             'vn', [], ...               % normal velocity in spaceUnits per timeInterval timeUnits
             'vf', [], ...               % velocity vielf on face barycenters after Lagrangian avg
             'vv', []) ;                 % velocity field on vertices after Lagrangian avg
-        velocityRaw = struct(...
+        velocityRaw = struct(...        % raw 3D and 2D velocity fields deduced from PIV
             'v3d', [], ...              % 3D velocities in embedding space [pix/dt], no temporal filtering
             'v2d', [], ...              % 2D tangential velocities in pullback, no temporal filtering
             'v2dum', [], ...            % 2D tangential velocity scaled by speed in true embedding space, no temporal filtering
@@ -202,7 +210,7 @@ classdef TubULAR < handle
             'vf', [], ...               % velocity vielf on face barycenters, no temporal filtering
             'vv', []) ;                 % velocity field on vertices, no temporal filtering
         cleanCntrlines                  % centerlines in embedding space, no temporal filtering
-        smoothing = struct(...
+        smoothing = struct(...          % parameters for smoothing measured data on surfaces
             'lambda', 0.00, ...             % diffusion const for field smoothing on mesh
             'lambda_mesh', 0.00, ...        % diffusion const for vertex smoothing of mesh itself
             'nmodes', 7, ...                % number of low freq modes to keep per DV hoop
@@ -218,7 +226,7 @@ classdef TubULAR < handle
                 'mu_material_filtered', [], ...
                 'mu_material_vertices', [], ...
                 'fitlerOptions', []));     
-       currentStrain = struct(...
+       currentStrain = struct(...           % strain from pathline measurements at current timepoint
             'pathline', ...                 % strain from pathlines
             struct('t0Pathlines', [], ...   % t=0 timepoint for pathlines in question
             'strain', [], ...               % strain evaluated along pathlines
@@ -768,9 +776,9 @@ classdef TubULAR < handle
         end
         
         % Get velocity
-        function getCurrentVelocity(tubi, varargin)
+        function piv3d = getCurrentVelocity(tubi, varargin)
             if isempty(tubi.currentTime)
-                error('No currentTime set. Use QuapSlap.setTime()')
+                error('No currentTime set. Use tubi.setTime()')
             end
             if isempty(varargin) 
                 do_all = true ;
@@ -784,6 +792,9 @@ classdef TubULAR < handle
                 piv3dfn = tubi.fullFileBase.piv3d ;
                 load(sprintf(piv3dfn, tubi.currentTime), 'piv3dstruct') ;
                 tubi.currentVelocity.piv3d = piv3dstruct ;
+            end
+            if nargout > 0
+                piv3d = tubi.currentVelocity.piv3d ;
             end
         end
         
@@ -1275,98 +1286,6 @@ classdef TubULAR < handle
             end
         end
         
-        % Radial indentation for UVprime pathlines
-        function indentation = measureUVPrimePathlineIndentation(tubi, options)
-            overwrite = false ;
-            t0p = tubi.t0set() ;
-            if isfield(options, 'overwrite')
-                overwrite = options.overwrite ;
-            end
-            if isfield(options, 't0Pathline')
-                t0p = options.t0Pathline ;
-            end
-            indentFn = sprintf(tubi.fileName.pathlines_uvprime.indentation, t0p) ;
-            if ~exist(indentFn, 'file') || overwrite
-                radFn = sprintf(tubi.fileName.pathlines_uvprime.radius, t0p) ;
-                if ~exist(radFn, 'file')
-                    disp(['pathline radii not on disk: ' radFn])
-                    tubi.measureUVPrimePathlines(options) ;
-                end
-                
-                load(radFn, 'vRadiusPathlines')
-                rad = vRadiusPathlines.radii ;
-                nU = size(rad, 2) ;
-                indentation = 0 * rad ;
-                rad0 = rad(vRadiusPathlines.tIdx0, :, :) ;
-                for tidx = 1:length(tubi.xp.fileMeta.timePoints)
-                    indentation(tidx, :, :) = -(rad(tidx, :, :) - rad0) ./ rad0 ;
-                end
-                save(indentFn, 'indentation')
-                
-                % Plot the indentation as a kymograph
-                close all
-                figfn = fullfile(sprintf(tubi.dir.pathlines_uvprime.data, ...
-                    t0p), 'indentation_kymograph.png') ;
-                set(gcf, 'visible', 'off')
-                indentAP = mean(indentation, 3) ;
-                uspace = linspace(0, 1, nU) ;
-                imagesc(uspace, tubi.xp.fileMeta.timePoints, indentAP)
-                xlabel('ap position, $u''/L$', 'interpreter', 'latex')
-                ylabel(['time [' tubi.timeUnits ']'], 'interpreter', 'latex')
-                caxis([-max(abs(indentAP(:))), max(abs(indentAP(:)))])
-                colormap blueblackred
-                cb = colorbar() ;
-                ylabel(cb, 'indentation $\delta r/r_0$', 'interpreter', 'latex')
-                saveas(gcf, figfn)
-                
-                % Plot in 3d
-                % load reference mesh and pathline vertices in 3d
-                load(sprintf(tubi.fileName.pathlines_uvprime.refMesh, t0p), ...
-                    'refMesh') ;
-                load(sprintf(tubi.fileName.pathlines_uvprime.v3d, t0p), 'v3dPathlines') ;
-                indentDir = sprintf(tubi.dir.pathlines_uvprime.indentation, t0p) ;
-                if ~exist(indentDir, 'dir')
-                    mkdir(indentDir) 
-                end
-                [~,~,~,xyzlim] = tubi.getXYZLims() ;
-                for tidx = 1:size(rad, 1)
-                    tp = tubi.xp.fileMeta.timePoints(tidx) ;
-                    fn = fullfile(indentDir, 'indentation_%06d.png') ;
-                    if ~exist(fn, 'file') || overwrite
-                        close all 
-                        fig = figure('visible', 'off') ;
-                        opts = struct() ;
-                        opts.fig = fig ;
-                        opts.ax = gca ;
-                        xx = v3dPathlines.vXrs(tidx, :) ;
-                        yy = v3dPathlines.vYrs(tidx, :) ;
-                        zz = v3dPathlines.vZrs(tidx, :) ;
-                        v3d = [ xx(:), yy(:), zz(:) ] ;
-                        indent = indentation(tidx,:,:) ;
-                        opts.sscale = 0.5 ;
-                        opts.axisOff = false ;
-                        opts.label = 'constriction, $\delta r/r_0$' ;
-                        opts.ax_position = [0.1141, 0.1100, 0.6803, 0.8150] ;
-                        scalarFieldOnSurface(refMesh.f, v3d, indent(:), opts) ;
-                        view(0, 0)
-                        axis equal
-                        axis off
-                        xlim(xyzlim(1, :))
-                        ylim(xyzlim(2, :))
-                        zlim(xyzlim(3, :))
-                        sgtitle(['constriction, $t=$', sprintf('%03d', tp), ...
-                            ' ', tubi.timeUnits ], 'interpreter', 'latex')
-                        saveas(gcf, sprintf(fn, tp)) ;
-                        close all
-                    end
-                end
-                
-            else
-                load(indentFn, 'indentation')
-            end
-        end
-        
-        
         % Pullbacks
         generateCurrentPullbacks(tubi, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
         
@@ -1735,6 +1654,59 @@ classdef TubULAR < handle
         end
         measurePIV2d(tubi, options)
         measurePIV3d(tubi, options)
+        function [vrms, timestamps] = measureRMSvelocityOverTime(tubi, options)
+            % Parameters
+            % ----------
+            % options : optional struct with fields
+            %   weights : weights to attribute to each face in mesh
+            %   coordSys : str specifier (default=='sp')
+            % 
+            % Returns
+            % -------
+            % vrms : #tps x 1 float array
+            %   rms velocity over time
+            % timestamps : #tps x 1 float array
+            %   timestamps associated with each entry
+            % 
+            if nargin < 2
+                options = struct() ;
+            end
+            if ~isfield(options, 'weights')
+                options.weights = 'facearea' ;
+            end
+            % default is to define weights based on face area
+            tps = tubi.xp.fileMeta.timePoints ;
+            vrms = zeros(numel(tps)-1, 1) ;
+            for tidx = 1:numel(tps)-1
+                disp(['tidx = ' num2str(tidx) '/' num2str(numel(tps))]) 
+                tp = tps(tidx) ;
+                tubi.setTime(tp)
+                % Get weights and velocity
+                if strcmpi(options.weights, 'facearea')
+                    if strcmpi(tubi.piv.imCoords, 'sp_sme')
+                        mesh = tubi.getCurrentSPCutMeshSmRS() ;
+                        weights = doublearea(mesh.v, mesh.f) ;
+                    else
+                        error('code for this coordSys (tubi.piv.imCoords) here')
+                    end
+                end
+                vel = tubi.getCurrentVelocity ;
+                vrms(tidx) = sqrt(sum(weights .* ...
+                    vecnorm(vel.v3dfaces_rs, 2, 2).^2) / sum(weights)) ;
+            end
+            timestamps = (tps(1:end-1) - tubi.t0) * tubi.timeInterval ;
+            tubi.clearTime()
+            
+            if nargout == 0
+                fn = fullfile(tubi.dir.piv.root, 'rms_velocity.pdf') ;
+                plot(timestamps, vrms) ;
+                xlabel(['time [' tubi.timeUnits ']'])
+                ylabel(['r.m.s. velocity [' tubi.spaceUnits '/' tubi.timeUnits ']'], ...
+                    'interpreter', 'latex')
+                disp(['Saving figure to disk: ' fn])
+                saveas(gcf, fn) ;
+            end
+        end
         
         %% Metric
         plotMetric(tubi, options) 
@@ -2037,8 +2009,9 @@ classdef TubULAR < handle
         function vels = loadVelocityAverage(tubi, varargin)
             % Retreive the Velocity on each vertex/face barycenter of the
             % (s,phi) meshes.
-            % NOTE: that these are nearly Lagrangian, but not as Lagrangian
-            % as tubi.getPullbackPathlines(t0), which corrects for any
+            % NOTE: that these are nearly Lagrangian for most applications,
+            % but not perfectly Lagrangian. See also:
+            % tubi.getPullbackPathlines(t0), which corrects for any
             % residual motion in the pullback plane.
             
             % Load and pack into struct
@@ -2081,7 +2054,10 @@ classdef TubULAR < handle
         
         plotTimeAvgVelocities(tubi, options)
         helmholtzHodge(tubi, options)
-        measurePathlineVelocities(tubi, options)
+        outStruct = measurePathlineVelocities(tubi, options)
+        function outStruct = getPathlineVelocities(tubi, options)
+            outStruct = tubi.measurePathlineVelocities(options) ;
+        end
         plotPathlineVelocities(tubi, options)
         
         %% Velocities -- simple/surface-Lagrangian averaging
@@ -2468,6 +2444,15 @@ classdef TubULAR < handle
             end
             pcaResults = computePCAoverTime(tubi, options) ;            
         end
+        
+        lbsResults = computeLBSoverTime(tubi, options)
+        function lbsResults = getLBSoverTime(tubi, options)
+            if nargin < 2
+                options = struct() ;
+            end
+            lbsResults = computeLBSoverTime(tubi, options) ;
+        end
+        
     end
     
     methods (Static)
