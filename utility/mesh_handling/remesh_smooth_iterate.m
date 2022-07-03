@@ -89,7 +89,9 @@ if ~enforceQuality
     
     tr = triangulation(F, V) ;
     fb = tr.freeBoundary ;
-    fb = fb(:, 1) ;
+    if ~isempty(fb)
+        fb = fb(:, 1) ;
+    end
     V = laplacian_smooth(V, F, 'cotan', fb, lambda, 'implicit', V, 10);
 else
     

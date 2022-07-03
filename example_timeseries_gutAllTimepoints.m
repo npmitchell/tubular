@@ -334,9 +334,10 @@ tubi.spaceUnits = [char(181) 'm'] ;
 tubi.getPCAoverTime(options)
 
 %% Laplace-Beltrami Spectral (LBS) decomposition
+close all; clc;
 
-lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-% lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
 options = struct('overwrite', true, ...
     'overwriteImages', true) ;
 options.lbsTypes = lbsTypes ;

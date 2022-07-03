@@ -87,6 +87,9 @@ if nargin < 2
 elseif isempty(tp)
     tp = t0 ;
 end
+if nargin < 3
+    options = struct() ;
+end
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
 end

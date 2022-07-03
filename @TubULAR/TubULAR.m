@@ -1122,16 +1122,21 @@ classdef TubULAR < handle
         end
         
         % t0_for_phi0 (uvprime cutMesh)
-        function mesh = getCurrentUVPrimeCutMesh(tubi)
-            if isempty(tubi.currentMesh.uvpcutMesh)
-                tubi.loadCurrentSPCutMeshSm() ;
+        function mesh = getCurrentUVCutMesh(tubi)
+            if isempty(tubi.currentMesh.uvcutMesh)
+                tubi.loadCurrentUVCutMesh() ;
             end
-            mesh = tubi.currentMesh.uvpcutMesh ;
+            if nargout > 0
+                mesh = tubi.currentMesh.uvcutMesh ;
+            end
         end
-        function loadCurrentUVPrimeCutMesh(tubi)
-            uvpcutMeshfn = sprintf(tubi.fullFileBase.uvpcutMesh, tubi.currentTime) ;
-            tmp = load(uvpcutMeshfn, 'uvpcutMesh') ;
-            tubi.currentMesh.uvpcutMesh = tmp.uvpcutMesh ;
+        function mesh = loadCurrentUVCutMesh(tubi)
+            tmp = tubi.loadCurrentSPCutMesh() ;
+            mesh = struct() ;
+            mesh.f = tmp.f ;
+            mesh.v = tmp.v0 ;
+            mesh.u = tmp.uv ;
+            tubi.currentMesh.uvcutMesh = mesh ;
         end
         measureUVPrimePathlines(tubi, options)
         % Note: measureBeltramiCoefficient() allows uvprime

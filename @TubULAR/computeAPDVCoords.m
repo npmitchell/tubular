@@ -698,7 +698,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%
 fig = figure ;
 disp('Displaying mesh in figure ...')
-mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+mesh = read_ply_mod(sprintf([tubi.fullFileBase.mesh ], tt)) ;
 for ii = 1:3
     subplot(1, 3, ii)
     trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)

@@ -1,4 +1,4 @@
-function generateCurrentPullbacks(QS, cutMesh, spcutMesh, ...
+function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
     spcutMeshSm, pbOptions)
 %GENERATECURRENTPULLBACKS(QS, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
 %   Generate 2D images of tissue mapped from 3D
@@ -144,17 +144,17 @@ end
 
 %% Unpack options
 if nargin < 2 || isempty(cutMesh)
-    if isempty(QS.currentMesh.cutMesh)
-        QS.loadCurrentCutMesh()
+    if isempty(tubi.currentMesh.cutMesh)
+        tubi.loadCurrentCutMesh()
     end
-    cutMesh = QS.currentMesh.cutMesh ;
+    cutMesh = tubi.currentMesh.cutMesh ;
 end
 
 if (nargin < 3 || isempty(spcutMesh)) && (generate_uv || generate_relaxed || generate_sphi)
-    if isempty(QS.currentMesh.spcutMesh)
-        QS.loadCurrentSPCutMesh()
+    if isempty(tubi.currentMesh.spcutMesh)
+        tubi.loadCurrentSPCutMesh()
     end
-    spcutMesh = QS.currentMesh.spcutMesh ;
+    spcutMesh = tubi.currentMesh.spcutMesh ;
     
     % Smooth embedding coordinates (optional)
     if preTextureLambda > 0
@@ -179,10 +179,10 @@ if (nargin < 3 || isempty(spcutMesh)) && (generate_uv || generate_relaxed || gen
 end
 
 if (nargin < 4 || isempty(spcutMeshSm)) && (generate_rsm || generate_spsm)
-    if isempty(QS.currentMesh.spcutMeshSm)
-        QS.loadCurrentSPCutMeshSm()
+    if isempty(tubi.currentMesh.spcutMeshSm)
+        tubi.loadCurrentSPCutMeshSm()
     end
-    spcutMeshSm = QS.currentMesh.spcutMeshSm ;
+    spcutMeshSm = tubi.currentMesh.spcutMeshSm ;
     
     % Smooth embedding coordinates (optional)
     if preTextureLambda > 0
@@ -210,8 +210,8 @@ if generate_ricci
 end
 
 %% Unpack QS
-tt = QS.currentTime ;
-a_fixed = QS.a_fixed ;
+tt = tubi.currentTime ;
+a_fixed = tubi.a_fixed ;
 % fileNameBase = QS.fileBase.name ;
 % imFolder = QS.dir.im ;
 % imFolder_r = QS.dir.im_r ;
@@ -226,20 +226,20 @@ fprintf('Checking whether to create pullback \n');
 %--------------------------------------------------------------
 % Generate Output Image Files
 %--------------------------------------------------------------
-imfn_uv = sprintf( QS.fullFileBase.im_uv, tt); 
-imfn_r = sprintf( QS.fullFileBase.im_r, tt) ;
-imfn_sp = sprintf( QS.fullFileBase.im_sp, tt) ;
-imfn_up = sprintf( QS.fullFileBase.im_up, tt) ;
-if QS.dynamic
-    imfn_spsm = sprintf( QS.fullFileBase.im_sp_sm, tt) ;
-    imfn_rsm = sprintf( QS.fullFileBase.im_r_sm, tt) ;
+imfn_uv = sprintf( tubi.fullFileBase.im_uv, tt); 
+imfn_r = sprintf( tubi.fullFileBase.im_r, tt) ;
+imfn_sp = sprintf( tubi.fullFileBase.im_sp, tt) ;
+imfn_up = sprintf( tubi.fullFileBase.im_up, tt) ;
+if tubi.dynamic
+    imfn_spsm = sprintf( tubi.fullFileBase.im_sp_sm, tt) ;
+    imfn_rsm = sprintf( tubi.fullFileBase.im_r_sm, tt) ;
 end
-imfn_ricci = sprintf( QS.fullFileBase.im_ricci, tt) ;
+imfn_ricci = sprintf( tubi.fullFileBase.im_ricci, tt) ;
 do_pb1 = ~exist(imfn_uv, 'file') && generate_uv ;
 do_pb2 = ~exist(imfn_r, 'file') && generate_relaxed ;
 do_pb3 = ~exist(imfn_sp, 'file') && generate_sphi ;
 do_pb4 = ~exist(imfn_up, 'file') && generate_uphi ;
-if QS.dynamic
+if tubi.dynamic
     do_pb5 = ~exist(imfn_spsm, 'file') && generate_spsm ;
     do_pb6 = ~exist(imfn_rsm, 'file') && generate_rsm ;
 else
@@ -280,9 +280,9 @@ if do_pullbacks
     end     
     
     % Load 3D data for coloring mesh pullback
-    QS.getCurrentData()
+    tubi.getCurrentData()
     % grab raw stack data
-    IV = QS.currentData.IV ;
+    IV = tubi.currentData.IV ;
     
     % select channels
     if ~isempty(channels)
@@ -354,7 +354,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Save smoothed sp image
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-if QS.dynamic
+if tubi.dynamic
     if generate_spsm && (~exist(imfn_spsm, 'file') || overwrite) 
         disp('Generating image for smoothed sphi coords...')
         aux_generate_orbifold(spcutMeshSm, a_fixed, IV, imfn_spsm, ...
@@ -367,7 +367,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Save smoothed relaxed image
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-if QS.dynamic
+if tubi.dynamic
     if (~exist(imfn_rsm, 'file') || overwrite) && generate_rsm
         disp('Generating relaxed image for sphi coords...')
         if ~isfield(spcutMeshSm, 'ar')

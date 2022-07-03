@@ -365,13 +365,22 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         BW2(2:end-1, 2:end-1, 2:end-1) = BW ;
 
         % Convert BW to mesh
-        mesh = isosurface(BW2, 0.5) ;
-        mesh.vertices = mesh.vertices - 1 ;
-        mesh.vertices = mesh.vertices * ssfactor ;
-        % Swap X<->Y axes since MATLAB did this in isosurface/contour
-        mesh.vertices = mesh.vertices(:, [2, 1, 3]) ;
-        % mesh.faces = mesh.faces(:, [2, 1, 3]) ;
-
+        switch meshConstructionMethod
+            case 'marchingCubes'
+                mesh = isosurface(BW2, 0.5) ;
+                mesh.vertices = mesh.vertices - 1 ;
+                mesh.vertices = mesh.vertices * ssfactor ;
+                % Swap X<->Y axes since MATLAB did this in isosurface/contour
+                mesh.vertices = mesh.vertices(:, [2, 1, 3]) ;
+                % mesh.faces = mesh.faces(:, [2, 1, 3]) ;
+            case 'advancingFront'
+                error('Implement advancing front from example here')
+                
+            case 'PoissonSurface'
+                error('Implement poisson surface from example here')
+                
+        end
+        
         % Check it
         % trisurf(triangulation(mesh.faces, mesh.vertices), 'edgecolor', 'none')
 

@@ -1,0 +1,6 @@
+[submodule "DECLab"]
+	path = DECLab
+	url = https://www.github.com/DillonCislo/DECLab
+[submodule "TexturePatch"]
+	path = TexturePatch
+	url = https://www.github.com/npmitchell/TexturePatch

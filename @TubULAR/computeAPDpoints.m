@@ -496,7 +496,7 @@ if ~load_from_disk || overwrite
         tubi.setTime(tubi.t0set()) ;
         meshfn = sprintf(tubi.fullFileBase.mesh, tubi.t0set()) ;
         disp(['Loading mesh ' meshfn])
-        mesh = read_ply_mod(meshfn );
+        mesh = read_ply_mod( meshfn );
         
         %% getpts3d Select points from a 3D scatter plot by clicking on plot
         close all
@@ -508,7 +508,7 @@ if ~load_from_disk || overwrite
         xlabel('x'); ylabel('y'); zlabel('z')
         
         % View ANTERIOR endcap 
-        msg = 'Rotate the mesh to view Anterior endcap, then press Enter/return';
+        msg = 'Rotate the mesh to view Anterior endcap, then press Continue button (in bottom left of Figure)';
         disp(msg)
         title(msg)
         % key = 'none' ;
@@ -522,7 +522,7 @@ if ~load_from_disk || overwrite
         datacursormode on
         
         % View ANTERIOR endcap 
-        msg = "Select Anterior endcap point, then press 'a' (with Fig in foreground)";
+        msg = "Select Anterior endcap point, then press Continue button (in bottom left of Figure)";
         disp(msg)
         title(msg)
         c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;
@@ -549,7 +549,7 @@ if ~load_from_disk || overwrite
         view([az+180,el])
         
         % View POSTERIOR endcap         
-        msg = 'Rotate the mesh to view Posterior endcap, then press Continue';
+        msg = 'Rotate the mesh to view Posterior endcap, then press Continue button (in bottom left of Figure)';
         disp(msg)
         title(msg)
         c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;
@@ -574,7 +574,7 @@ if ~load_from_disk || overwrite
         %     waitforbuttonpress;
         %     key=get(gcf,'CurrentKey');
         % end   
-        msg = "Select the Posterior endcap point, then press 'Continue' (with Fig in foreground)";
+        msg = "Select the Posterior endcap point, then press Continue button (in bottom left of Figure)";
         disp(msg)
         title(msg)
         c = uicontrol('String', 'Continue', 'Callback', 'uiresume(gcf)') ;

@@ -31,6 +31,11 @@ function extractCenterlineSeries(QS, cntrlineOptions)
 %
 % Outputs
 % -------
+% centerline curves, one for each timepoint, stored in:
+%   [fullfile(outdir, name) '_centerline' extenstr] ;
+% centerline curves in RS frame (rotated and scaled to align with APDV
+%   coordsys), stored in: 
+%   skel_rs_outfn = [fullfile(outdir, name) '_centerline_scaled' extenstr ]
 % outDirs : 2 x 1 cell array 
 %   The 2 output directories: centerlineOutDir, outdir for images
 %

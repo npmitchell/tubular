@@ -724,6 +724,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     % Save s,phi and their 3D embedding
     spcutMesh.phi0s = phi0s ;
     spcutMesh.phi0_fit = phi0_fit ;
+    spcutMesh.readme = struct('f', 'faces') ;
     save(spcutMeshfn, 'spcutMesh') ;
 else
     disp('Loading spcutMesh from disk...')

@@ -37,7 +37,7 @@ function initializeTubULAR(tubi, xp, opts)
 %       additional smoothing for fields derived from DEC fields
 %   
 %
-% NPMitchell 2020
+% NPMitchell 2020-2022
 
 %% PROPERTIES
 
@@ -152,21 +152,29 @@ if ~strcmp(tubi.fullFileBase.name(end-4:end), '.tif') || ...
     ~strcmp(tubi.fullFileBase.name(end-5:end), '.tiff') 
     tubi.fullFileBase.name = [tubi.fullFileBase.name '.tif'] ;
 end
+% Note: default is tubi.fileBase.mesh = 'mesh_%06d.ply' ;
 try
-    tubi.fileBase.mesh = ...
-        [xp.detector.options.ofn_smoothply '%06d'] ;
+    tubi.fileBase.mesh = xp.detector.options.ofn_smoothply ;
+    if strcmpi(tubi.fileBase.mesh(end-3:end), '.ply')
+        tubi.fileBase.mesh = tubi.fileBase.mesh(1:end-4) ;
+    end
 catch
     if contains(xp.detectOptions.ofn_smoothply, '%') && ...
              contains(xp.detectOptions.ofn_smoothply, 'd')
         if contains(xp.detectOptions.ofn_smoothply, '.ply')
-         tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply(1:end-4) ;
+            tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply(1:end-4) ;
         else
-         tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply ;
+            tubi.fileBase.mesh = xp.detectOptions.ofn_smoothply ;
         end
     else
-         tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply '%06d'] ;
-    end
+        if contains(xp.detectOptions.ofn_smoothply, '.ply')
+            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply(1:end-4) '%06d'] ;
+        else
+            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply '%06d'] ;
+        end
             
+    end
+     
          
 end
 tubi.fileBase.alignedMesh = ...
