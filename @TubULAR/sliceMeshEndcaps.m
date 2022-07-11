@@ -1,4 +1,4 @@
-function sliceMeshEndcaps(QS, opts, methodOpts)
+function sliceMeshEndcaps(tubi, opts, methodOpts)
 % SLICEMESHENDCAPS()
 % Create cut meshes with endcaps removed 
 % Note that a later step involves cutMesh, which slices along AP.
@@ -8,6 +8,8 @@ function sliceMeshEndcaps(QS, opts, methodOpts)
 %
 % Parameters
 % ----------
+% tubi : TubULAR class instance
+%   class instance for which we cut off endcaps of mesh
 % opts : struct with optional fields
 % methodOpts : struct with optional fields
 %   tref : int (timestamp, not index)
@@ -16,30 +18,20 @@ function sliceMeshEndcaps(QS, opts, methodOpts)
 %
 % Prerequisites
 % -------------
-% align_meshes.m or alignMeshesAPDV() after training on APD
-% extract_centerline.m or extractCenterlineSeries() after training on APD
+% alignMeshesAPDV() after identifying APD pints
+% extractCenterlineSeries() 
 % 
-% Postrequisites (codes to run after)
-% -----------------------------------
-% extract_chirality_writhe.m or extractChiralityWrithe
-% Generate_Axisymmetric_Pullbacks_Orbifold.m (script) or continue master
-%   pipeline script
 %
 % First run extract_centerline.m or extractCenterlineSeries() before 
 % running this code.
-% Run this code only after training on anterior (A), posterior (P), and 
-% dorsal anterior (D) points in different iLastik channels.
-% anteriorChannel, posteriorChannel, and dorsalChannel specify the iLastik
-% training channel that is used for each specification.
-% Name the h5 file output from iLastik as ..._Probabilities_apcenterline.h5
-% Train for anterior dorsal (D) only at the first time point, because
-% that's the only one that's used.
+% Run this code only after identifying anterior (A), posterior (P), and 
+% dorsal anterior (D) points via computeAPDpoints().
 
-%% Parameters from QS
-timePoints = QS.xp.fileMeta.timePoints ;
+%% Parameters from tubi
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Parameters
-tref = QS.xp.fileMeta.timePoints(1) ;     % which timepoint to use as reference, when
+tref = tubi.xp.fileMeta.timePoints(1) ;     % which timepoint to use as reference, when
                                           % dorsal points on the boundary
                                           % are defined. Subsequent and
                                           % previous timepoints have dorsal
@@ -152,15 +144,15 @@ if useCustomPts
 end
 
 % Invert rotation for offset
-aOffXYZ = QS.APDV2dxyz(aOffset) / QS.ssfactor ;
-pOffXYZ = QS.APDV2dxyz(pOffset) / QS.ssfactor ;
-aOffRateXYZ = QS.APDV2dxyz(aOffsetRate) / QS.ssfactor ;
-pOffRateXYZ = QS.APDV2dxyz(pOffsetRate) / QS.ssfactor ;
-aOff2XYZ = QS.APDV2dxyz(aOffset2) / QS.ssfactor ;
-pOff2XYZ = QS.APDV2dxyz(pOffset2) / QS.ssfactor ;
-aOffRate2XYZ = QS.APDV2dxyz(aOffset2Rate) / QS.ssfactor ;
-pOffRate2XYZ = QS.APDV2dxyz(pOffset2Rate) / QS.ssfactor ;
-apDir = QS.APDV2dxyz([1, 0,0]) ;
+aOffXYZ = tubi.APDV2dxyz(aOffset) / tubi.ssfactor ;
+pOffXYZ = tubi.APDV2dxyz(pOffset) / tubi.ssfactor ;
+aOffRateXYZ = tubi.APDV2dxyz(aOffsetRate) / tubi.ssfactor ;
+pOffRateXYZ = tubi.APDV2dxyz(pOffsetRate) / tubi.ssfactor ;
+aOff2XYZ = tubi.APDV2dxyz(aOffset2) / tubi.ssfactor ;
+pOff2XYZ = tubi.APDV2dxyz(pOffset2) / tubi.ssfactor ;
+aOffRate2XYZ = tubi.APDV2dxyz(aOffset2Rate) / tubi.ssfactor ;
+pOffRate2XYZ = tubi.APDV2dxyz(pOffset2Rate) / tubi.ssfactor ;
+apDir = tubi.APDV2dxyz([1, 0,0]) ;
 apDir = apDir ./ sqrt(sum(apDir .^ 2 )) ;
 
 % figure parameters
@@ -168,19 +160,19 @@ xwidth = 16 ; % cm
 ywidth = 10 ; % cm
 
 % subsampling factor for the h5s used to train for mesh/acom/pcom/dcom
-ssfactor = QS.ssfactor ; 
-[~, ~, xyzlim_um] = QS.getXYZLims() ;
+ssfactor = tubi.ssfactor ; 
+[~, ~, xyzlim_um] = tubi.getXYZLims() ;
 
 % Name output directory
-outdir = QS.dir.cylinderMesh ;
+outdir = tubi.dir.cylinderMesh ;
 figoutdir = fullfile(outdir, 'images') ;
 if ~exist(figoutdir, 'dir')
     mkdir(figoutdir) ;
 end
 
 %% Load AP coms
-[apt_sm, ppt_sm] = QS.getAPpointsSm ;
-trefIDx = QS.xp.tIdx(tref) ;
+[apt_sm, ppt_sm] = tubi.getAPpointsSm ;
+trefIDx = tubi.xp.tIdx(tref) ;
 
 %% Iterate through each mesh
 
@@ -227,12 +219,12 @@ for ii=todo
     ppt = ppt_sm(ii, :) ;
     
     %% Name the output mesh filename
-    name = sprintf(QS.fileBase.mesh, tt) ;
-    meshfn = sprintf(QS.fullFileBase.mesh, tt) ;
-    outfn = sprintf(QS.fullFileBase.cylinderMesh, tt) ;
-    keepfn = sprintf(QS.fullFileBase.cylinderKeep, tt) ; 
-    boundaryfn = sprintf(QS.fullFileBase.apBoundary, tt) ;
-    outapd_boundaryfn = QS.fileName.apBoundaryDorsalPts ;  % not a base name
+    name = sprintf(tubi.fileBase.mesh, tt) ;
+    meshfn = sprintf(tubi.fullFileBase.mesh, tt) ;
+    outfn = sprintf(tubi.fullFileBase.cylinderMesh, tt) ;
+    keepfn = sprintf(tubi.fullFileBase.cylinderKeep, tt) ; 
+    boundaryfn = sprintf(tubi.fullFileBase.apBoundary, tt) ;
+    outapd_boundaryfn = tubi.fileName.apBoundaryDorsalPts ;  % not a base name
     
     %% Read the mesh
     disp(['Loading mesh ' name]) ;
@@ -405,8 +397,8 @@ for ii=todo
             
             % Make sure that we are removing a connected component
             % form a mesh from the piece(s) to be removed
-            allpts = 1:length(vtx) ;
-            all_but_acut = uint16(setdiff(allpts', pts_to_remove)) ;
+            allpts = 1:size(vtx,1) ;
+            all_but_acut = setdiff(allpts', pts_to_remove) ;
             [ acutfaces, acutvtx, ~] = remove_vertex_from_mesh( fv.f, fv.v, all_but_acut ) ;
             [ ~, ~, connected_indices, npieces ] = ...
                 remove_isolated_mesh_components( acutfaces, acutvtx ) ;
@@ -505,7 +497,7 @@ for ii=todo
                     % Make sure that we are removing a connected component
                     % form a mesh from the piece(s) to be removed
                     allpts = linspace(1, length(vtx), length(vtx)) ;
-                    all_but_pcut = uint16(setdiff(allpts, pts_to_remove)) ;
+                    all_but_pcut = setdiff(allpts, pts_to_remove) ;
                     [ pcutfaces, pcutvtx, ~] = remove_vertex_from_mesh( faces, vtx, all_but_pcut ) ;
                     
                     [ pcutfacesLargest, pcutvtxLargest, connected_indices, npieces ] = ...
@@ -681,7 +673,7 @@ for ii=todo
         % is same as wrt AP axis given that AP axis is a straight line
         % presently.        
         % transform to APDV coords
-        vrs = QS.xyz2APDV(vtx * ssfactor) ;
+        vrs = tubi.xyz2APDV(vtx * ssfactor) ;
         % subtract pi/2 to make dorsal be zero
         a_phipi = mod(atan2(vrs(ab, 3), vrs(ab, 2)) - pi * 0.5, 2*pi) ;
         % For posterior, subtract COM of the boundary in z -- this is a bit
@@ -744,7 +736,7 @@ for ii=todo
         % CURRENT TIME IS A TIMEPOINT AFTER TREF
         % transform to APDV coords in case topology is wrong (for
         % inspection in case of error)
-        vrs = QS.xyz2APDV(vtx * ssfactor) ;
+        vrs = tubi.xyz2APDV(vtx * ssfactor) ;
         
         % Match previous timepoint
         ka = dsearchn(vtx(ab, :), previous_avtx) ;
@@ -758,7 +750,7 @@ for ii=todo
         % CURRENT TIME IS A TIMEPOINT BEFORE TREF
         % transform to APDV coords in case topology is wrong (for
         % inspection in case of error)
-        vrs = QS.xyz2APDV(vtx * ssfactor) ;
+        vrs = tubi.xyz2APDV(vtx * ssfactor) ;
         
         % Match previous timepoint
         ka = dsearchn(vtx(ab, :), backward_avtx) ;
@@ -789,16 +781,16 @@ for ii=todo
     if save_figs && (~exist(figfn, 'file') || overwrite)
         disp(['Saving figure for frame ' num2str(ii)])
         fig = figure('Visible', 'Off');
-        vrs = QS.xyz2APDV(vtx * ssfactor) ;
+        vrs = tubi.xyz2APDV(vtx * ssfactor) ;
         tmp = trisurf(faces, vrs(:, 1), vrs(:, 2), vrs(:, 3), ...
             vrs(:, 3), 'edgecolor', 'none', 'FaceAlpha', 0.4) ;
         hold on
         plot3(vrs(adb, 1), vrs(adb, 2), vrs(adb, 3), 's')
         plot3(vrs(pdb, 1), vrs(pdb, 2), vrs(pdb, 3), '^')
-        acomrs = QS.xyz2APDV(apt * ssfactor) ;
-        pcomrs = QS.xyz2APDV(ppt * ssfactor) ;
-        acomOffrs = QS.xyz2APDV(acomOff * ssfactor) ;
-        pcomOffrs = QS.xyz2APDV(pcomOff * ssfactor) ;
+        acomrs = tubi.xyz2APDV(apt * ssfactor) ;
+        pcomrs = tubi.xyz2APDV(ppt * ssfactor) ;
+        acomOffrs = tubi.xyz2APDV(acomOff * ssfactor) ;
+        pcomOffrs = tubi.xyz2APDV(pcomOff * ssfactor) ;
         plot3(acomrs(1), acomrs(2), acomrs(3), 'ks')
         plot3(pcomrs(1), pcomrs(2), pcomrs(3), 'k^')
         plot3(acomOffrs(1), acomOffrs(2), acomOffrs(3), 'ko')
@@ -811,8 +803,8 @@ for ii=todo
         ylabel('y [$\mu$m]', 'Interpreter', 'Latex')
         zlabel('z [$\mu$m]', 'Interpreter', 'Latex')
         titlestr = 'Mesh with cylindrical cuts, $t=$' ;
-        timestr = sprintf('%03d', tt * QS.timeInterval) ;
-        titlestr = [titlestr timestr ' ' QS.timeUnits] ;
+        timestr = sprintf('%03d', tt * tubi.timeInterval) ;
+        titlestr = [titlestr timestr ' ' tubi.timeUnits] ;
         title(titlestr, 'Interpreter', 'Latex')
         legend({'surface', 'cutPath start', 'cutPath end', ...
             'anterior', 'posterior', ...

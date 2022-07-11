@@ -47,7 +47,7 @@ addpath(fullfile('utility', 'addpath_recurse'))
 addpath_recurse('utility')
 addpath_recurse('/mnt/data/code/gptoolbox')
 addpath('TexturePatch')
-addpath('DEC')
+addpath('DECLab')
 addpath(fullfile('utility','plotting'))
 addpath(fullfile('utility','plotting'))
 % go back to the data
@@ -253,8 +253,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
             'ilastikaxisorder', ilastikaxisorder, ... 
             'physicalaxisorder', imsaneaxisorder, ... 
             'include_boundary_faces', true, ...
-            'smooth_with_matlab', -1, ...  % set this to >0 to use matlab laplacian filter instead of meshlab
-            'pythonVersion', '2') ;
+            'smooth_with_matlab', -1) ; % set this to >0 to use matlab laplacian filter instead of meshlab
 
         % save options
         if exist(msls_detOpts_fn, 'file')
@@ -323,32 +322,6 @@ tubi = TubULAR(xp, opts) ;
 disp('done defining TubULAR instance')
 
 
-%% PCA decomposition
-pcaTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-options = struct('overwrite', true, ...
-    'overwriteImages', true) ;
-options.pcaTypes = pcaTypes ;
-% options.meshStyles = 'sphi' ;
-tubi.spaceUnits = [char(181) 'm'] ;
-tubi.getPCAoverTime(options)
-
-%% Laplace-Beltrami Spectral (LBS) decomposition
-close all; clc;
-
-% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-options = struct('overwrite', true, ...
-    'overwriteImages', true) ;
-options.lbsTypes = lbsTypes ;
-% options.meshStyles = 'sphi' ;
-tubi.spaceUnits = [char(181) 'm'] ;
-tubi.getLBSoverTime(options)
-
-
-
-%%
-error('stop here for PCA only')
 
 
 %% 
@@ -356,9 +329,22 @@ error('stop here for PCA only')
 
 
 
+%% 
+tubi.setTime(tubi.t0 + 90)
+options = struct() ;
+options.coordSys = 'uv' ;
+options.style = 'curves' ;
+options.exten = '.pdf' ;
+tubi.coordinateSystemDemo(options)
+options.exten = '.png' ;
+tubi.coordinateSystemDemo(options)
 
-
-
+options.coordSys = 'sphi' ;
+options.style = 'curves' ;
+options.exten = '.pdf' ;
+tubi.coordinateSystemDemo(options)
+options.exten = '.png' ;
+tubi.coordinateSystemDemo(options)
 
 
 
@@ -444,12 +430,12 @@ cntrlineOpts.dilation = 0 ;              % how many voxels to dilate the segment
 % Note: this can take about 400s per timepoint for res=2.0, so use as big a 
 %   res value as possible.
 %
-tubi.extractCenterlineSeries(cntrlineOpts)
+tubi.generateFastMarchingCenterlines(cntrlineOpts)
 disp('done with centerlines')
 
 %% Identify anomalies in centerline data
 idOptions.ssr_thres = 15 ;  % distance of sum squared residuals in um as threshold for removing spurious centerlines
-tubi.generateCleanCntrlines(idOptions) ;
+tubi.cleanFastMarchingCenterlines(idOptions) ;
 disp('done with cleaning up centerlines')
 
 %% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
@@ -483,11 +469,11 @@ disp('done cleaning cylinder meshes')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ORBIFOLD -> begin populating tubi.dir.mesh/gridCoords_nUXXXX_nVXXXX/ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-overwrite = true ;
+overwrite = false ;
 % Iterate Through Time Points to Create Pullbacks ========================
 for tt = tubi.xp.fileMeta.timePoints
     disp(['NOW PROCESSING TIME POINT ', num2str(tt)]);
-    tidx = xp.tIdx(tt);
+    tidx = tubi.xp.tIdx(tt);
     
     % Load the data for the current time point ------------------------
     tubi.setTime(tt) ;
@@ -510,10 +496,10 @@ for tt = tubi.xp.fileMeta.timePoints
         tubi.plotCutPath(tubi.currentMesh.cutMesh, tubi.currentMesh.cutPath)
         compute_pullback = true ;
     else
-        fprintf('Loading Cut Mesh from disk... ');
-        tubi.loadCurrentCutMesh()
-        compute_pullback = ~isempty(tubi.currentMesh.cutPath) ;
+        compute_pullback = false ;
     end
+    
+    tubi.getCurrentUVCutMesh() ;
     
     spcutMeshOptions = struct() ;
     spcutMeshOptions.t0_for_phi0 = tubi.t0set() ;  % which timepoint do we define corners of pullback map
@@ -536,8 +522,8 @@ disp('Done with generating spcutMeshes and cutMeshes')
 
 %% Inspect coordinate system charts using (s,phi) coordinate system ('sp')
 options = struct() ;
-options.coordSys = 'sp' ;
-tubi.coordSystemDemo(options)
+options.coordSys = 'uv' ;
+tubi.coordinateSystemDemo(options)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -555,7 +541,7 @@ tubi.plotSPCutMeshSmRS(options) ;
 % Inspect coordinate system charts using smoothed meshes
 options = struct() ;
 options.coordSys = 'spsm' ;
-tubi.coordSystemDemo(options)
+tubi.coordinateSystemDemo(options)
 
 %% Redo Pullbacks with time-smoothed meshes ===============================
 disp('Create pullback using S,Phi coords with time-averaged Meshes')
@@ -687,4 +673,28 @@ options.climitRamp = 0.01 ;
 options.climitRatio = 1 ;
 tubi.measurePathlineStrain(options)
 tubi.plotPathlineStrain(options)
+
+
+
+%% PCA decomposition
+pcaTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+options = struct('overwrite', true, ...
+    'overwriteImages', true) ;
+options.pcaTypes = pcaTypes ;
+% options.meshStyles = 'sphi' ;
+tubi.spaceUnits = [char(181) 'm'] ;
+tubi.getPCAoverTime(options)
+
+%% Laplace-Beltrami Spectral (LBS) decomposition
+close all; clc;
+
+% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
+options = struct('overwrite', true, ...
+    'overwriteImages', true) ;
+options.lbsTypes = lbsTypes ;
+% options.meshStyles = 'sphi' ;
+tubi.spaceUnits = [char(181) 'm'] ;
+tubi.getLBSoverTime(options)
 

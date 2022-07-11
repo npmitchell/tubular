@@ -1,12 +1,13 @@
 function [xloc, ssloc] = equidistantSampling1D(xvals, ss, nsamples, method)
 %EQUIDISTANTSAMPLING(ss)
+% Given a series of values ss 
 % 
 % Parameters
 % ----------
 % xvals : N x 1 float or int array
 %   the dimension to resample in order to achieve uniform ds = diff(ssloc)
 % ss : N x 1 float array
-%   pathlength at each index site. For ex, (0, 1.2, 1.4, ...) if ds = 1.2 
+%   pathlength at each index site. For ex, (0, 1.2, 2.4, ...) if ds = 1.2 
 %   and xvals are evenly spaced
 % nsamples : int
 %   Number of points along the curve to sample

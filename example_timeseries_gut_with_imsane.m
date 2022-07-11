@@ -281,12 +281,8 @@ for tp = xp.fileMeta.timePoints
 end
 
 
-
-%% Now create and run tubularFitter here based on the methods in the following section
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PART 2: TubULAR -- surface parameterization
+%% PART 2: TubULAR Fitter -- surface parameterization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Now we have 3d data volumes and surfaces. Define a TubULAR object. 
 % To visualize data on these surfaces and compute how these surfaces deform
@@ -395,12 +391,12 @@ cntrlineOpts.dilation = 0 ;              % how many voxels to dilate the segment
 % Note: this can take about 400s per timepoint for res=2.0, so use as big a 
 %   res value as possible.
 %
-xp.fitter.tubi.extractCenterlineSeries(cntrlineOpts)
+xp.fitter.tubi.generateFastMarchingCenterlines(cntrlineOpts)
 disp('done with centerlines')
 
 %% Identify anomalies in centerline data
 idOptions.ssr_thres = 15 ;  % distance of sum squared residuals in um as threshold for removing spurious centerlines
-xp.fitter.tubi.generateCleanCntrlines(idOptions) ;
+xp.fitter.tubi.cleanFastMarchingCenterlines(idOptions) ;
 disp('done with cleaning up centerlines')
 
 %% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
@@ -492,7 +488,6 @@ disp('Done with generating spcutMeshes and cutMeshes')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Smooth the sphi grid meshes in time ====================================
 options = struct() ;
-options.overwrite = overwrite ;
 options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
 xp.fitter.tubi.smoothDynamicSPhiMeshes(options) ;
 
@@ -518,18 +513,10 @@ for tt = xp.fileMeta.timePoints
 end
 
 %% Now generate embeddings using imsane for the first time point
-% for tp = xp.fileMeta.timePoints 
-%     xp.loadTime(tp) ;
-%     xp.fitSurface() ;
-%     xp.generateSOI() ;
-% end
-
 tp = xp.fileMeta.timePoints(1);
 xp.loadTime(tp);
 xp.rescaleStackToUnitAspect();
-
-%%
-clc;
+%% 
 xp.fitSurface();
 xp.generateSOI();
 

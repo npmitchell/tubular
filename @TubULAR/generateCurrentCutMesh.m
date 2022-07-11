@@ -1,9 +1,9 @@
-function generateCurrentCutMesh(QS, cutMeshOptions)
-% generateCurrentCutMesh(QS, cutMeshOptions)
+function generateCurrentCutMesh(tubi, cutMeshOptions)
+% generateCurrentCutMesh(tubi, cutMeshOptions)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 %   The object for which we generate the currentTime's cutMesh
 % cutMeshOptions : struct with fields
 %   nsegs4path (int, optional, default=2)
@@ -36,9 +36,9 @@ definePDviaRicci_t0 = false ;
 definePDviaRicci = false ;
 ricciOptions = struct() ;
 try
-    t0 = QS.t0set() ;
+    t0 = tubi.t0set() ;
 catch
-    t0 = QS.xp.fileMeta.timePoints(1) ;
+    t0 = tubi.xp.fileMeta.timePoints(1) ;
 end
 nargin
 if nargin > 1
@@ -70,27 +70,27 @@ end
 ricciOptions.t0 = t0 ;
 
 % Unpack parameters
-tt = QS.currentTime ;
-cutMeshfn = sprintf(QS.fullFileBase.cutMesh, tt) ;
-QS.getCleanCntrlines() ;
+tt = tubi.currentTime ;
+cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tt) ;
+tubi.getCleanFastMarchingCenterlines() ;
 
 % Used to save time if mesh is loaded, but this can lead to problems
 % mesh = QS.currentMesh.cylinderMeshClean ;
 % if isempty(mesh)
-QS.loadCurrentCylinderMeshClean() ;
-mesh = QS.currentMesh.cylinderMeshClean ;
+tubi.loadCurrentCylinderMeshClean() ;
+mesh = tubi.currentMesh.cylinderMeshClean ;
 % end
 
-cylinderMeshCleanBase = QS.fullFileBase.cylinderMeshClean ;
-outcutfn = QS.fullFileBase.cutPath ;
+cylinderMeshCleanBase = tubi.fullFileBase.cylinderMeshClean ;
+outcutfn = tubi.fullFileBase.cutPath ;
 % centerlines from QS
-QS.getCleanCntrlines ;
-cleanCntrlines = QS.cleanCntrlines ;
+tubi.getCleanFastMarchingCenterlines ;
+cleanCntrlines = tubi.cleanFMCenterlines ;
 
 % Grab ad and pd indices for cylinder mesh
-adIDx = h5read(QS.fileName.aBoundaryDorsalPtsClean,...
+adIDx = h5read(tubi.fileName.aBoundaryDorsalPtsClean,...
     ['/' sprintf('%06d', tt)]) ;
-pdIDx = h5read(QS.fileName.pBoundaryDorsalPtsClean,...
+pdIDx = h5read(tubi.fileName.pBoundaryDorsalPtsClean,...
     ['/' sprintf('%06d', tt)]) ;
 
 % try geodesic if first timepoint
@@ -100,7 +100,7 @@ if tt == t0
     % Modify adIDx/pdIDx if desired (for removing possible twist)
     if definePDviaRicci_t0
         [rawRicciMesh, ~] = ...
-            QS.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
+            tubi.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
 
         % Assert that adIDx vertex is very near phi= 0
         assert(rawRicciMesh.rectangle.u(adIDx,2) == 0)
@@ -193,7 +193,7 @@ else
     % Modify adIDx/pdIDx if desired (for removing possible twist)
     if definePDviaRicci
         [rawRicciMesh, ~] = ...
-            QS.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
+            tubi.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
 
         % Assert that adIDx vertex is very near phi= 0
         assert(rawRicciMesh.rectangle.u(adIDx,2) == 0)
@@ -239,7 +239,7 @@ else
     prevcutP = dlmread(sprintf(outcutfn, prevTP), ',', 1, 0) ;
     previousP = prevmesh.v(prevcutP, :) ;
     % Load previous centerline in raw units
-    prevcline = cleanCntrlines{QS.xp.tIdx(prevTP)} ; % use previous CORRECTED centerline (non-anomalous)
+    prevcline = cleanCntrlines{tubi.xp.tIdx(prevTP)} ; % use previous CORRECTED centerline (non-anomalous)
     prevcline = prevcline(:, 2:4) ;
     % Compute Twist for this previous timepoint
     prevTw = twist(previousP, prevcline) ;
@@ -258,7 +258,7 @@ else
     previousP = prevmesh.v(prevcutP, :) ;
 
     % Current centerline: chop off ss to make Nx3
-    cntrline = cleanCntrlines{QS.xp.tIdx(tt)} ;
+    cntrline = cleanCntrlines{tubi.xp.tIdx(tt)} ;
     cntrline = cntrline(:, 2:4) ;
     
     % Check topology 
@@ -384,13 +384,13 @@ ar = minimizeIsoarealAffineEnergy( cutMesh.f, cutMesh.v, cutMesh.u );
 
 % Scale the x axis by a or ar, also flip u if flipy is true
 uvtx = cutMesh.u ;
-if QS.flipy
-    cutMesh.u = [ QS.a_fixed .* uvtx(:,1), 1.0 - uvtx(:,2) ];
+if tubi.flipy
+    cutMesh.u = [ tubi.a_fixed .* uvtx(:,1), 1.0 - uvtx(:,2) ];
 else
-    cutMesh.u = [ QS.a_fixed .* uvtx(:,1), uvtx(:,2) ];
+    cutMesh.u = [ tubi.a_fixed .* uvtx(:,1), uvtx(:,2) ];
 end
 cutMesh.ar = ar ;
-cutMesh.umax = QS.a_fixed ;
+cutMesh.umax = tubi.a_fixed ;
 
 % preview the pullback mesh uv coords
 % plot(cutMesh.u(:, 1), cutMesh.u(:, 2), '.')
@@ -408,9 +408,9 @@ save(cutMeshfn, 'cutMesh', 'adIDx', 'pdIDx', 'cutP')
 
 % Displacing mesh along normal direction
 disp(['Evolving mesh along normal shift for pullback ',...
-    'images: shift=' num2str(QS.normalShift)])
-cutMesh.v = cutMesh.v + cutMesh.vn * QS.normalShift ;
+    'images: shift=' num2str(tubi.normalShift)])
+cutMesh.v = cutMesh.v + cutMesh.vn * tubi.normalShift ;
 
 disp('Assigning current cutMesh to self')
-QS.currentMesh.cutMesh = cutMesh ;
+tubi.currentMesh.cutMesh = cutMesh ;
 disp('done with plotting & saving cut')

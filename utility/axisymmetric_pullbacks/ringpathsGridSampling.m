@@ -1,4 +1,4 @@
-function [ringpath_ss, hoop_ss ] = ringpathsGridSampling(uspace, vspace, TF, TV2D, TV3Drs)
+function [ringpath_ss, hoop_ss, curves3d, uvgrid2d ] = ringpathsGridSampling(uspace, vspace, TF, TV2D, TV3Drs)
 %RINGPATHSGRIDSAMPLING(uspace, vspace, nU, nV, TF, TV2D, TV3Drs)
 % Compute the proper length from the left side of the 2d mesh image TV2D to
 % each vertical (u=const) line/ring.
@@ -21,9 +21,14 @@ function [ringpath_ss, hoop_ss ] = ringpathsGridSampling(uspace, vspace, TF, TV2
 % ringpath_ss : nU x 1 float array
 %   the average proper pathlength from the left of the rectilinear 2d mesh
 %   to the position at uspace(i) is given by ringpath_ss(i)
-% hoop_ss : nV x 1 float array (optional)
-%   the proper pathlength from the bottom of the rectilinear 2d mesh to the
-%   position at vspace(j) and u=uspace(i) is hoop_ss(i, j)
+% hoop_ss : nU x nV float array (optional)
+%   the proper pathlength from the bottom (v=0) of the rectilinear 2d mesh
+%   to the position at u=uspace(i) and vspace(j) is hoop_ss(i, j)
+% curves3d : nU x nV x 3 float 
+%   interpolated 3d values at uv grid defined over grid of uspace
+%   and vspace
+% uvgrid2d : nU x nV x 2 float
+%   2d values of uv grid defined as grid of supplied uspace and vspace
 %
 % NPMitchell 2020
 
@@ -37,6 +42,12 @@ for kk = 1:nU
         disp(['u = ' num2str(kk / nU)])
     end
     uv = [uspace(kk) * ones(size(vspace)), vspace] ;
+    if nargout > 3
+        if kk == 1
+            uvgrid2d = zeros(nU, nV, 2) ;
+        end
+        uvgrid2d(kk, :, :) = uv ;
+    end
     curves3d(kk, :, :) = interpolate2Dpts_3Dmesh(TF, TV2D, TV3Drs, uv) ;
 end 
 
@@ -53,8 +64,7 @@ if nargout > 1
     % v (second dim in mapping space)
     hoop_ss = zeros(nU, nV) ;
     for kk = 1:nU
-        error('have not debugged dimension of vecnorm and diff here')
-        hoop_ds = reshape(vecnorm(diff(curves3d, 2), 2, 2), [nU-1, nV]) ;
-        hoop_ss(kk, :) = cumsum([0; hoop_ds]) ;
+        hoop_ds = reshape(vecnorm(diff(squeeze(curves3d(:, kk, :))), 2, 2), [1, nV-1]) ;
+        hoop_ss(kk, :) = cumsum([0, hoop_ds]) ;
     end
 end

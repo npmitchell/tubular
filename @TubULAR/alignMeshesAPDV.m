@@ -21,6 +21,13 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 %   overwrite_ims : bool
 %   smwindow      : float or int
 %       number of timepoints over which we smooth
+%   normal_step   : float
+%       how far inside to push start/endpoints for centerline extraction
+%       (should be about 1 pixel to ensure centerlines can be found with
+%       some downsampling)
+%   forceEndpointsInside : bool
+%       push the start/ednpoints for centerline extraction further inside
+%       the mesh even if they are already a little bit inside the mesh
 %
 % Returns
 % -------
@@ -69,6 +76,9 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 % startendpt.h5
 %   Starting and ending points
 %   Saved to fullfile(meshDir, 'centerline/startendpt_rs.h5') ;
+% forceEndpointInside : bool
+%   push the endpoints for crude (fast marching) centerline extraction
+%   further inside the mesh by pushing along vertex normals by normal_step
 % 
 % NPMitchell 2020
 
@@ -84,6 +94,7 @@ preview = false ;
 plot_buffer = 20 ;
 ssfactor = QS.ssfactor ;
 flipy = QS.flipy ; 
+forceEndpointsInside = false ;
 
 % Booleans & floats
 if isfield(opts, 'overwrite')
@@ -100,10 +111,13 @@ end
 if isfield(opts, 'plot_buffer')
     plot_buffer = opts.plot_buffer ;
 end
+if isfield(opts, 'forceEndpointsInside')
+    forceEndpointsInside = opts.forceEndpointsInside ;
+end
 if isfield(opts, 'normal_step')
     normal_step = opts.normal_step ;
 else
-    normal_step = 1e-1 ;  % in pixels, how far to march if ppt is outside mesh
+    normal_step = 1.0 ;  % in pixels, how far to march if ppt is outside mesh
 end
 dptname = fullfile(meshDir, 'dpt_for_rot.txt') ;
 
@@ -354,38 +368,44 @@ for tidx = 1:length(timePoints)
         ainside = inpolyhedron(fvsub, apt(1), apt(2), apt(3)) ;
         pinside = inpolyhedron(fvsub, ppt(1), ppt(2), ppt(3)) ;
 
-        if ainside
+        if ainside && ~forceEndpointsInside
             disp('start point for centerline is inside mesh')
             startpt = apt' ;
         else
+            disp('Pushing start point for centerline further inside the mesh')
             % move along the inward normal of the mesh from the matched vertex
             vtx = [vtx_sub(aind, 1), vtx_sub(aind, 2), vtx_sub(aind, 3)]' ;
             normal = fvsub.normals(aind, :) ;
-            startpt = vtx + normal;
+            startpt = vtx(:) + normal(:) * normal_step;
             if ~inpolyhedron(fvsub, startpt(1), startpt(2), startpt(3)) 
                 % this didn't work, check point in reverse direction
-                startpt = vtx - normal * normal_step ;
+                startpt = vtx(:) - normal(:) * normal_step ;
                 if ~inpolyhedron(fvsub, startpt(1), startpt(2), startpt(3))
                     % Can't seem to jitter into the mesh, so use vertex
                     disp("Can't seem to jitter into the mesh, so using vertex for startpt")
-                    startpt = vtx ;
+                    startpt = vtx(:) ;
                 end
             end
         end 
+        disp(['startpt = [' num2str(startpt(1)) ',' num2str(startpt(2)) ...
+            ',' num2str(startpt(3)) '], apt = [' num2str(apt(1)) ','...
+            num2str(apt(2)) ',' num2str(apt(3)) ']'])
+        assert(length(startpt) == 3)
         % Note: Keep startpt in subsampled units
 
         % Define end point
-        if pinside
+        if pinside && ~forceEndpointsInside
             disp('end point for centerline is inside mesh')
             endpt = ppt' ;
         else
+            disp('Pushing end point for centerline further inside the mesh')
             % move along the inward normal of the mesh from the matched vertex
             vtx = [vtx_sub(pind, 1), vtx_sub(pind, 2), vtx_sub(pind, 3)]' ;
             normal = fvsub.normals(pind, :) ;
-            endpt = vtx + normal * normal_step;
+            endpt = vtx(:) + normal(:) * normal_step;
             if ~inpolyhedron(fvsub, endpt(1), endpt(2), endpt(3)) 
                 % this didn't work, check point in reverse direction
-                endpt = vtx - normal * normal_step ;
+                endpt = vtx(:) - normal(:) * normal_step ;
                 if ~inpolyhedron(fvsub, endpt(1), endpt(2), endpt(3))
                     % Can't seem to jitter into the mesh, so use vertex
                     disp("Can't seem to jitter into the mesh, so using vertex for endpt")
@@ -393,6 +413,10 @@ for tidx = 1:length(timePoints)
                 end
             end
         end 
+        disp(['endpt = [' num2str(endpt(1)) ',' num2str(endpt(2)) ...
+            ',' num2str(endpt(3)) '], ppt = [' num2str(ppt(1)) ','...
+            num2str(ppt(2)) ',' num2str(ppt(3)) ']'])
+        assert(length(endpt) == 3)
         % Note: Keep endpt in subsampled units
 
         % Check out the mesh

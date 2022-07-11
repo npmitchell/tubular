@@ -734,7 +734,8 @@ if ~exist(ricciMeshFn, 'file') || overwrite
     riccicutMesh = cutRectilinearCylMesh(riccicutMesh, opts) ;
     ricciMesh.rectangle = struct('f', riccicutMesh.f, 'u', ...
         riccicutMesh.u, 'v', riccicutMesh.v, ...
-        'nU', nU, 'nV', nV) ;
+        'nU', nU, 'nV', nV, ...
+        'pathPairs', riccicutMesh.pathPairs) ;
 
     % Save ricciMesh
     % note: ricciMesh has fields annulus and rectangle
@@ -745,6 +746,10 @@ if ~exist(ricciMeshFn, 'file') || overwrite
 else
     disp('ricciMesh already on disk, loading...')
     load(ricciMeshFn, 'ricciMesh') 
+    if ~isfield(ricciMesh.rectangle, 'pathPairs')
+        ricciMesh.rectangle.pathPairs = [1:nU; nU*(nV-1)+1:nU*nV]';
+        save(ricciMeshFn, 'ricciMesh')
+    end
     computed_mesh = false ;
 end
 

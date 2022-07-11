@@ -93,7 +93,9 @@ function stacks = rescaleToUnitAspect(data, resolution)
     % newStack = rescaleToUnitAspect() 
 
     if all(resolution) == resolution(1)
-        stacks = data;
+        for channel = 1:size(data, 4)
+            stacks{channel} = squeeze(data(:,:,:,channel)) ;
+        end
         return;
     end
 

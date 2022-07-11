@@ -1,4 +1,4 @@
-function generateCurrentSPCutMesh(QS, cutMesh, spcutMeshOptions)
+function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 % generateCurrentSPCutMesh(QS, cutMesh, spcutMeshOptions)
 %
 % Note that the only output in APDV (spaceUnits) coordinates are
@@ -28,10 +28,10 @@ function generateCurrentSPCutMesh(QS, cutMesh, spcutMeshOptions)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 %   Note that the following properties are used:
-%       QS.phiMethod = ('3dcurves', 'texture', 'combined') 
-%       QS.a_fixed = 2.0    
+%       tubi.phiMethod = ('3dcurves', 'texture', 'combined') 
+%       tubi.a_fixed = 2.0    
 % cutMesh : cutMesh struct, optional
 %   cutMesh with fields
 % spcutMesh : spcutMesh struct, optional
@@ -60,20 +60,15 @@ save_phi0patch = false ;
 iterative_phi0 = false ;
 smoothingMethod = 'none' ;
 maxPhiIterations = 10 ;     % maximum # iterations of minimizing phi via phi -> phi-phi0(s) 
-textureAxisOrder = QS.data.axisOrder ;
-save_ims = QS.plotting.save_ims ;
-phi0_sign = QS.flipy ;  % NOTE: our convention is that new phi = v - phi_0 but for
+textureAxisOrder = tubi.data.axisOrder ;
+save_ims = tubi.plotting.save_ims ;
+phi0_sign = tubi.flipy ;  % NOTE: our convention is that new phi = v - phi_0 but for
                         % some reason when flipy is true even though we have
                         % flipped cutMesh, we must add a minus sign so that phiv_kk
                         % becomes phi_kk = v + phi0. 
 
 %% Unpack options
-if nargin < 2 || isempty(cutMesh)
-    if isempty(QS.currentMesh.cutMesh)
-        QS.loadCurrentCutMesh()
-    end
-    cutMesh = QS.currentMesh.cutMesh ;
-end
+cutMesh = tubi.getCurrentCutMesh() ;
 if nargin > 2
     disp('Unpacking options')
     if isfield(spcutMeshOptions, 'overwrite')
@@ -95,11 +90,11 @@ if nargin > 2
         % The default timepoint at which we set phi0=0 is either the first feature
         %   onset time or else the first timepoint
         try
-            t0_for_phi0 = QS.t0set() ;
+            t0_for_phi0 = tubi.t0set() ;
             disp(['Setting t0 = ' num2str(t0_for_phi0)])
         catch
             disp('Setting t0 = first timepoint')
-            t0_for_phi0 = QS.xp.fileMeta.timePoints(1) ; 
+            t0_for_phi0 = tubi.xp.fileMeta.timePoints(1) ; 
         end
     end
     if isfield(spcutMeshOptions, 'maxPhiIterations')
@@ -118,29 +113,29 @@ end
 
 % populate patchOpts from pbOptions
 pbOptions = struct() ;
-pbOptions.resolution = QS.xp.fileMeta.stackResolution(1) ;
+pbOptions.resolution = tubi.xp.fileMeta.stackResolution(1) ;
 pbOptions.axisorder = textureAxisOrder ;
 
-%% Unpack QS
-tt = QS.currentTime ;
-nU = QS.nU ;
-nV = QS.nV ;
-a_fixed = QS.a_fixed ;
-phi_method = QS.phiMethod ;
-spcutMeshfn = sprintf(QS.fullFileBase.spcutMesh, tt) ;
-fileNameBase = QS.fileBase.name ; 
-phi0fitBase = QS.fullFileBase.phi0fit ;
-spcutMeshBase = QS.fullFileBase.spcutMesh ;
-[rot, trans] = getRotTrans(QS) ;
-resolution = QS.APDV.resolution ;
-QS.getCleanCntrlines ;
-cleanCntrlines = QS.cleanCntrlines ;
-cleanCntrline = cleanCntrlines{QS.xp.tIdx(tt)} ;
-preview = QS.plotting.preview ;
-[~, ~, xyzlim_um] = QS.getXYZLims() ;
-clineDVhoopDir = QS.dir.clineDVhoop ;
-clineDVhoopBase = QS.fullFileBase.clineDVhoop ;
-sphiDir = QS.dir.spcutMesh ;
+%% Unpack tubi
+tt = tubi.currentTime ;
+nU = tubi.nU ;
+nV = tubi.nV ;
+a_fixed = tubi.a_fixed ;
+phi_method = tubi.phiMethod ;
+spcutMeshfn = sprintf(tubi.fullFileBase.spcutMesh, tt) ;
+fileNameBase = tubi.fileBase.name ; 
+phi0fitBase = tubi.fullFileBase.phi0fit ;
+spcutMeshBase = tubi.fullFileBase.spcutMesh ;
+[rot, trans] = getRotTrans(tubi) ;
+resolution = tubi.APDV.resolution ;
+tubi.getCleanFastMarchingCenterlines ;
+cleanCntrlines = tubi.cleanFMCenterlines ;
+cleanCntrline = cleanCntrlines{tubi.xp.tIdx(tt)} ;
+preview = tubi.plotting.preview ;
+[~, ~, xyzlim_um] = tubi.getXYZLims() ;
+clineDVhoopDir = tubi.dir.clineDVhoop ;
+clineDVhoopBase = tubi.fullFileBase.clineDVhoop ;
+sphiDir = tubi.dir.spcutMesh ;
 
 % Check that options are consistent
 if strcmp(phi_method, '3dcurves') && strcmp(smoothingMethod, 'none') && iterative_phi0 
@@ -171,17 +166,17 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     % Generate tiled orbifold triangulation
     %----------------------------------------------------------------------
     tileCount = [1 1];  % how many above, how many below
+    % First initialize cutMeshrs as a full copy, but we will rotate and
+    % scale the vertices and normals (rs = rotated and scaled)
     cutMeshrs = cutMesh;
     
     % DEBUG 12-03-2020
     % Rotate and translate TV3D
-    cutMeshrs.v = QS.xyz2APDV(cutMesh.v) ;
-    % USED TO DO THIS but does not flip in y
-    % cutMeshrs.v = ((rot * cutMesh.v')' + trans) * resolution ;
+    cutMeshrs.v = tubi.xyz2APDV(cutMesh.v) ;
     
     % DEBUG 12-03-2020 -- added flipping vn here
     cutMeshrs.vn = (rot * cutMesh.vn')' ;
-    if QS.flipy
+    if tubi.flipy
         cutMeshrs.vn(:, 2) = - cutMeshrs.vn(:, 2) ;
     end
     
@@ -198,9 +193,12 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     % Calculate abbreviated centerline from cutMesh boundaries
     %----------------------------------------------------------------------
     % Load centerline from cleaned list
-    cline = QS.xyz2APDV(cleanCntrline(:, 2:4)) ; 
-    ss = cleanCntrline(:, 1) * QS.APDV.resolution ;
-    disp('Finding relevant segment of centerline')
+    cline = tubi.xyz2APDV(cleanCntrline(:, 2:4)) ; 
+    ss = cleanCntrline(:, 1) * tubi.APDV.resolution ;
+    disp('Finding relevant segment of centerline from the raw centerline')
+    % Find the start and endpoints of a centerline closest to the 3D
+    %   positions of the boundaries corresponding to u=0 and u=1 of the 2D
+    %   mesh pullback representation.
     [cseg, acID, pcID, ~, ~] = ...
         centerlineSegmentFromCutMesh(cline, TF, TV2D, TV3Drs) ;
 
@@ -215,17 +213,38 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     vspace = linspace( eps, 1-eps, nV )' ;
 
     disp('Casting crude (equal dU) points into 3D...')
-    crude_ringpath_ss = ringpathsGridSampling(uspace0, vspace, TF, TV2D, TV3Drs) ;
+    [crude_ringpath_ss, ~, uvgrid3d, uvgrid2d] = ...
+        ringpathsGridSampling(uspace0, vspace, TF, TV2D, TV3Drs) ;
 
     % Resample crude_ringpath_ds made from uspace0 (uspace0 had equal du, not equal ds_3D in u direction)
     [uspace_ds, eq_ringpath_ss] = equidistantSampling1D(linspace(0, 1, nU)', crude_ringpath_ss, nU, 'linear') ;
     % ensure that uspace is nU x 1, not 1 x nU
     uspace_ds = reshape(uspace_ds, [nU, 1]) ; 
+    % if we wish to squish the posterior end of the image as we go from uv 
+    % to sphi then we might have:
+    %   ^           / uspace_ds
+    %   |          /
+    %   |         /
+    %   |      __/
+    %   |   __/
+    %   |__/
+    %   |---------------> index
+    % and crude_ringpath_ss would be a bit like its inverse but with units
+    % of tubi.spaceUnits:
+    %   ^         __/ crude_ringpath_ss. Note this is 'crude' since the
+    %   |      __/         hoops are not evenly sampled in the computation.
+    %   |   __/   
+    %   |  / 
+    %   | /
+    %   |/
+    %   |---------------> index
+    % 
+    
+    
     % hedge the first and last point to avoid NaNs
     eps = 1e-13 ;
     uspace_ds(1) = uspace_ds(1) + eps ;
     uspace_ds(end) = uspace_ds(end) - eps ;
-    clearvars dsuphi curves3d 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     disp(['Casting resampled points into 3D (approx equal ', ...
@@ -236,8 +255,9 @@ if ~exist(spcutMeshfn, 'file') || overwrite
         if mod(kk, 20) == 0
             disp(['u = ' num2str(kk / nU)])
         end
-        uv = [cutMesh.umax * uspace_ds(kk) * ones(size(vspace)), vspace] ;
-        curves3d(kk, :, :) = interpolate2Dpts_3Dmesh(TF, TV2D, TV3Drs, uv) ;
+        % here sample the mesh with equally spaced ds
+        uv_ds = [cutMesh.umax * uspace_ds(kk) * ones(size(vspace)), vspace] ;
+        curves3d(kk, :, :) = interpolate2Dpts_3Dmesh(TF, TV2D, TV3Drs, uv_ds) ;
     end 
 
     % Check the 3d curves 
@@ -292,9 +312,9 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     [mss, mcline, radii_from_mean_uniform_rs, avgpts_ss, avgpts] = ...
         srFromDVCurves(c3d_dsv) ;
 
-    % Used to find radius using original centerline
-    % [ssv, radii, avgpts, cids] = srFromDVCurvesGivenCenterline(ss, cline, c3ds) ;
-    % Could operate just on the centerline segment
+    % The original centerline with endcaps truncated is cseg_ss for
+    % comparison. cseg = centerline segment, ss = integrated pathlength
+    % along original centerline, bu
     cseg_ss = ss(acID:pcID) ;
     % [ssv, radii, avgpts, cids] = srFromDVCurves(cseg_ss, cseg, c3ds) ;
     % 
@@ -303,12 +323,9 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     % cids = cids + acID ;
 
     % Plot new centerline
-    aux_plot_clineDVhoop(QS, avgpts, avgpts_ss, cseg, cline, cseg_ss, ...
+    aux_plot_clineDVhoop(tubi, avgpts, avgpts_ss, cseg, cline, cseg_ss, ...
         curves3d, xyzlim_um, clineDVhoopFigBase, tt)
     
-    % Optional: clean curve with polynomial and point match
-    % avgpts onto cleaned curve. Skipping for later.
-
     % Compute ringpath_ss, the mean distance traveled from one
     % line of constant u to the next
     disp('Computing ringpath_ss in "uniform" resampling (equal ds along DV)...')
@@ -334,18 +351,22 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     onesUV = ones(nU, nV) ;
     uspace_ds_umax = uspace_ds * cutMesh.umax ;
-    uu = uspace_ds_umax .* onesUV ;
+    uu_ds_max = uspace_ds_umax .* onesUV ;
     vv = (vspace .* onesUV')' ;
     % uv is equally spaced in ss, UNEQUALLY spaced in uu
-    uv = [uu(:), vv(:)] ;
+    sv = [uu_ds_max(:), vv(:)] ;
     % Note: here interpolate uv in the TV2D coord system, then
     % use uphi as the actual 2D coordinates for these vertices
     % NOTE: unlike curves3d, uvgrid3d is NOT rotated/translated/scaled
-    uvgrid3d = interpolate2Dpts_3Dmesh(TF, TV2D, TV3D, uv) ;
+    sv0grid3d = interpolate2Dpts_3Dmesh(TF, TV2D, TV3D, sv) ;
+    
+    % Here, sv0grid3d should be identical to curves3d but in pixel space
+    assert(all(vecnorm(sv0grid3d - ...
+        tubi.APDV2xyz( reshape(curves3d, [nU*nV, 3]) ), 2, 2) < 1e-10))
     
     %% Make avgpts in pixel space (not RS)
     fprintf('Resampling uvgrid3d curves in pix...\n')
-    curves3d_pix = reshape(uvgrid3d, [nU, nV, 3]) ;
+    curves3d_pix = reshape(sv0grid3d, [nU, nV, 3]) ;
     c3d_dsv_pix = zeros(size(curves3d_pix)) ;  % in units of pix
     avgpts_pix = zeros(nU, 3) ;
     for i=1:nU
@@ -368,12 +389,12 @@ if ~exist(spcutMeshfn, 'file') || overwrite
         phi0_fit = phi0s ;
         compute_phi0 = false ;
     elseif tt > t0_for_phi0
-        tidx = QS.xp.tIdx(tt) ;
-        tp_for_comparison = QS.xp.fileMeta.timePoints(tidx-1) ;
+        tidx = tubi.xp.tIdx(tt) ;
+        tp_for_comparison = tubi.xp.fileMeta.timePoints(tidx-1) ;
         compute_phi0 = true ;
     elseif tt < t0_for_phi0 
-        tidx = QS.xp.tIdx(tt) ;
-        tp_for_comparison = QS.xp.fileMeta.timePoints(tidx+1) ;
+        tidx = tubi.xp.tIdx(tt) ;
+        tp_for_comparison = tubi.xp.fileMeta.timePoints(tidx+1) ;
         compute_phi0 = true ;
     end
     
@@ -416,7 +437,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             
             %% Obtain previous pullback image
             % prev2d_uphi = reshape(tmp.spcutMesh.uphi, [nU, nV, 2]) ;
-            imfn_sp_prev = sprintf( QS.fullFileBase.im_sp, tp_for_comparison) ;
+            imfn_sp_prev = sprintf( tubi.fullFileBase.im_sp, tp_for_comparison) ;
 
             % fit the shifts in the y direction
             dmyk = 0 ;
@@ -436,7 +457,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                 if ~iterative_phi0 || dmyk > maxPhiIterations
                     do_iteration = false ;
                 end
-                disp(['Iteration ' num2str(dmyk)])
+                disp(['Fitting phi0 to minimize motion in 3D of parameterization: Iteration ' num2str(dmyk)])
                 plotfn = sprintf(phi0fitBase, tt, dmyk);
 
                 % Pass phiOptions to allow sliding along AP
@@ -469,10 +490,10 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                         tp_for_comparison)  ;
 
                     % Load the intensity data for this timepoint
-                    if isempty(QS.currentData.IV)
-                        QS.getCurrentData()
+                    if isempty(tubi.currentData.IV)
+                        tubi.getCurrentData()
                     end
-                    IV = QS.currentData.IV ;
+                    IV = tubi.currentData.IV ;
                     
                     % Texture patch options
                     Options.PSize = 5;
@@ -488,7 +509,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                     patchOpts.imfn_sp_prev = imfn_sp_prev ;
                     patchOpts.IV = IV ;
                     patchOpts.ringpath_ss = ringpath_ss ;
-                    patchOpts.v3d = uvgrid3d ;
+                    patchOpts.v3d = sv0grid3d ;
                     patchOpts.vvals4plot = phi4plot ;
                     % passed to texturePatchToImage
                     patchOpts.Options = Options ;
@@ -557,13 +578,13 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                     % before fitting
                     hold on;
                     pe0 = find(phiprev(:) < 1e-4 | phiprev(:) > 0.99) ;
-                    pe0h = plot3(uvgrid3d(pe0, 1), uvgrid3d(pe0, 2), ...
-                        uvgrid3d(pe0, 3), '.') ;
+                    pe0h = plot3(sv0grid3d(pe0, 1), sv0grid3d(pe0, 2), ...
+                        sv0grid3d(pe0, 3), '.') ;
                     % after fitting
                     hold on;                   
                     pekk = find(phi4plot(:) < 1e-4 | phi4plot(:) > 0.99) ;
-                    pekkh = plot3(uvgrid3d(pekk, 1), uvgrid3d(pekk, 2), ...
-                        uvgrid3d(pekk, 3), '.') ;         
+                    pekkh = plot3(sv0grid3d(pekk, 1), sv0grid3d(pekk, 2), ...
+                        sv0grid3d(pekk, 3), '.') ;         
                     % format plot
                     legend({'prev mesh', 'before fitting', 'after fitting'},...
                         'location', 'eastoutside')
@@ -592,7 +613,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
         elseif strcmp(phi_method, 'texture') 
             disp('Computing phi(v) via texture matching (physical method)')
             error('adjust this method to use later timepoint if tt>t0_for_comparison')
-            phi0_fit = QS.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace) ;
+            phi0_fit = tubi.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace) ;
         else
             error(["Could not recognize phi_method: ", ...
                 "must be 'texture' or '3dcurves' or 'combined'"])
@@ -603,7 +624,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
         if strcmp(phi_method, 'combined') 
             error('adjust this method to use later timepoint if tt>t0_for_comparison')
             disp('Refining phi(v) via texture matching (physical method)')
-            phi0_fit = QS.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace,...
+            phi0_fit = tubi.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace,...
                         phi0_fit) ;
         end
         close all
@@ -616,13 +637,13 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     end
 
     % NOTE: We have coordinates u,phiv that we associate with
-    % the 3d coordinates already mapped to uv
-    uphi = [uu(:), phiv(:)] ;
+    % the 3d coordinates previously mapped to uv
+    uphi = [uu_ds_max(:), phiv(:)] ;
 
     % Recompute radii_from_mean_uniform_rs as radii_from_avgpts 
     % NOTE: all radius calculations done in microns, not pixels
-    sphi3d_rs = ((rot * uvgrid3d')' + trans) * resolution ;
-    if QS.flipy
+    sphi3d_rs = ((rot * sv0grid3d')' + trans) * resolution ;
+    if tubi.flipy
         sphi3d_rs(:, 2) = - sphi3d_rs(:, 2) ;
     end
     radii_from_avgpts = zeros(size(sphi3d_rs, 1), size(sphi3d_rs, 2)) ;
@@ -633,31 +654,31 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     end
 
     % Triangulate the sphigrid and store as its own cutMesh
-    sv = ringpath_ss .* onesUV ;
+    ssv = ringpath_ss .* onesUV ;
 
     % Define path pairs for tiling the (s,phi) cut mesh
     spcutP1 = 1:nU;
     spcutP2 = nU*nV - fliplr(0:(nU-1)) ;
     spcutMesh.pathPairs = [ spcutP1', spcutP2' ];
-    spcutMesh.f = defineFacesRectilinearGrid(uv, nU, nV) ;
+    spcutMesh.f = defineFacesRectilinearGrid(sv, nU, nV) ;
     spcutMesh.nU = nU ;
     spcutMesh.nV = nV ;
     
     % First resampling
-    spcutMesh.v0 = uvgrid3d ;
+    spcutMesh.v0 = sv0grid3d ;
     spcutMesh.v0rs_equal_dsdv = c3d_dsv ;
     % spcutMesh.vrs0 = ((rot * new3d')' + trans) * resolution ;
     % Define normals based on the original mesh normals
     spvn03d = interpolate2Dpts_3Dmesh(TF, TV2D, TVN3D, uphi) ;
     spvn03d = spvn03d ./ vecnorm(spvn03d, 2, 2) ;
     spcutMesh.vn0 = spvn03d ;
-    spcutMesh.sphi0 = [sv(:), phiv(:)] ;
+    spcutMesh.sphi0 = [ssv(:), phiv(:)] ;
     spcutMesh.uphi0 = uphi ;
-    % Note: uv has no direct relation with cutMesh, just a grid
-    % for utility and reference, but it does have unequal 
-    % spacing in u in anticipation of building sphi0 as a 
-    % near perfect grid.
-    spcutMesh.uv = uv ;  
+    % Note: uv0 has no direct relation with cutMesh, just a grid
+    % for utility and reference. It has unequal 
+    % spacing in u (approx same as s) in anticipation of building sphi0 
+    % Note in particular that the uv
+    spcutMesh.uv0 = sv ;  
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % SECOND RESAMPLING
@@ -677,6 +698,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
 
     % Tile the spcutMesh
     tileCount = [2, 2] ;
+    % Define fields u,v, and vn just for tiling purposes
     spcutMesh.u = spcutMesh.sphi0 ;
     spcutMesh.v = spcutMesh.v0 ;
     spcutMesh.vn = spcutMesh.vn0 ;
@@ -702,8 +724,8 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     spcutMesh.ringpath_ss = ringpath_ss ;
     spcutMesh.radii_from_mean_uniform_rs = radii_from_mean_uniform_rs ;  % from uniform DV sampling
     spcutMesh.radii_from_avgpts = radii_from_avgpts ;
-    spcutMesh.mss = mss ;       % from uniform DV sampling, also stored in centerline
-    spcutMesh.mcline = mcline ; % from uniform DV sampling, also stored in centerline
+    spcutMesh.mss = mss ;       % 1000x1 float, pathlength of centerline from avgpts but finely sampled, from uniform DV sampling, also stored in centerline
+    spcutMesh.mcline = mcline ; % 1000x3 float, centerline from avgpts but finely sampled, from uniform DV sampling, also stored in centerline
     spcutMesh.avgpts = avgpts ; % from uniform DV sampling, also stored in centerline
     spcutMesh.avgpts_ss = avgpts_ss ; % from uniform sampling, also stored in centerline
 
@@ -724,7 +746,33 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     % Save s,phi and their 3D embedding
     spcutMesh.phi0s = phi0s ;
     spcutMesh.phi0_fit = phi0_fit ;
-    spcutMesh.readme = struct('f', 'faces') ;
+    spcutMesh.readme = struct('readme', ['principal fields are f, v, sphi for the mesh in 3d and 2d. ',...
+        'vn are vertex normals. nU and nV are dimensions of the gridded pullback vertices.', ...
+        'ringpath_ss, mss, avgpts, avgpts_ss'], ...
+        'f', '#faces x 3 int, face connectivity list indexing in to vertices v0 (for uv mesh) or v (for sphi mesh)', ...
+        'phi0s', 'nU x 1 float, values of phi0 which offset the pullback vertices along the second dimension', ...
+        'phi0_fit', 'nU x 1 float, fitted values of phi0, which may be equal to phi0s if there is no smoothing applied',...
+        'ar', 'float, aspect ratio of the pullback which minimizes IsoarealAffineEnergy. An aspect ratio of 1 is most conformal, but an aspect ratio of ar sometimes is helpful for visualization', ...
+        'pathPairs', 'nUx2 int, indices of vertices which are identical across the periodic direciton', ...
+        'nU', 'int, number of points along the longitudinal axis in the resampled grid uv or sphi', ...
+        'nV', 'int, number of points along the circumferential axis in the resampled grid uv or sphi', ...
+        'v0', 'nU*nV x 3 float, mesh embedding of uv vertices', ...
+        'v0rs_equal_dsdv', 'nU*nV x 3 float, mesh embedding with vertices equidistant along the circumferential direction. Note there is no corresponding pullback grid of vertices for this mesh!', ...
+        'vn0', 'nU*nV x 3 float, normal vectors at the vertices of the sphi0 vertices', ...
+        'sphi0', 'advected nU*nV x 2, (s,phi) coordinates of v0 -- [ssv(:), phiv(:)] -- ie before second resampling into a grid in pullback space ',...
+        'uphi0', 'nU*nV x 2 float, [uu_ds_max(:), phiv(:)] -- ie positions in (s,phi) space of uv grid', ...
+        'uv0', 'nU*nV x 2 float, [uu_ds_max(:), v(:)] -- ie positions in (s,v) space of uv grid', ...
+        'sphi', 'nU*nV x 2 float, 2D pullback positions of sphi coordinates (resampled as grid in s,phi space), corresponds to v and vn',...
+        'v', 'nU*nV x 3 float, 3D vertex embedding positions',...
+        'vn', 'nU*nV x 3 float, vertex normals of the sphicutMesh embedding', ...
+        'ringpath_ss', 'nU x 1 float, pathlength along the centerline computed from average position of uniform-circumferential-pathlength-sampling of DV hoops', ...
+        'radii_from_mean_uniform_rs', 'nU*nVx1 float, distance from a uniform-circumferential-pathlength-sampling of DV hoops to the avgpts centerline', ...
+        'radii_from_avgpts', 'nU*nVx1 float, distance from the avgpts centerline to each vertex on the surface', ...
+        'mss', '1000x3 float, pathlength along centerline from avgpts but finely sampled, from uniform DV sampling, also stored in centerline', ...
+        'mcline', '1000x3 float, centerline from avgpts but finely sampled, from uniform DV sampling, also stored in centerline', ...
+        'avgpts', 'from uniform DV sampling, also stored in centerline', ...
+        'avgpts_ss', 'nU x 1 float from uniform sampling, also stored in centerline') ;
+    
     save(spcutMeshfn, 'spcutMesh') ;
 else
     disp('Loading spcutMesh from disk...')

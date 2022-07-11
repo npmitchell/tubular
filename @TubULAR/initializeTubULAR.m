@@ -337,7 +337,7 @@ tubi.fileName.apdv = ...
     fullfile(clineDir, 'apdv_pts_for_centerline.h5') ;
 tubi.fileName.dpt = fullfile(meshDir, 'dpt_for_rot.txt') ;
 tubi.fileName.startendPt = fullfile(clineDir, 'startendpt.h5') ;
-tubi.fileName.cleanCntrlines = ...
+tubi.fileName.cleanFMCenterlines = ...
     fullfile(clineDir, 'centerlines_anomalies_fixed.mat') ;
 tubi.fileName.apBoundaryDorsalPts = ...
     fullfile(tubi.dir.cylinderMesh, 'ap_boundary_dorsalpts.h5') ;
@@ -374,6 +374,7 @@ imFolderBase = fullfile(uvDir, ['PullbackImages' shiftstr] ) ;
 ricciMeshDir = fullfile(uvDir, ['ricci_cutMesh' shiftstr], 'noResampling') ;
 ricciMeshDirWithResampling = fullfile(uvDir, ['ricci_cutMesh' shiftstr], ...
     'withResampling') ;
+uvmeshDir = fullfile(uvDir, ['uv_cutMesh' shiftstr]) ;
 sphiDir = fullfile(uvDir, ['sphi_cutMesh' shiftstr]) ;
 if dynamic
     sphiSmDir = fullfile(sphiDir, 'smoothed') ;
@@ -423,6 +424,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Port into tubi
 % (already above) tubi.dir.cutMesh = fullfile(meshDir, 'cutMesh') ;
+tubi.dir.uvcurMesh = uvmeshDir ;
 tubi.dir.spcutMesh = sphiDir ;
 if dynamic
     tubi.dir.spcutMeshSm = sphiSmDir ;
@@ -516,6 +518,11 @@ tubi.fullFileBase.clineDVhoop = ...
 %% filenames for writhe of the parameterized mesh
 tubi.fileName.writhe = fullfile(tubi.dir.writhe, ...
     ['writhe_sphi' uvexten '_avgpts.mat']) ;
+
+%% uvcutMesh
+tubi.fullFileBase.uvcutMesh = ...
+    fullfile(uvmeshDir, 'uvcutMesh_%06d.mat') ;
+tubi.fileBase.uvcutMesh = 'uvcutMesh_%06d' ;
 
 %%  spcutMesh and pullbacks
 tubi.fullFileBase.spcutMesh = ...

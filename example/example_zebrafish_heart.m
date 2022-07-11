@@ -1159,7 +1159,7 @@ cntrlineOpts.dilation = 0 ;              % how many voxels to dilate the segment
 %   res value as possible.
 
 fprintf('Extracting centerlines... ');
-tubi.extractCenterlineSeries(cntrlineOpts)
+tubi.generateFastMarchingCenterlines(cntrlineOpts)
 fprintf('Done\n');
 
 %% Identify Anomalies in Centerline Data ==================================
@@ -1168,7 +1168,7 @@ idOptions.ssr_thes = 15; % Distance of sum squared residuals in 'spaceUnits'
                          % as a threshold for removing spurious centerlines
                          
 fprintf('Cleaning centerlines... ');
-tubi.generateCleanCntrlines(idOptions);
+tubi.cleanFastMarchingCenterlines(idOptions);
 fprintf('Done\n');
 
 %% Generate Cylindrical Mesh ==============================================

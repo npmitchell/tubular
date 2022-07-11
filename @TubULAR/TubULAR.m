@@ -5,7 +5,8 @@ classdef TubULAR < handle
     %
     % Coordinate Systems
     % ------------------    
-    % uv :  (conformal map onto unit square)
+    % uv :  (conformal map onto unit square, with one fixed vertex at each
+    %       endcap)
     %       Conformally mapping the cylinderCutMesh onto the unit square 
     %       in the plane results in the instantaneous uv coordinate system. 
     %       Corners of the unit square are taken directly from the cutMesh,
@@ -20,9 +21,6 @@ classdef TubULAR < handle
     %       positions in R^3 (geometric) or based on intensity motion in
     %       pullback space (material/Lagrangian) inferred through 
     %       phasecorrelation of tissue strips around discretized s values.
-    % uvprime : (conformal map
-    %       [same as uvprime_sm, since uvprime is currently computed via
-    %       sphi_sm coordinates]
     % r/spr/sphir :  (proper length x rectified azimuthal coordinate)
     %       same as sphi but with aspect ratio relaxed to minimize isoareal
     %       energy cost --> makes triangles more similar in area by scaling
@@ -33,16 +31,11 @@ classdef TubULAR < handle
     %       that the meshes are mirrored with respect to the lab frame, so
     %       tubi.flipy = true.
     % 
-    % PIV measurements fall into two classes: 
+    % PIV measurements: 
     %   - 'piv': principal surface-Lagrangian-frame PIV (sp_sme or up_sme)
     %       --> note that the designation of coordinate system is not
     %       explicitly specified in the filenames:
     %       tubi.dir.mesh/gridCoords_nU0100_nV0100/piv/piv3d, etc
-    %   - 'piv_uvp_sme': PIV in coordSys for quasiconformal measurements 
-    %       --> note that these are less Lagrangian than
-    %       sp_sme or up_sme, so they are treated as independent from the 
-    %       principal pipeline in which we measure velocities in a
-    %       surface-Lagrangian frame (ie sp_sme or up_sme).
     %
     % Properties
     % ----------
@@ -209,7 +202,7 @@ classdef TubULAR < handle
             'vn', [], ...               % normal velocity in spaceUnits per timeInterval timeUnits, no temporal filtering
             'vf', [], ...               % velocity vielf on face barycenters, no temporal filtering
             'vv', []) ;                 % velocity field on vertices, no temporal filtering
-        cleanCntrlines                  % centerlines in embedding space, no temporal filtering
+        cleanFMCenterlines              % centerlines from fast marching method (crude centerlines) in embedding space, no temporal filtering
         smoothing = struct(...          % parameters for smoothing measured data on surfaces
             'lambda', 0.00, ...             % diffusion const for field smoothing on mesh
             'lambda_mesh', 0.00, ...        % diffusion const for vertex smoothing of mesh itself
@@ -310,7 +303,7 @@ classdef TubULAR < handle
             tubi.currentMesh.spcutMeshSm = [] ;
             tubi.currentMesh.spcutMeshSmRS = [] ;
             tubi.currentMesh.spcutMeshSmRSC = [] ;
-            tubi.currentMesh.uvpcutMesh = [] ;
+            tubi.currentMesh.uvcutMesh = [] ;
             tubi.currentData.IV = [] ;
             tubi.currentData.adjustlow = 0 ;
             tubi.currentData.adjusthigh = 0 ;
@@ -915,7 +908,8 @@ classdef TubULAR < handle
         measureSurfaceAreaVolume(tubi, options)
         
         % Centerlines & cylinderMesh
-        extractCenterlineSeries(tubi, cntrlineOpts)
+        % formerly: extractCenterlineSeries()
+        generateFastMarchingCenterlines(tubi, cntrlineOpts)
         function setEndcapOptions(tubi, endcapOpts)
             tubi.endcapOptions = endcapOpts ;
         end        
@@ -928,29 +922,45 @@ classdef TubULAR < handle
             save(tubi.fileName.endcapOptions, 'endcapOptions')
         end
         sliceMeshEndcaps(tubi, endcapOpts, methodOpts)
-        generateCleanCntrlines(tubi, idOptions)
-        function getCleanCntrlines(tubi)
-            if isempty(tubi.cleanCntrlines)
+        
+        % formerly named: generateCleanCntrlines() 
+        cleanFastMarchingCenterlines(tubi, idOptions)
+        function clines = getCleanFastMarchingCenterlines(tubi)
+            if isempty(tubi.cleanFMCenterlines)
                 try
-                    tmp = load(tubi.fileName.cleanCntrlines, 'cntrlines') ;
-                    tubi.cleanCntrlines = tmp.cntrlines ;
+                    tmp = load(tubi.fileName.cleanFMCenterlines, 'cntrlines') ;
+                    tubi.cleanFMCenterlines = tmp.cntrlines ;
                     disp('Loaded clean centerlines from disk')
                 catch
                     disp('No clean centerlines on disk, generating...')
-                    tubi.cleanCntrlines = tubi.generateCleanCntrlines() ;
+                    tubi.cleanFMCenterlines = tubi.cleanFastMarchingCenterlines() ;
                 end
             end
+            if nargout > 0
+                clines = tubi.cleanFMCenterlines ;
+            end
         end
-        function loadCurrentCylinderMeshlean(tubi)
+        function mesh = getCurrentCylinderMeshClean(tubi)
+            if isempty(tubi.currentMesh.cylinderMeshClean)
+                tubi.loadCurrentCylinderMeshClean()
+            end
+            if nargout > 0
+                mesh = tubi.currentMesh.cylinderMeshClean ;
+            end
+        end
+        function loadCurrentCylinderMesh(tubi)
             cylmeshfn = ...
                 sprintf( tubi.fullFileBase.cylinderMesh, tubi.currentTime ) ;
             tubi.currentMesh.cylinderMesh = read_ply_mod( cylmeshfn );
         end
-        function loadCurrentCylinderMeshClean(tubi)
+        function mesh = loadCurrentCylinderMeshClean(tubi)
             cylmeshfn = ...
                 sprintf( tubi.fullFileBase.cylinderMeshClean, tubi.currentTime ) ;
             disp(['Loading cylinderMeshClean ' cylmeshfn])
             tubi.currentMesh.cylinderMeshClean = read_ply_mod( cylmeshfn );
+            if nargout > 0
+                mesh = tubi.currentMesh.cylinderMeshClean ;
+            end
         end
         
         % RawRicci meshes -- can be used to form cutMeshes
@@ -960,7 +970,23 @@ classdef TubULAR < handle
         % cutMesh
         generateCurrentCutMesh(tubi, options)
         plotCutPath(tubi, cutMesh, cutPath)
-        function loadCurrentCutMesh(tubi)
+        function mesh = getCurrentCutMesh(tubi)
+            % Load/recall the current cutMesh with pullback uv coordinates.
+            % This mesh is not a rectilinear mesh topology with vertices in
+            % an nU x nV grid, but instead has the topology of the mesh
+            % found from getMeshes after cutting.
+            if isempty(tubi.currentMesh.cutMesh)
+                tubi.loadCurrentCutMesh
+            end
+            if nargout > 0
+                mesh = tubi.currentMesh.cutMesh ;
+            end
+        end
+        function mesh = loadCurrentCutMesh(tubi)
+            % Load the current cutMesh with pullback uv coordinates.
+            % This mesh is not a rectilinear mesh topology with vertices in
+            % an nU x nV grid, but instead has the topology of the mesh
+            % found from getMeshes after cutting.
             if isempty(tubi.currentTime)
                 error('No currentTime set. Use QuapSlap.setTime()')
             end
@@ -977,10 +1003,45 @@ classdef TubULAR < handle
                 tmp.cutMesh.cutP
                 error('check this here --> is cutP a field?')
             end
+            if nargout > 0
+                mesh = tubi.currentMesh.cutMesh ;
+            end
         end
         
+        % uvcutMesh (rectilinearly gridded version of cutMesh)
+        uvcutMesh = generateCurrentUVCutMesh(tubi, options)
+        function uvcutMesh = getCurrentUVCutMesh(tubi, options)
+            if nargin < 2
+                options = struct() ;
+            end
+            if isempty(tubi.currentTime)
+                error('First set currentTime')
+            end
+            if isempty(tubi.currentMesh.uvcutMesh)
+                try
+                    tubi.loadCurrentUVCutMesh() ;
+                catch
+                    tubi.generateCurrentUVCutMesh(options) ;
+                end
+            end
+            if nargout > 0
+                uvcutMesh = tubi.currentMesh.uvcutMesh ;
+            end
+        end
+        function uvcutMesh = loadCurrentUVCutMesh(tubi)
+            if isempty(tubi.currentTime)
+                error('First set currentTime')
+            end
+            uvcutMeshfn = sprintf(tubi.fullFileBase.uvcutMesh, tubi.currentTime) ;    
+            tmp = load(uvcutMeshfn, 'uvcutMesh') ;
+            tubi.currentMesh.uvcutMesh = tmp.uvcutMesh ;
+            if nargout > 0
+                uvcutMesh = tubi.currentMesh.uvcutMesh ;
+            end
+        end 
+        
         % spcutMesh
-        generateCurrentSPCutMesh(tubi, cutMesh, overwrite)
+        spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, options)
         function spcutMesh = getCurrentSPCutMesh(tubi)
             if isempty(tubi.currentTime)
                 error('First set currentTime')
@@ -1002,7 +1063,7 @@ classdef TubULAR < handle
             if nargout > 0
                 spcutMesh = tubi.currentMesh.spcutMesh ;
             end
-        end        
+        end 
         function spcutMeshSm = getCurrentSPCutMeshSm(tubi)
             if isempty(tubi.currentTime)
                 error('First set currentTime')
@@ -1121,26 +1182,7 @@ classdef TubULAR < handle
             end
         end
         
-        % t0_for_phi0 (uvprime cutMesh)
-        function mesh = getCurrentUVCutMesh(tubi)
-            if isempty(tubi.currentMesh.uvcutMesh)
-                tubi.loadCurrentUVCutMesh() ;
-            end
-            if nargout > 0
-                mesh = tubi.currentMesh.uvcutMesh ;
-            end
-        end
-        function mesh = loadCurrentUVCutMesh(tubi)
-            tmp = tubi.loadCurrentSPCutMesh() ;
-            mesh = struct() ;
-            mesh.f = tmp.f ;
-            mesh.v = tmp.v0 ;
-            mesh.u = tmp.uv ;
-            tubi.currentMesh.uvcutMesh = mesh ;
-        end
-        measureUVPrimePathlines(tubi, options)
-        % Note: measureBeltramiCoefficient() allows uvprime
-        % coordSys.
+        % t0_for_phi0 (uv cutMesh)
         
         % Ricci flow for (r=log(rho), phi) coordinate system
         function mesh = getCurrentRicciMesh(tubi)
@@ -1168,7 +1210,7 @@ classdef TubULAR < handle
         measureRPhiPathlines(tubi, options)
         % Note: measureBeltramiCoefficient() allows ricci coordSys
         measureBeltramiCoefficient(tubi, options)
-        function beltrami = getubieltramiCoefficient(tubi, options)
+        function beltrami = getBeltramiCoefficient(tubi, options)
             if nargin < 2
                 options = struct() ;
             end
@@ -1350,11 +1392,6 @@ classdef TubULAR < handle
                         imDir_e = tubi.dir.im_upe ;
                         fn0 = tubi.fileBase.im_up ;
                         ofn = tubi.fileBase.im_up_e ;
-                    elseif strcmp(coordsys, 'uvprime')
-                        imDir = tubi.dir.im_uvprime ;
-                        imDir_e = tubi.dir.im_uvprime_e ;
-                        fn0 = tubi.fileBase.im_uvprime ;
-                        ofn = tubi.fileBase.im_uvprime_e ;
                     elseif strcmp(coordsys, 'r') || strcmp(coordsys, 'spr') || strcmp(coordsys, 'sphir') || strcmp(coordsys, 'rsp')
                         imDir = tubi.dir.im_r ;
                         imDir_e = tubi.dir.im_re ;
@@ -1424,8 +1461,11 @@ classdef TubULAR < handle
             end
             fn = sprintf(clineDVhoopBase, tubi.currentTime) ;
             disp(['Loading DVhoop centerline from ' fn])
-            load(fn, 'mss', 'mcline', 'avgpts')
-            
+            try
+                load(fn, 'mss', 'mcline', 'avgpts')
+            catch
+                error(['DVhoop centerline did not exist on disk. First run generateCurrentSPCutMesh() to create: ' fn])
+            end
             % Is this needed here? Yes!
             if tubi.flipy
                 mcline(:, 2) = -mcline(:, 2) ;
@@ -1596,15 +1636,12 @@ classdef TubULAR < handle
         measureThickness(tubi, thicknessOptions)
         phi0_fit = fitPhiOffsetsViaTexture(tubi, uspace_ds_umax, vspace,...
             phi0_init, phi0TextureOpts)
-       
-        % uvprime cutMeshSm
-        generateUVPrimeCutMeshes(tubi, options)
-        
+               
         % ricci Mesh (truly conformal mapped mesh)
         [ricciMesh, ricciMu] = generateRicciMeshTimePoint(tubi, tp, options) 
         
         % spcutMeshSm coordinate system demo
-        coordinateSystemDemo(tubi)
+        coordinateSystemDemo(tubi, options)
         
         % flow measurements
         function getPIV(tubi, options)
@@ -2276,172 +2313,6 @@ classdef TubULAR < handle
         %% timepoint-specific coordinate transformations
         sf = interpolateOntoPullbackXY(tubi, XY, scalar_field, options)
                 
-        %% coordSysDemo
-        function coordSystemDemo(QS, options)
-            % Image for publication/presentation on method & coordinate system
-            % Create coordinate system charts visualization using smoothed meshes
-            % options : struct with fields
-            %   style : 'curves' or 'surface'
-            %
-            exten = '.png' ;
-            style = 'mesh' ;
-            if nargin < 2
-                options = struct() ;
-            end
-            if isfield(options, 'exten')
-                exten = options.exten ;
-            end
-            if isfield(options, 'style')
-                style = options.style ;
-            end
-            if strcmpi(style, 'curves')
-                assert(~isempty(QS.currentTime))
-                mesh = QS.loadCurrentSPCutMeshSmRS() ;
-                fig = figure('units', 'centimeters', 'position', [0, 0, 13, 13]) ;
-                uu = mesh.u(:, 1) ;
-                vv = mesh.u(:, 2) ;
-                xx = (mesh.v(:, 1)) ;
-                yy = (mesh.v(:, 2)) ;
-                zz = (mesh.v(:, 3)) ;
-                colorsV = viridis(mesh.nV) ;
-                colorsU = viridis(mesh.nU) ;
-                nU = mesh.nU ;
-                nV = mesh.nV ;
-
-                % LONGITUDE 3D
-                subplot(2, 3, [1,2])
-                hold off
-                for qq = 1:mesh.nV  
-                    plot3(xx(qq:nU:end), yy(qq:nU:end), zz(qq:nU:end), '-', ...
-                        'color', colorsV(qq, :));
-                    hold on ;
-                end
-                axis equal
-                xlabel('ap position [$\mu$m]', 'interpreter', 'latex')
-                ylabel('lateral position [$\mu$m]', 'interpreter', 'latex')
-                zlabel('dv position [$\mu$m]', 'interpreter', 'latex')
-
-                % AZIMUTH 3D
-                subplot(2, 3, [4,5])
-                hold off
-                for qq = 1:mesh.nU
-                    inds = (qq-1)*nU+1:qq*nU ;
-                    plot3(xx(inds), yy(inds), zz(inds), '-', ...
-                        'color', colorsV(qq, :));
-                    hold on ;
-                end
-                axis equal
-                xlabel('ap position [$\mu$m]', 'interpreter', 'latex')
-                ylabel('lateral position [$\mu$m]', 'interpreter', 'latex')
-                zlabel('dv position [$\mu$m]', 'interpreter', 'latex')
-
-                % LONGITUDE
-                subplot(2, 3, 3)
-                hold off
-                for qq = 1:mesh.nV  
-                    plot(uu(qq:nU:end), vv(qq:nU:end), '-', ...
-                        'color', colorsV(qq, :));
-                    hold on ;
-                end
-                axis square
-                xlabel('$s$ [$\mu$m]', 'interpreter', 'latex')
-                ylabel('$\phi$ [1/$2\pi$]', 'interpreter', 'latex')
-
-                % AZIMUTH
-                subplot(2, 3, 6)
-                hold off
-                for qq = 1:mesh.nV  
-                    inds = (qq-1)*nU+1:qq*nU ;
-                    plot(uu(inds), vv(inds), '-', ...
-                        'color', colorsV(qq, :));
-                    hold on ;
-                end
-                axis square
-                xlabel('$s$ [$\mu$m]', 'interpreter', 'latex')
-                ylabel('$\phi$ [1/$2\pi$]', 'interpreter', 'latex')
-            else
-                assert(~isempty(QS.currentTime))
-                mesh = QS.loadCurrentSPCutMeshSmRS() ;
-                fig = figure('units', 'centimeters', 'position', [0, 0, 13, 13]) ;
-                uu = mesh.u(:, 1) ;
-                vv = mesh.u(:, 2) ;
-                xx = (mesh.v(:, 1)) ;
-                yy = (mesh.v(:, 2)) ;
-                zz = (mesh.v(:, 3)) ;
-                colorsV = viridis(mesh.nV) ;
-                colorsU = viridis(mesh.nU) ;
-                nU = mesh.nU ;
-                nV = mesh.nV ;
-
-                % LONGITUDE 3D
-                subplot(2, 3, [1,2])
-                hold off
-                h1 = trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', ...
-                    mesh.u(:, 1), 'edgecolor', 'none')
-                shading interp
-                lightangle(-5,30)
-                h1.FaceLighting = 'gouraud';
-                h1.AmbientStrength = 0.9;
-                h1.DiffuseStrength = 0.9;
-                h1.SpecularStrength = 0.5;
-                h1.SpecularExponent = 5;
-                h1.BackFaceLighting = 'unlit';
-                colormap viridis
-                axis equal
-                xlabel('ap position [$\mu$m]', 'interpreter', 'latex')
-                ylabel('lateral position [$\mu$m]', 'interpreter', 'latex')
-                zlabel('dv position [$\mu$m]', 'interpreter', 'latex')
-                grid off
-
-                % AZIMUTH 3D
-                subplot(2, 3, [4,5])
-                h2 = trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', ...
-                    mesh.u(:, 2), 'edgecolor', 'none')
-                shading interp
-                lightangle(-5,30)
-                h2.FaceLighting = 'gouraud';
-                h2.AmbientStrength = 0.9;
-                h2.DiffuseStrength = 0.9;
-                h2.SpecularStrength = 0.5;
-                h2.SpecularExponent = 5;
-                h2.BackFaceLighting = 'unlit';
-                colormap viridis
-                axis equal
-                xlabel('ap position [$\mu$m]', 'interpreter', 'latex')
-                ylabel('lateral position [$\mu$m]', 'interpreter', 'latex')
-                zlabel('dv position [$\mu$m]', 'interpreter', 'latex')
-                grid off
-                
-                % LONGITUDE
-                subplot(2, 3, 3)
-                hold off
-                mesh.u(:, 1) = mesh.u(:, 1) / max(mesh.u(:, 1)) ;
-                u3d = [mesh.u, 0*mesh.u(:, 1)] ;
-                h3 = trisurf(triangulation(mesh.f, u3d), 'facevertexcdata', ...
-                    mesh.u(:, 1), 'edgecolor', 'none')
-                view(2)
-                axis square
-                xlabel('$s$ [$\mu$m]', 'interpreter', 'latex')
-                ylabel('$\phi$ [1/$2\pi$]', 'interpreter', 'latex')
-
-                % AZIMUTH
-                subplot(2, 3, 6)
-                hold off
-                mesh.u(:, 1) = mesh.u(:, 1) / max(mesh.u(:, 1)) ;
-                u3d = [mesh.u, 0*mesh.u(:, 1)] ;
-                trisurf(triangulation(mesh.f, u3d), 'facevertexcdata', ...
-                    mesh.u(:, 2), 'edgecolor', 'none')
-                view(2)
-                axis square
-                xlabel('$s$ [$\mu$m]', 'interpreter', 'latex')
-                ylabel('$\phi$ [1/$2\pi$]', 'interpreter', 'latex')
-            end
-            set(gcf, 'color', 'w')
-            export_fig(fullfile(QS.dir.uvCoord, [sprintf(...
-                'coordSystemDemo_%06d_', QS.currentTime) style exten]), ...
-                '-nocrop','-r600')
-        end
-        
         pcaResults = computePCAoverTime(tubi, options) 
         function pcaResults = getPCAoverTime(tubi, options)
             if nargin < 2

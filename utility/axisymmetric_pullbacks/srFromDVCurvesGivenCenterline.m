@@ -2,7 +2,8 @@ function [ssv, radii, avgpts, cids] = srFromDVCurvesGivenCenterline(cseg_ss, cse
 %srFromDVCurves Find pathlength match and radius for hoops in 3d 
 %   Given the centerline pathlength cseg_ss, the centerline cseg, and the
 %   array of 1d DV curves, compute the matching centerline pathlength for
-%   each 
+%   each. This is no longer used since we compute the centerline from the
+%   average position of DV hoops.
 %
 % 
 % Returns

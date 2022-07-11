@@ -8,12 +8,14 @@ function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
 % pbOptions : struct
 %   overwrite : bool (default=false)
 %       overwrite existing images on disk
-%   generate_sphi : bool (default=false)
-%       create pullbacks in uphi coords
+%   generate_sphi : bool (default=true)
+%       create pullbacks in sphi coords
 %   generate_relaxed : bool (default=false)
-%       create pullbacks in uphi coords
+%       create pullbacks in sphi coords, stretched along x to minimize
+%       areal distortion (but not anisotropic distortion). So this is not
+%       a conformal map.
 %   generate_uv : bool (default=false)
-%       create pullbacks in uphi coords
+%       create pullbacks in uphi coords. This is a nearly conformal map.
 %   generate_uphi : bool (default=false)
 %       create pullbacks in uphi coords
 %   generate_spsm : bool (default=false)

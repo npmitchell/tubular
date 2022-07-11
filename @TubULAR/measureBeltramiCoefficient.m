@@ -109,9 +109,9 @@ nTimePoints = length(timePoints) ;
 if contains(coordSys, 'ricci')
     fn = sprintf(QS.fileName.pathlines.quasiconformal, t0Pathlines) ;
     imDir = sprintf(QS.dir.pathlines.quasiconformal, t0Pathlines) ;
-elseif contains(coordSys, 'uvprime')
-    fn = sprintf(QS.fileName.pathlines_uvprime.quasiconformal, t0Pathlines) ;
-    imDir = sprintf(QS.dir.pathlines_uvprime.quasiconformal, t0Pathlines) ;
+elseif contains(coordSys, 'uv')
+    fn = fullfile(QS.fileName.dir.cutMesh, 'beltrami', 'mu_v3dv2d.mat') ;
+    imDir = fullfile(QS.dir.cutMesh, 'beltrami') ;
 end
 if ~exist(fullfile(imDir, '2d'), 'dir')
     mkdir(fullfile(imDir, '2d'))
