@@ -178,11 +178,6 @@ lKymoFn = fullfile(datdir, 'leftKymographPathlineStrainRate.mat') ;
 rKymoFn = fullfile(datdir, 'rightKymographPathlineStrainRate.mat') ;
 dKymoFn = fullfile(datdir, 'dorsalKymographPathlineStrainRate.mat') ;
 vKymoFn = fullfile(datdir, 'ventralKymographPathlineStrainRate.mat') ;
-% apSKymoFn = fullfile(datdir, 'apKymographPathlineStrain.mat') ;
-% lSKymoFn = fullfile(datdir, 'leftKymographPathlineStrain.mat') ;
-% rSKymoFn = fullfile(datdir, 'rightKymographPathlineStrain.mat') ;
-% dSKymoFn = fullfile(datdir, 'dorsalKymographPathlineStrain.mat') ;
-% vSKymoFn = fullfile(datdir, 'ventralKymographPathlineStrain.mat') ;
 files_exist = exist(apKymoFn, 'file') && ...
     exist(lKymoFn, 'file') && exist(rKymoFn, 'file') && ...
     exist(dKymoFn, 'file') && exist(vKymoFn, 'file') ;

@@ -18,6 +18,10 @@ function [eIDx, feIDx, bulkEdgeIDx] = topologicalStructureTools(tri)
 % bulkEdgeIDx : #bonds x 1 int
 %   label of whether in bulk (0) or on edge (1)
 %
+% See also
+% --------
+% meshAveragingOperators()
+%
 % Dillon Cislo & NPMitchell 2020
 
 % Construct Edge-Face Correspondence -------------------------------------- 

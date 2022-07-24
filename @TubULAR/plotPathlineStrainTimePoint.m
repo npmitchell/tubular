@@ -1,5 +1,5 @@
-function plotPathlineStrainTimePoint(QS, tp, options)
-%plotPathlineStrainRateTimePoint(QS, tp, options)
+function plotPathlineStrainTimePoint(tubi, tp, options)
+%plotPathlineStrainRateTimePoint(tubi, tp, options)
 %   Plot the traceful and traceless components of the strain rate tensor
 %   defined at pathlines moving in the domain of parameterization over
 %   time.
@@ -8,9 +8,9 @@ function plotPathlineStrainTimePoint(QS, tp, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % tp : int 
-%   timepoint in units of (1/QS.timeInterval) * QS.timeUnits
+%   timepoint in units of (1/tubi.timeInterval) * tubi.timeUnits
 % options: struct with fields
 %   t0Pathline : int
 %       Lagrangian frame is taken to be cutMesh of this timepoint
@@ -22,13 +22,13 @@ function plotPathlineStrainTimePoint(QS, tp, options)
 % 
 % NPMitchell 2020
 
-tidx = QS.xp.tIdx(tp) ;
+tidx = tubi.xp.tIdx(tp) ;
 
 %% Unpack required params
 if isfield(options, 't0Pathline')
     t0Pathline = options.t0Pathline ;
 else
-    t0Pathline = QS.t0 ;
+    t0Pathline = tubi.t0 ;
 end
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
@@ -41,6 +41,7 @@ clim_deviatoric = 1 ;
 averagingStyle = 'Lagrangian' ;
 LagrangianFrameStyle = 'zphi' ;
 plot_comparison = false ;
+lambda = 0.0 ;  % additional smoothing parameter
 
 %% Unpack options
 if isfield(options, 'overwrite')
@@ -75,6 +76,10 @@ if isfield(options, 'debug')
     debug = options.debug ;
 end
 
+if isfield(options, 'lambda')
+    lambda = options.lambda ;
+end
+
 %% Determine sampling Resolution from input -- either nUxnV or (2*nU-1)x(2*nV-1)
 if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
     doubleResolution = false ;
@@ -86,32 +91,32 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
-t0 = QS.t0set() ;
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+%% Unpack tubi
+t0 = tubi.t0set() ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 % Output directory
-egImDir = sprintf( QS.dir.pathlines.strain_images, t0Pathline) ;
+egImDir = sprintf( tubi.dir.pathlines.strain_images, t0Pathline) ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 
-%% load from QS
+%% load from tubi
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 fn_strain2d = fullfile(egImDir, 'strain2d', ...
-    sprintf([QS.fileBase.spcutMeshSm '.png'], tp));
+    sprintf([tubi.fileBase.spcutMeshSm '.png'], tp));
 fn_strain3d = fullfile(egImDir, 'strain3d', ...
-    sprintf([QS.fileBase.spcutMeshSm '.png'], tp));
+    sprintf([tubi.fileBase.spcutMeshSm '.png'], tp));
 fn_dxdy2d = fullfile(egImDir, 'strainDxDy_2d', ...
-    sprintf([QS.fileBase.spcutMeshSm '.png'], tp));
+    sprintf([tubi.fileBase.spcutMeshSm '.png'], tp));
 fn_dxdy3d = fullfile(egImDir, 'strainDxDy_3d', ...
-    sprintf([QS.fileBase.spcutMeshSm '.png'], tp));
+    sprintf([tubi.fileBase.spcutMeshSm '.png'], tp));
 redo_images = ~exist(fn_strain2d, 'file') || ...
     ~exist(fn_strain3d, 'file') || ...
     ~exist(fn_dxdy2d, 'file') || ...
@@ -122,10 +127,10 @@ if redo_images
     
     if strcmpi(LagrangianFrameStyle, 'zphi')
         if doubleResolution
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC2x, t0Pathline)) ;
+            tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC2x, t0Pathline)) ;
             mesh0 = tmp.spcutMeshSmRSC2x ;
         else
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, t0Pathline)) ;
+            tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC, t0Pathline)) ;
             mesh0 = tmp.spcutMeshSmRSC ;
         end
     else
@@ -138,16 +143,22 @@ if redo_images
             ~isfield(options, 'theta') || ...
             ~isfield(options, 'strain_tr') || ~isfield(options, 'strain_dv') || ...
             ~isfield(options, 'strain_th')
-        estrainFn = fullfile(sprintf(QS.dir.pathlines.strain, ...
-            t0Pathline), sprintf(QS.fileBase.strain, tp)) ;
+        estrainFn = fullfile(sprintf(tubi.dir.pathlines.strain, ...
+            t0Pathline), sprintf(tubi.fileBase.strain, tp)) ;
         disp(['Loading strainrate results from disk: ' estrainFn])
-        load(estrainFn, 'tre', 'dev', 'theta', 'faceIDs', 'bondDxDy')
+
+        % load(estrainFn, 'tre', 'dev', 'theta', 'faceIDs', 'bondDxDy') ;        
+        % % Since strain measured on a tiled mesh, take the middle third only
+        % % strain = strain(faceIDs) ;
+        % tre = tre(faceIDs) ;
+        % dev = dev(faceIDs) ;
+        % theta = theta(faceIDs) ;
         
-        % Since strain measured on a tiled mesh, take the middle third only
-        % strain = strain(faceIDs) ;
-        tre = tre(faceIDs) ;
-        dev = dev(faceIDs) ;
-        theta = theta(faceIDs) ;
+        load(estrainFn, 'tre_sm', 'dev_sm', 'theta_sm', 'faceIDs', 'bondDxDy') ;
+        tre = tre_sm ;
+        dev = dev_sm ; 
+        theta = theta_sm ;
+        
         dx = bondDxDy.dx_strain ;
         dy = bondDxDy.dy_strain ;  
     else
@@ -158,20 +169,20 @@ if redo_images
         % strain_dv = options.strain_dv ;
         % strain_th = options.strain_th ;
     end
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Timepoint specific operations
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    titlestr = ['$t=$' sprintf('%03d', tp - t0) ' ' QS.timeUnits ] ;
+    titlestr = ['$t=$' sprintf('%03d', tp - t0) ' ' tubi.timeUnits ] ;
     % Load meshes if not supplied    
     if isempty(mesh) && redo_images
         % If they don't all already exist in RAM, load the meshes
         % Load current mesh
         if doubleResolution
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC2x, tp)) ;
+            tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC2x, tp)) ;
             mesh = tmp.spcutMeshSmRSC2x ;
         else
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
+            tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
             mesh = tmp.spcutMeshSmRSC ;
         end
 
@@ -189,11 +200,11 @@ if redo_images
         if isempty(cutMesh)
             % Load cutMesh
             if doubleResolution
-                tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS2x, tp)) ;
+                tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRS2x, tp)) ;
                 cutMesh = tmp.spcutMeshSmRS2x ;
                 clearvars tmp
             else
-                tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp)) ;
+                tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
                 cutMesh = tmp.spcutMeshSmRS ;
                 clearvars tmp
             end
@@ -232,13 +243,14 @@ if redo_images
     % NOTE: \varepsilon --> ${\boldmath${\varepsilon}$}$
     labels = {'$\frac{1}{2}\mathrm{Tr} [\bf{\bar{g}}^{-1}\varepsilon] $', ...
         '$||\varepsilon-\frac{1}{2}$Tr$\left[\mathbf{\bar{g}}^{-1}\varepsilon\right]\bf{\bar{g}}||$'} ;
-    time_in_units = (tp - t0) * QS.timeInterval ;
-    tstr = ['$t=$', sprintf('%03d', time_in_units), ' ', QS.timeUnits ];
+    time_in_units = (tp - t0) * tubi.timeInterval ;
+    tstr = ['$t=$', sprintf('%03d', time_in_units), ' ', tubi.timeUnits ];
 
     %% Now plot STRAIN in 2d
     close all
+    disp(['looking for dxdy2d image: ' fn_strain2d])
     set(gcf, 'visible', 'off') ;
-    if ~exist(fn_strain2d, 'file') || overwrite
+    if ~exist(fn_strain2d, 'file') || redo_images
         % Panel 1
         subplot(1, 2, 1)
         trisurf(cutMesh.f, ...
@@ -283,15 +295,17 @@ if redo_images
 
         % Save the image
         sgtitle(['strain, ', tstr], 'Interpreter', 'latex') 
+        disp(['Saving strain figure to: ' fn_strain2d])
         saveas(gcf, fn_strain2d) ;
         clf
     end    
     close all
     
     %% Now plot STRAIN in 3d
+    disp(['looking for dxdy2d image: ' fn_strain3d])
     close all
     set(gcf, 'visible', 'off') ;
-    if ~exist(fn_strain3d, 'file') || overwrite
+    if ~exist(fn_strain3d, 'file') || redo_images
         % Panel 1 --> trace
         subplot(1, 2, 1)
         trisurf(cutMesh.f, ...
@@ -302,7 +316,7 @@ if redo_images
     
         caxis([-clim_trace, clim_trace])
         title(labels{1}, 'Interpreter', 'Latex')  
-        xyzlim = QS.plotting.xyzlim_um_buff ;
+        xyzlim = tubi.plotting.xyzlim_um_buff ;
         tposZ = xyzlim(3, 2) + 0.5 * (xyzlim(3, 2) - xyzlim(3, 1)) ;
         tposY = xyzlim(2, 2) + 0.5 * (xyzlim(2, 2) - xyzlim(2, 1)) ;
         tposYZ = max(tposY, tposZ) ;
@@ -354,6 +368,7 @@ if redo_images
     
         % Save the image
         sgtitle(['strain, ', tstr], 'Interpreter', 'latex') 
+        disp(['Saving strain 3d figure to: ' fn_strain3d])
         saveas(gcf, fn_strain3d) ;
         clf
     end    
@@ -361,8 +376,9 @@ if redo_images
     
     %% Now plot dx dy in 2d
     close all
+    disp(['looking for dxdy2d image: ' fn_dxdy2d])
     set(gcf, 'visible', 'off') ;
-    if ~exist(fn_dxdy2d, 'file') || overwrite
+    if ~exist(fn_dxdy2d, 'file') || redo_images
         % Panel 1
         subplot(1, 2, 1)
         trisurf(cutMesh.f, ...
@@ -391,6 +407,7 @@ if redo_images
 
         % Save the image
         sgtitle(['strain, ', tstr], 'Interpreter', 'latex') 
+        disp(['Saving dxdy2d image: ' fn_dxdy2d])
         saveas(gcf, fn_dxdy2d) ;
         clf
     end    
@@ -399,8 +416,10 @@ if redo_images
 
     %% Now plot dx dy in 3d
     close all
+    
+    disp(['looking for dxdy2d image: ' fn_dxdy3d])
     set(gcf, 'visible', 'off') ;
-    if ~exist(fn_strain3d, 'file') || overwrite
+    if ~exist(fn_strain3d, 'file') || redo_images
         % Panel 1 --> dx
         subplot(1, 2, 1)
         trisurf(cutMesh.f, ...
@@ -412,7 +431,7 @@ if redo_images
         title('$\varepsilon_\zeta$', 'Interpreter', 'Latex')   
         colormap(bbr256)
       
-        xyzlim = QS.plotting.xyzlim_um_buff ;
+        xyzlim = tubi.plotting.xyzlim_um_buff ;
         tposZ = xyzlim(3, 2) + 0.5 * (xyzlim(3, 2) - xyzlim(3, 1)) ;
         tposY = xyzlim(2, 2) + 0.5 * (xyzlim(2, 2) - xyzlim(2, 1)) ;
         tposYZ = max(tposY, tposZ) ;
@@ -452,8 +471,14 @@ if redo_images
     
         % Save the image
         sgtitle(['orthogonal strain components, ', tstr], 'Interpreter', 'latex') 
+        
+        disp(['Saving dxdy2d image: ' fn_dxdy3d])
         saveas(gcf, fn_dxdy3d) ;
+        
         clf
     end    
     close all
+else
+    disp(['Files exist: ', fn_strain2d, fn_strain3d, fn_dxdy2d, fn_dxdy3d]) ;
+          
 end

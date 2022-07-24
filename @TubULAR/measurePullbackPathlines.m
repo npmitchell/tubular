@@ -9,6 +9,12 @@ function measurePullbackPathlines(QS, options)
 %   of the PullbackPathlines (via interpolation of div(v_t) defined on
 %   pullback mesh vertices).
 %
+% NOTE: Updated 2022-07 so that if the pullback is doubleCover of the
+% surface, we ensure that velocities and pathlines of periodic positions
+% respect the periodicity of the surface. We do this by explicitly
+% AVERAGING the displacments of each cover, then clipping to a single
+% cover cylinderCutMesh. 
+%
 % Parameters
 % ----------
 % QS : QuapSlap class instance

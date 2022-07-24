@@ -41,6 +41,10 @@ function results = computePCAoverTime(tubi, options)
 %   nArrows : int
 %       subsampling factor for quiverplot on modes, only used if
 %       plotArrowsOnModes == true 
+%   displacement_scale : float
+%       scale factor to multiply pca velocities by before advecting mesh
+%       vertices by vn*v_pca --> ie displace vertices for visualization by
+%       vn*v_pca*displacement_scale.
 %
 % Returns
 % -------
@@ -80,7 +84,7 @@ drawArrowsInPCA3D = false ;
 % How to construct the mesh on which we compute the fields to be PCA'd
 meshChoice = {'Lagrangian', 'sphi'} ;
 % On which fields do we compute PCA
-pcaTypes = {'v3d', 'vnVector', 'vt', 'vnScalar', 'divv', '2Hvn', 'gdot'};
+pcaTypes = {'v3d', 'vnVector', 'vt', 'vnScalar', 'divv', 'H2vn', 'gdot'};
 % pairs of mode numbers to plot in 2d projections (modes are ordered by rank)
 axPairs = [1,2;1,3;2,3] ;
 % smoothing parameters for sphi measurement
@@ -93,7 +97,11 @@ zwidth = tubi.smoothing.zwidth ;
 plotArrowsOnModes = false ;
 % Plotting: subsampling of quiver plot arrows
 nArrows = 250 ;
+% Plotting: scale factor for displacement of vertices by PCA vectors
+displacement_scale = 1500 ; 
 
+quiver_lw_2d = 1.0 ;
+quiver_lw_3d = 1;
 
 %% Overwrite default options with supplied options
 if nargin < 2
@@ -142,15 +150,12 @@ end
 if isfield(options, 'lambda_err')
     lambda_err = options.lambda_err ;
 end
-if isfield(options, 'qsub')
+if isfield(options, 'nArrows')
     nArrows = options.nArrows ;
 end
-
 if isfield(options, 'plotArrowsOnModes')
     plotArrowsOnModes = options.plotArrowsOnModes ;
 end
-
-
 if isfield(options, 'meshChoice')
     meshChoice = options.meshChoice ;
     if isa(meshChoice, 'char')
@@ -162,9 +167,11 @@ elseif isfield(options, 'meshStyles')
         meshChoice = {meshChoice} ;
     end
 end
-
 if isfield(options, 'axPairs')
     axPairs = options.axPairs ;
+end
+if isfield(options, 'displacement_scale')
+    displacement_scale = options.displacement_scale ;
 end
 
 
@@ -443,12 +450,14 @@ for meshChoiceID = 1:numel(meshChoice)
     %% Get subsampling for quiver plots
     if plotArrowsOnModes
         disp('Load/compute sampling for vector field')
-        fn = fullfile(tubi.dir.PCAoverTime, 'quiver_subsampling.mat') ;
+        fn = fullfile(tubi.dir.PCAoverTime, ...
+            sprintf('quiver_subsampling_nArrows%d.mat', nArrows)) ;
+        V0c = squeeze(allVc(:,:,1)) ; % vertices at t0
+        COM = barycenter(V0c, Fc);
         if exist(fn, 'file')
             load(fn, 'sampleIDx_faces') 
         else
             % get subsampling
-            COM = barycenter(V0c, Fc);
             % find farthest vertices
             sampleIDx_vertices = farthestPointVertexSampling(nArrows, V0c, Fc, ...
                 [1], struct('preview', true)) ;
@@ -537,7 +546,7 @@ for meshChoiceID = 1:numel(meshChoice)
                 titleString0 = 'area rate of change $$\mathrm{Tr}[g^{-1} \dot{g}] / 2$$';
                 saveStrPrefix = 'PCA_gdot';
             else
-                error('Invalid velocity type for PCA analysis');
+                error(['Invalid velocity type for PCA analysis: ' pcaType]);
             end
 
             if convert_to_period
@@ -616,8 +625,7 @@ for meshChoiceID = 1:numel(meshChoice)
                         harmV = harmV - normV;
 
                         % Scale PCA compnents to produce visible displacements
-                        vscale = 400;
-                        VMc = V0c + vscale * vmode;
+                        VMc = V0c + displacement_scale * vmode;
 
                         saveStr = [saveStrMode, '_', plotType, '.png'];
                         outputFigFn = fullfile(outputDirPCA, saveStr);
@@ -837,10 +845,8 @@ for meshChoiceID = 1:numel(meshChoice)
                         
                         % Plot displacement of vertices from reference mesh
                         if strcmpi(pcaType, 'vnScalar') && strcmpi(plotType, 'displacement')
-                            % Scale PCA compnents to produce visible displacements
-                            vscale = 400;
-                            
-                            VMc = V0c + vscale * vmode .* VNc;
+                            % Scale PCA compnents to produce visible displacements                            
+                            VMc = V0c + displacement_scale * vmode .* VNc;
                             saveStr = [saveStrMode, '_', plotType, '.png'];
                             outputFigFn = fullfile(outputDirPCA, saveStr);
                             if ~exist(outputFigFn, 'file') || overwriteImages
@@ -1052,9 +1058,8 @@ for meshChoiceID = 1:numel(meshChoice)
                     hold on
 
                     if drawArrowsInPCAPlane
-                        quiver_lw = 0.75;
                         quiver(v1(1:size(vvec,1)), v2(1:size(vvec,1)), ...
-                            vvec(:,1), vvec(:,2), 0, 'Color', 'k', 'LineWidth', quiver_lw );
+                            vvec(:,1), vvec(:,2), 0, 'Color', 'k', 'LineWidth', quiver_lw_2d );
                     end
 
                     scatter(v1, v2, [], timeColors, 'filled');
@@ -1110,8 +1115,9 @@ for meshChoiceID = 1:numel(meshChoice)
             %% Generate 3D PCA Mode Comparison Plot ===================================
             % Compares the 3 most important modes produced by PCA
             close all; clc;
-
-
+            fig = figure('Units', 'centimeters') ;
+            set(fig, 'Position', [0, 0, 9, 9]) ;
+            
             % Generate Visualization --------------------------------------------------
             outputFigFn = fullfile(outputDirPCA, [saveStrPrefix '_3D_trajectory.png']);
             if ~exist(outputFigFn, 'file') || overwriteImages 
@@ -1149,14 +1155,13 @@ for meshChoiceID = 1:numel(meshChoice)
                 r = 0.025 * max(max(max(xLim), max(yLim)), max(zLim)) ;
                 if convert_to_period, r = T * r; end
 
-                quiver_lw = 0.75;
                 fig = figure('Visible', 'off',  'units', 'centimeters') ;
                 hold on
 
                 if  drawArrowsInPCA3D 
                     quiver3(v1(1:size(vvec,1)), v2(1:size(vvec,1)), v3(1:size(vvec,1)), ...
                         vvec(:,1), vvec(:,2), vvec(:,3), ...
-                        0, 'Color', 'k', 'LineWidth', quiver_lw );
+                        0, 'Color', 'k', 'LineWidth', quiver_lw_3d );
                 end
 
                 for tidx = 1:numel(v1)
@@ -1182,15 +1187,15 @@ for meshChoiceID = 1:numel(meshChoice)
                 if drawArrowsInPCA3D 
                     quiver3(v1(1:size(vvec,1)), v2(1:size(vvec,1)), zLim(1) * ones(numel(v3)-1,1), ...
                         vvec(:,1), vvec(:,2), 0*vvec(:,3), ...
-                        0, 'Color', 0.6 * [1 1 1], 'LineWidth', quiver_lw );
+                        0, 'Color', 0.6 * [1 1 1], 'LineWidth', quiver_lw_3d );
 
                     quiver3(v1(1:size(vvec,1)), yLim(2) * ones(numel(v2)-1,1), v3(1:size(vvec,1)), ...
                         vvec(:,1), 0*vvec(:,2), vvec(:,3), ...
-                        0, 'Color', 0.6 * [1 1 1], 'LineWidth', quiver_lw );
+                        0, 'Color', 0.6 * [1 1 1], 'LineWidth', quiver_lw_3d );
 
                     quiver3(xLim(2) * ones(numel(v1)-1,1), v2(1:size(vvec,1)), v3(1:size(vvec,1)), ...
                         0*vvec(:,1), vvec(:,2), vvec(:,3), ...
-                        0, 'Color', 0.6 * [1 1 1], 'LineWidth', quiver_lw );
+                        0, 'Color', 0.6 * [1 1 1], 'LineWidth', quiver_lw_3d );
                 end
 
                 hold off

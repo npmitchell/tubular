@@ -1,4 +1,4 @@
-function plotPathlineStrain(QS, options)
+function plotPathlineStrain(tubi, options)
 % plotPathlineStrain(QS, options)
 %   Plot the strain (from piv pathlines) along pathlines as kymographs and 
 %   correlation plots. These are computed via finite differencing of 
@@ -28,14 +28,13 @@ function plotPathlineStrain(QS, options)
 %% Default options 
 overwrite = false ;
 plot_kymographs = true ;
-plot_kymographs_strain = true ;
-plot_fold_strainRate = true ;
-plot_lobe_strainRate = true ;
-plot_fold_strain = true ;
-plot_lobe_strain = true ;
+plot_strain3d = false ;
 maxWFrac = 0.03 ;  % Maximum halfwidth of feature/fold regions as fraction of ap length
-t0 = QS.t0set() ;
+t0 = tubi.t0set() ;
 t0Pathline = t0 ;
+viewAngles = [-20,25] ;
+clim_tre = 2 ;
+clim_dev = 5 ;
 
 strain_trace_label = '$\frac{1}{2}\mathrm{Tr} [\bf{g}^{-1}\varepsilon]$';
 strain_trace_label_norm = '$||\mathrm{Tr} [\varepsilon]||$';
@@ -46,10 +45,10 @@ strain_deviator_label_short = ...
 % strain_theta_label = '$\theta_{\mathrm{Dev}[{\varepsilon}]}$'; 
 
 %% Parameter options
-lambda = QS.smoothing.lambda ;
-lambda_mesh = QS.smoothing.lambda_mesh ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 climit = 0.2 ;
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
@@ -100,14 +99,8 @@ end
 if isfield(options, 'plot_kymographs')
     plot_kymographs = options.plot_kymographs ;
 end
-if isfield(options, 'plot_kymographs_strain')
-    plot_kymographs_strain = options.plot_kymographs_strain ;
-end
-if isfield(options, 'plot_fold_strain')
-    plot_fold_strain = options.plot_fold_strain ;
-end
-if isfield(options, 'plot_lobe_strain')
-    plot_lobe_strain = options.plot_lobe_strain ;
+if isfield(options, 'plot_strain3d')
+    plot_strain3d = options.plot_strain3d ;
 end
 
 %% Determine sampling Resolution from input -- either nUxnV or (2*nU-1)x(2*nV-1)
@@ -119,8 +112,8 @@ else
 end
 
 %% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 
 %% Colormap
 close all
@@ -136,13 +129,13 @@ bbr256 = blueblackred(256) ;
 % pos256 = bluewhitered(256) ;
 close all
 pm256 = phasemap(256) ;
-bluecolor = QS.plotting.colors(1, :) ;
-orangecolor = QS.plotting.colors(2, :) ;
-yellowcolor = QS.plotting.colors(3, :) ;
-purplecolor = QS.plotting.colors(4, :) ;
-greencolor = QS.plotting.colors(5, :) ;
-graycolor = QS.plotting.colors(8, :) ;
-browncolor = QS.plotting.colors(9, :) ;
+bluecolor = tubi.plotting.colors(1, :) ;
+orangecolor = tubi.plotting.colors(2, :) ;
+yellowcolor = tubi.plotting.colors(3, :) ;
+purplecolor = tubi.plotting.colors(4, :) ;
+greencolor = tubi.plotting.colors(5, :) ;
+graycolor = tubi.plotting.colors(8, :) ;
+browncolor = tubi.plotting.colors(9, :) ;
 
 %% Choose colors
 trecolor = yellowcolor ;
@@ -152,227 +145,268 @@ Hsz = 3 ;  % size of scatter markers for mean curvature
 
 %% load from QS
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 %% Test incompressibility of the flow on the evolving surface
 % We relate the normal velocities to the divergence / 2 * H.
-tps = QS.xp.fileMeta.timePoints(1:end-1) - t0 ;
+tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0 ;
 
-% Output directory is inside metricKinematics dir
-mKPDir = sprintf(QS.dir.strainRate.pathline.root, t0Pathline) ;
-datdir = fullfile(mKPDir, 'measurements') ;
+% Output directory is inside piv/pathlines/t0_XXXX dir
+mKPDir = sprintf(tubi.dir.pathlines.strain, t0Pathline) ;
+datdir = mKPDir ;
 % Data for kinematics on meshes (defined on vertices) [not needed here]
 % mdatdir = fullfile(mKDir, 'measurements') ;
 
 % Unit definitions for axis labels
 unitstr = [ '[unitless]' ];
+tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
 
-%% Compute or load all timepoints
-apSKymoFn = fullfile(datdir, 'apKymographPathlineStrain.mat') ;
-lSKymoFn = fullfile(datdir, 'leftKymographPathlineStrain.mat') ;
-rSKymoFn = fullfile(datdir, 'rightKymographPathlineStrain.mat') ;
-dSKymoFn = fullfile(datdir, 'dorsalKymographPathlineStrain.mat') ;
-vSKymoFn = fullfile(datdir, 'ventralKymographPathlineStrain.mat') ;
-files_exist = exist(apSKymoFn, 'file') && ...
-    exist(lSKymoFn, 'file') && exist(rSKymoFn, 'file') && ...
-    exist(dSKymoFn, 'file') && exist(vSKymoFn, 'file') ;
-if files_exist
-    load(apSKymoFn, 'tr_apM', 'dv_apM', 'th_apM')
-    load(lSKymoFn, 'tr_lM', 'dv_lM', 'th_lM')
-    load(rSKymoFn, 'tr_rM', 'dv_rM', 'th_rM')
-    load(dSKymoFn, 'tr_dM', 'dv_dM', 'th_dM')
-    load(vSKymoFn, 'tr_vM', 'dv_vM', 'th_vM')
-else
-    % preallocate for kymos
-    ntps = length(QS.xp.fileMeta.timePoints(1:end-1)) ;
-    dv_apM = zeros(ntps, nU) ;   % dv averaged
-    tr_apM = zeros(ntps, nU) ;   
-    th_apM = zeros(ntps, nU) ;   
-    dv_lM = zeros(ntps, nU) ;    % left averaged
-    tr_lM = zeros(ntps, nU) ;
-    th_lM = zeros(ntps, nU) ;
-    dv_rM = zeros(ntps, nU) ;    % right averaged
-    tr_rM = zeros(ntps, nU) ;
-    th_rM = zeros(ntps, nU) ;
-    dv_dM = zeros(ntps, nU) ;    % dorsal averaged
-    tr_dM = zeros(ntps, nU) ;
-    th_dM = zeros(ntps, nU) ;
-    dv_vM = zeros(ntps, nU) ;    % ventral averaged
-    tr_vM = zeros(ntps, nU) ;
-    th_vM = zeros(ntps, nU) ;
-
-    for tp = QS.xp.fileMeta.timePoints(1:end-1)
-        close all
-        disp(['t = ' num2str(tp)])
-        tidx = QS.xp.tIdx(tp) ;
-
-        % Check for timepoint measurement on disk
-        srfn = fullfile(datdir, sprintf('strainRate_%06d.mat', tp))   ;
-
-        % Load timeseries measurements
-        load(srfn, 'tre_ap', 'tre_l', 'tre_r', 'tre_d', 'tre_v', ...
-            'dev_ap', 'dev_l', 'dev_r', 'dev_d', 'dev_v', ...
-            'theta_ap', 'theta_l', 'theta_r', 'theta_d', 'theta_v')
-   
-        %% Store in matrices
-        % dv averaged
-        tr_apM(tidx, :) = tre_ap ;
-        dv_apM(tidx, :) = dev_ap ;
-        th_apM(tidx, :) = theta_ap ;
-
-        % left quarter
-        tr_lM(tidx, :) = tre_l ;
-        dv_lM(tidx, :) = dev_l ;
-        th_lM(tidx, :) = theta_l ;
-
-        % right quarter
-        tr_rM(tidx, :) = tre_r ;
-        dv_rM(tidx, :) = dev_r ;
-        th_rM(tidx, :) = theta_r ;
-
-        % dorsal quarter
-        tr_dM(tidx, :) = tre_d ;
-        dv_dM(tidx, :) = dev_d ;
-        th_dM(tidx, :) = theta_d ;
-
-        % ventral quarter
-        tr_vM(tidx, :) = tre_v ;
-        dv_vM(tidx, :) = dev_v ;
-        th_vM(tidx, :) = theta_v ;
+%% Plot strains in 3d
+if plot_strain3d
+    pb = tubi.getPullbackPathlines([], 'vertexPathlines3d') ;
+    refMesh = pb.refMesh ;
+    % Set the rotated scaled vertices as field "v" for
+    % inducedStrainPeriodicMesh() call
+    refMesh.v = refMesh.vrs ;
+    fa = doublearea(refMesh.vrs, refMesh.f) * 0.5 ;
+    
+    for tidx = tidx0 + 90 ; %1 :length(tps)
+        tp = tubi.xp.fileMeta.timePoints(tidx) ;
+        tubi.setTime(tp) ;
         
-        %% Save kymograph data
-        save(apSKymoFn, 'tr_apM', 'dv_apM', 'th_apM')
-        save(lSKymoFn, 'tr_lM', 'dv_lM', 'th_lM')
-        save(rSKymoFn, 'tr_rM', 'dv_rM', 'th_rM')
-        save(dSKymoFn, 'tr_dM', 'dv_dM', 'th_dM')
-        save(vSKymoFn, 'tr_vM', 'dv_vM', 'th_vM')
+        outfn = fullfile(sprintf(tubi.dir.pathlines.strain_images, t0Pathline),...
+            sprintf('smoothing_example_strain_%06d.png', tp)) ;
+        
+        strain = tubi.getCurrentPathlineStrain(tubi.t0, 'strain') ;
+        % tre = strain.strain.tre(strain.strain.faceIDs) ;
+        % dev = strain.strain.dev(strain.strain.faceIDs) ;
+        tre = strain.strain.tre_sm ;
+        fra = strain.strain.fractionalAreaChange_sm ;
+        dev = strain.strain.dev_sm ;
+
+        % positions of the pathline vertices
+        xx = pb.vertices3d.vXrs(tidx, :, :) ;
+        yy = pb.vertices3d.vYrs(tidx, :, :) ;
+        zz = pb.vertices3d.vZrs(tidx, :, :) ;
+        v3d = [ xx(:), yy(:), zz(:) ] ;
+        mesh = struct() ;
+        mesh.f = refMesh.f ;
+        mesh.v = v3d ;
+        mesh.u = refMesh.u ;
+        mesh.pathPairs = refMesh.pathPairs ;
+        mesh.nU = tubi.nU ;
+        mesh.nV = tubi.nV ;
+        
+        [strainTensor, tre2, dev2, theta, outputStruct] = ...
+            inducedStrainPeriodicMesh(mesh, refMesh, options) ;
+        tre2 = tre2(strain.strain.faceIDs) ;
+        dev2 = dev2(strain.strain.faceIDs) ;
+        
+        
+        ax1 = subtightplot(2, 2, 1) ;
+        % tre2 = (doublearea(mesh.v, mesh.f) * 0.5 - fa) ./ fa ;
+        trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', tre2, 'edgecolor', 'none')
+        colorbar()
+        axis equal
+        view(viewAngles)
+        caxis(clim_tre*[-1,1])
+        colormap(ax1, brewermap(256, '*RdBu'))
+        title('tre')
+        grid off
+        xlim(xyzlim(1, :))
+        ylim(xyzlim(2, :))
+        zlim(xyzlim(3, :))
+        
+        ax2 = subtightplot(2, 2, 2) ;
+        trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', fra, 'edgecolor', 'none')
+        colorbar()
+        axis equal
+        view(viewAngles)
+        caxis(clim_tre*[-1,1])
+        colormap(ax2, brewermap(256, '*RdBu'))
+        title('\deltaA/A_0')
+        grid off
+        xlim(xyzlim(1, :))
+        ylim(xyzlim(2, :))
+        zlim(xyzlim(3, :))
+        
+        ax3 = subtightplot(2, 2, 3) ;
+        trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', dev2, 'edgecolor', 'none')
+        colorbar()
+        axis equal
+        view(viewAngles)
+        caxis([0,clim_dev])
+        colormap(ax3, batlowk)
+        grid off
+        xlim(xyzlim(1, :))
+        ylim(xyzlim(2, :))
+        zlim(xyzlim(3, :))
+        
+        ax4 = subtightplot(2, 2, 4) ;
+        trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', dev, 'edgecolor', 'none')
+        colorbar()
+        axis equal
+        view(viewAngles)
+        caxis([0,clim_dev])
+        colormap(ax4, batlowk)
+        grid off
+        xlim(xyzlim(1, :))
+        ylim(xyzlim(2, :))
+        zlim(xyzlim(3, :))
+        
+        set(gcf, 'color', 'w')
+        export_fig(outfn, '-nocrop', '-r600')
+        
     end
 end
 
 
-%% Store kymograph data in cell arrays
-trsK = {0.5*tr_apM, 0.5*tr_lM, 0.5*tr_rM, 0.5*tr_dM, 0.5*tr_vM} ;
-dvsK = {dv_apM, dv_lM, dv_rM, dv_dM, dv_vM} ;
-thsK = {th_apM, th_lM, th_rM, th_dM, th_vM} ;
-
-%% Make kymographs averaged over dv, or left, right, dorsal, ventral 1/4
-dvDir = fullfile(mKPDir, 'avgDV') ;
-lDir = fullfile(mKPDir, 'avgLeft') ;
-rDir = fullfile(mKPDir, 'avgRight') ;
-dDir = fullfile(mKPDir, 'avgDorsal') ;
-vDir = fullfile(mKPDir, 'avgVentral') ;
-outdirs = {dvDir, lDir, rDir, dDir, vDir} ;
-
-%% Now plot different measured quantities as kymographs
+%%
 if plot_kymographs
-    titleadd = {': circumferentially averaged', ...
-        ': left side', ': right side', ': dorsal side', ': ventral side'} ;
 
-    for qq = 1:length(outdirs)
-        % Prep the output directory for this averaging
-        odir = outdirs{qq} ;
-        if ~exist(odir, 'dir')
-            mkdir(odir)
-        end
+    %% Compute or load all timepoints
+    apSKymoFn = fullfile(datdir, 'apKymographLagrangianMetric.mat') ;
+    lSKymoFn = fullfile(datdir, 'leftKymographLagrangianMetric.mat') ;
+    rSKymoFn = fullfile(datdir, 'rightKymographLagrangianMetric.mat') ;
+    dSKymoFn = fullfile(datdir, 'dorsalKymographLagrangianMetric.mat') ;
+    vSKymoFn = fullfile(datdir, 'ventralKymographLagrangianMetric.mat') ;
+    files_exist = exist(apSKymoFn, 'file') && ...
+        exist(lSKymoFn, 'file') && exist(rSKymoFn, 'file') && ...
+        exist(dSKymoFn, 'file') && exist(vSKymoFn, 'file') ;
+    if files_exist
+        load(apSKymoFn, 'str_apM', 'sdv_apM', 'sth_apM')
+        load(lSKymoFn, 'str_lM', 'sdv_lM', 'sth_lM')
+        load(rSKymoFn, 'str_rM', 'sdv_rM', 'sth_rM')
+        load(dSKymoFn, 'str_dM', 'sdv_dM', 'sth_dM')
+        load(vSKymoFn, 'str_vM', 'sdv_vM', 'sth_vM')
+    else
+        error('First run tubi.measurePathlineStrain()')
+    end
 
-        % Unpack what to plot (averaged kymographs, vary averaging region)
-        trK = trsK{qq} ;
-        dvK = dvsK{qq} ;
-        thK = thsK{qq} ;
-        
-        titles = {['dilation, ' strain_trace_label],...
-            ['shear, ', strain_deviator_label]} ;
-        labels = {[strain_trace_label ' ' unitstr], ...
-            [strain_deviator_label ' ' unitstr]} ;
-        names = {'strain_dilation', 'strain_deviator'} ;
-        
-        %% Plot strainRate DV-averaged Lagrangian pathline kymographs 
-        % Check if images already exist on disk
 
-        % Consider both wide color limit and narrow
-        zoomstr = {'_wide', '', '_zoom'} ;
-        climits = {climit, 0.5*climit, 0.25*climit} ;
-        
-        for pp = 1:length(climits)
-            %% Plot STRAIN traceful DV-averaged pathline kymograph
-            % Check if images already exist on disk
-            fn = fullfile(odir, [ names{1} zoomstr{pp} '.png']) ;
-            if ~exist(fn, 'file') || ~exist(fn_early, 'file') || overwrite
-                close all
-                set(gcf, 'visible', 'off')
-                imagesc((1:nU)/nU, tps, trK)
-                caxis([-climits{pp}, climits{pp}])
-                colormap(bbr256)
-                
-                
-                % Titles 
-                title([titles{1}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
-                xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
-                cb = colorbar() ;
-                
-                % title and save
-                ylabel(cb, labels{1}, 'Interpreter', 'Latex')  
-                disp(['saving ', fn])
-                export_fig(fn, '-png', '-nocrop', '-r200')   
-                
-                clf
+    %% Store kymograph data in cell arrays
+    trsK = {0.5*str_apM, 0.5*str_lM, 0.5*str_rM, 0.5*str_dM, 0.5*str_vM} ;
+    dvsK = {sdv_apM, sdv_lM, sdv_rM, sdv_dM, sdv_vM} ;
+    thsK = {sth_apM, sth_lM, sth_rM, sth_dM, sth_vM} ;
+
+    %% Make kymographs averaged over dv, or left, right, dorsal, ventral 1/4
+    dvDir = fullfile(mKPDir, 'images', 'avgDV') ;
+    lDir = fullfile(mKPDir, 'images', 'avgLeft') ;
+    rDir = fullfile(mKPDir, 'images', 'avgRight') ;
+    dDir = fullfile(mKPDir, 'images', 'avgDorsal') ;
+    vDir = fullfile(mKPDir, 'images', 'avgVentral') ;
+    outdirs = {dvDir, lDir, rDir, dDir, vDir} ;
+
+    %% Now plot different measured quantities as kymographs
+    if plot_kymographs
+        titleadd = {': circumferentially averaged', ...
+            ': left side', ': right side', ': dorsal side', ': ventral side'} ;
+
+        for qq = 1:length(outdirs)
+            % Prep the output directory for this averaging
+            odir = outdirs{qq} ;
+            if ~exist(odir, 'dir')
+                mkdir(odir)
             end
 
-            %% DEVIATOR -- strain
-            fn = fullfile(odir, [ names{2} zoomstr{pp} '.png']) ;
-            if ~exist(fn, 'file') || overwrite
-                close all
-                set(gcf, 'visible', 'off')
-                % Map intensity from dev and color from the theta
-                indx = max(1, round(mod(2*thK(:), 2*pi)*size(pm256, 1)/(2 * pi))) ;
-                colors = pm256(indx, :) ;
-                devKclipped = min(dvK / climits{pp}, 1) ;
-                colorsM = devKclipped(:) .* colors ;
-                colorsM = reshape(colorsM, [size(dvK, 1), size(dvK, 2), 3]) ;
-                imagesc((1:nU)/nU, tps, colorsM)
-                caxis([0, climits{pp}])
+            % Unpack what to plot (averaged kymographs, vary averaging region)
+            trK = trsK{qq} ;
+            dvK = dvsK{qq} ;
+            thK = thsK{qq} ;
 
-                % Add folds to plot
-                hold on;
+            titles = {['dilation, ' strain_trace_label],...
+                ['shear, ', strain_deviator_label]} ;
+            labels = {[strain_trace_label ' ' unitstr], ...
+                [strain_deviator_label ' ' unitstr]} ;
+            names = {'strain_dilation', 'strain_deviator'} ;
 
-                % Colorbar and phasewheel
-                colormap(gca, phasemap)
-                phasebar('colormap', phasemap, ...
-                    'location', [0.82, 0.7, 0.1, 0.135], 'style', 'nematic') ;
-                ax = gca ;
-                get(gca, 'position')
-                cb = colorbar('location', 'eastOutside') ;
-                drawnow
-                axpos = get(ax, 'position') ;
-                cbpos = get(cb, 'position') ;
-                set(cb, 'position', [cbpos(1), cbpos(2), cbpos(3), cbpos(4)*0.6])
-                set(ax, 'position', axpos) 
-                hold on;
-                caxis([0, climits{pp}])
-                colormap(gca, gray)
+            %% Plot strainRate DV-averaged Lagrangian pathline kymographs 
+            % Check if images already exist on disk
 
-                % title and save
-                title([titles{2}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
-                xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
-                ylabel(cb, labels{2}, 'Interpreter', 'Latex')  
-                    
-                % title and save
-                ylabel(cb, labels{2}, 'Interpreter', 'Latex')  
-                disp(['saving ', fn])
-                export_fig(fn, '-png', '-nocrop', '-r200')   
-                clf
+            % Consider both wide color limit and narrow
+            zoomstr = {'_wide', '', '_zoom'} ;
+            climits = {climit, 0.5*climit, 0.25*climit} ;
+
+            for pp = 1:length(climits)
+                %% Plot STRAIN traceful DV-averaged pathline kymograph
+                % Check if images already exist on disk
+                fn = fullfile(odir, [ names{1} zoomstr{pp} '.png']) ;
+                if ~exist(fn, 'file') || ~exist(fn_early, 'file') || overwrite
+                    close all
+                    set(gcf, 'visible', 'off')
+                    imagesc((1:nU)/nU, tps, trK)
+                    caxis([-climits{pp}, climits{pp}])
+                    colormap(bbr256)
+
+
+                    % Titles 
+                    title([titles{1}, titleadd{qq}], 'Interpreter', 'Latex')
+                    ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
+                    xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
+                    cb = colorbar() ;
+
+                    % title and save
+                    ylabel(cb, labels{1}, 'Interpreter', 'Latex')  
+                    disp(['saving ', fn])
+                    export_fig(fn, '-png', '-nocrop', '-r200')   
+
+                    clf
+                end
+
+                %% DEVIATOR -- strain
+                fn = fullfile(odir, [ names{2} zoomstr{pp} '.png']) ;
+                if ~exist(fn, 'file') || overwrite
+                    close all
+                    set(gcf, 'visible', 'off')
+                    % Map intensity from dev and color from the theta
+                    indx = max(1, round(mod(2*thK(:), 2*pi)*size(pm256, 1)/(2 * pi))) ;
+                    colors = pm256(indx, :) ;
+                    devKclipped = min(dvK / climits{pp}, 1) ;
+                    colorsM = devKclipped(:) .* colors ;
+                    colorsM = reshape(colorsM, [size(dvK, 1), size(dvK, 2), 3]) ;
+                    imagesc((1:nU)/nU, tps, colorsM)
+                    caxis([0, climits{pp}])
+
+                    % Add folds to plot
+                    hold on;
+
+                    % Colorbar and phasewheel
+                    colormap(gca, phasemap)
+                    phasebar('colormap', phasemap, ...
+                        'location', [0.82, 0.7, 0.1, 0.135], 'style', 'nematic') ;
+                    ax = gca ;
+                    get(gca, 'position')
+                    cb = colorbar('location', 'eastOutside') ;
+                    drawnow
+                    axpos = get(ax, 'position') ;
+                    cbpos = get(cb, 'position') ;
+                    set(cb, 'position', [cbpos(1), cbpos(2), cbpos(3), cbpos(4)*0.6])
+                    set(ax, 'position', axpos) 
+                    hold on;
+                    caxis([0, climits{pp}])
+                    colormap(gca, gray)
+
+                    % title and save
+                    title([titles{2}, titleadd{qq}], 'Interpreter', 'Latex')
+                    ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
+                    xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
+                    ylabel(cb, labels{2}, 'Interpreter', 'Latex')  
+
+                    % title and save
+                    ylabel(cb, labels{2}, 'Interpreter', 'Latex')  
+                    disp(['saving ', fn])
+                    export_fig(fn, '-png', '-nocrop', '-r200')   
+                    clf
+                end
             end
         end
     end
 end
-
 
 disp('done')
 

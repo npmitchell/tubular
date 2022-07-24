@@ -1,4 +1,4 @@
-function measurePathlineStrain(QS, options)
+function measurePathlineStrain(tubi, options)
 % measurePathlineStrain(QS, options)
 %   Compute strain from integrated pathlines deforming mesh vertices.
 %   Measurements are taken with respect to fixed Lagrangian frame. 
@@ -25,6 +25,7 @@ median_filter_strainRates = false ;
 climitInitial = 0.05 ;
 climitRamp = 0.005 ;
 climitRatio = 1 ;
+preview = false ;
 
 %% Parameter options
 lambda_mesh = 0.002 ;
@@ -35,8 +36,8 @@ samplingResolution = '1x';
 averagingStyle = "Lagrangian" ;
 LagrangianFrame = 'zetaphi' ;
 % Load time offset for first fold, t0 -- default pathline t0
-QS.t0set() ;
-t0 = QS.t0 ;
+tubi.t0set() ;
+t0 = tubi.t0 ;
 % By default, t0Pathline = t0 (see below)
 
 %% Unpack options & assign defaults
@@ -45,6 +46,9 @@ if nargin < 2
 end
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
+end
+if isfield(options, 'preview')
+    preview = options.preview ;
 end
 if isfield(options, 'overwriteImages')
     overwriteImages = options.overwriteImages ;
@@ -96,11 +100,11 @@ else
 end
 
 %% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
-fons = QS.t0set() - QS.xp.fileMeta.timePoints(1) ;
+fons = tubi.t0set() - tubi.xp.fileMeta.timePoints(1) ;
 
 %% Colormap
 close all
@@ -113,62 +117,63 @@ close all
 
 %% load from QS
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 % We relate the normal velocities to the divergence / 2 * H.
-tps = QS.xp.fileMeta.timePoints(1:end-1) - t0;
+tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0;
 
 % Unit definitions for axis labels
-unitstr = [ '[1/' QS.timeUnits ']' ];
-vunitstr = [ '[' QS.spaceUnits '/' QS.timeUnits ']' ];
+unitstr = [ '[1/' tubi.timeUnits ']' ];
+vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
     
 % DONE WITH PREPARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load pathlines to build metric from advected mesh faces
-QS.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
-vP = QS.pathlines.vertices ;
+tubi.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
+vP = tubi.pathlines.vertices ;
 
 % Output directory is inside pathline dir
-outdir = sprintf(QS.dir.pathlines.strain, t0) ;
+outdir = sprintf(tubi.dir.pathlines.strain, t0) ;
 if ~exist(outdir, 'dir')
     mkdir(outdir)
 end
 
 % Load Lx, Ly by loadingPIV. 
-QS.loadPIV()
-Xpiv = QS.piv.raw.x ;
-Ypiv = QS.piv.raw.y ;
+tubi.loadPIV()
+Xpiv = tubi.piv.raw.x ;
+Ypiv = tubi.piv.raw.y ;
 
 % Also need velocities to advect mesh
 % QS.loadVelocityAverage('vv')
 % vPIV = QS.velocityAverage.vv ;
 
 % Discern if piv measurements are done on a double covering or the meshes
-if strcmp(QS.piv.imCoords(end), 'e')
+if strcmp(tubi.piv.imCoords(end), 'e')
     doubleCovered = true ;
 end
 
 %% INTEGRATE STRAINRATE INTO STRAIN ON PATHLINES
 % Compute or load all timepoints
-load(sprintf(QS.fileName.pathlines.v3d, t0), 'v3dPathlines')
-load(sprintf(QS.fileName.pathlines.vXY, t0), 'vertexPathlines')
-vX3rs = v3dPathlines.vXrs ;
-vY3rs = v3dPathlines.vYrs ;
-vZ3rs = v3dPathlines.vZrs ;
-t0 = v3dPathlines.t0 ;
-tIdx0 = v3dPathlines.tIdx0 ;
+pb = tubi.getPullbackPathlines([], 'vertexPathlines3d') ;
+% load(sprintf(tubi.fileName.pathlines.v3d, t0), 'v3dPathlines')
+% load(sprintf(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
+vX3rs = pb.vertices3d.vXrs ;
+vY3rs = pb.vertices3d.vYrs ;
+vZ3rs = pb.vertices3d.vZrs ;
+t0 = pb.vertices3d.t0 ;
+tIdx0 = pb.vertices3d.tIdx0 ;
 
 if ~all(isfinite(vX3rs(:)))
     error('Some vertex 3D positions are infinite. Check interpolation')
 end
 
 % Define reference mesh
-refMeshFn = fullfile(sprintf(QS.dir.pathlines.data, t0Pathline), ...
+refMeshFn = fullfile(sprintf(tubi.dir.pathlines.data, t0Pathline), ...
         'refMesh.mat') ;
 if exist(refMeshFn, 'file') || overwrite
     load(refMeshFn, 'refMesh')
@@ -179,36 +184,42 @@ else
     vXY = [vX(:), vY(:)] ;
     Lx = vertexPathlines.Lx ;
     Ly = vertexPathlines.Ly ;
-    refMesh.f = defineFacesRectilinearGrid(vXY, QS.nU, QS.nV) ;
-    refMesh.u = QS.XY2uv([Lx(tIdx0), Ly(tIdx0)], vXY, 1, 1) ;
+    refMesh.f = defineFacesRectilinearGrid(vXY, tubi.nU, tubi.nV) ;
+    refMesh.u = tubi.XY2uv([Lx(tIdx0), Ly(tIdx0)], vXY, 1, 1) ;
     x0 = vX3rs(tIdx0, :) ;
     y0 = vY3rs(tIdx0, :) ;
     z0 = vZ3rs(tIdx0, :) ;
     refMesh.v = [ x0(:), y0(:), z0(:) ] ; 
     pathPairs = [ (1:nU)', (nV-1)*nU + (1:nU)' ] ;
     refMesh.pathPairs = pathPairs ;
-    refMesh.nU = QS.nU ;
-    refMesh.nV = QS.nV ;
-    assert(numel(refMesh.u(:, 1)) == QS.nU * QS.nV)
+    refMesh.nU = tubi.nU ;
+    refMesh.nV = tubi.nV ;
+    assert(numel(refMesh.u(:, 1)) == tubi.nU * tubi.nV)
 
     % Save reference Mesh as lagrangian frame
     save(refMeshFn, 'refMesh') ;
 end
 
-ntps = length(QS.xp.fileMeta.timePoints(1:end-1)) ;
+% Set the rotated scaled vertices as field "v" for
+% inducedStrainPeriodicMesh() call
+refMesh.v = refMesh.vrs ;
+
+ntps = length(tubi.xp.fileMeta.timePoints(1:end-1)) ;
 tidx2do = 1:40:ntps ;
+tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
+tidx2do = [tidx2do setdiff(tidx0:10:ntps, tidx2do)] ;
 tidx2do = [tidx2do setdiff(1:ntps, tidx2do)] ;
 for tidx = tidx2do
     % Identify current timepoint
-    tp = QS.xp.fileMeta.timePoints(tidx) ;
+    tp = tubi.xp.fileMeta.timePoints(tidx) ;
     
     % Do the fund forms for the lagrangian frame already exist?
     % ffn = sprintf(QS.fullFileBase.pathline.fundForms, t0, tp) ;
     
-    ffn = sprintf(QS.fullFileBase.pathlines.strain, t0, tp) ;
+    ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0, tp) ;
     if ~exist(ffn, 'file') || overwrite 
         disp(['t = ' num2str(tp)])
-        QS.setTime(tp) ;
+        tubi.setTime(tp) ;
 
         % Load Lagrangian advected vertices as mesh for this timepoint
         % load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
@@ -221,8 +232,8 @@ for tidx = tidx2do
         mesh.v = v3d ;
         mesh.u = refMesh.u ;
         mesh.pathPairs = refMesh.pathPairs ;
-        mesh.nU = QS.nU ;
-        mesh.nV = QS.nV ;
+        mesh.nU = tubi.nU ;
+        mesh.nV = tubi.nV ;
         
         [strain, tre, dev, theta, outputStruct] = ...
             inducedStrainPeriodicMesh(mesh, refMesh, options) ;
@@ -253,20 +264,121 @@ for tidx = tidx2do
         %  dbonds_def = outputStruct.dbonds_def ;
         theta_pb = outputStruct.theta_pb ;
         faceIDs = outputStruct.faceIDs ;
+        
+        % Ratio of initial to 
+        fractionalAreaChange = (doublearea(mesh.v, mesh.f) - ...
+            doublearea(refMesh.v, refMesh.f)) ./ doublearea(refMesh.v, refMesh.f) ;
+        
+        
+        % SMOOTHED version
+        e11 = squeeze(fundForms.g1(faceIDs, 1, 1)-fundForms.g0(faceIDs, 1, 1)) ;
+        e12 = squeeze(fundForms.g1(faceIDs, 1, 2)-fundForms.g0(faceIDs, 1, 2)) ;
+        e21 = squeeze(fundForms.g1(faceIDs, 2, 1)-fundForms.g0(faceIDs, 2, 1)) ;
+        e22 = squeeze(fundForms.g1(faceIDs, 2, 2)-fundForms.g0(faceIDs, 2, 2)) ;
+
+        % Smooth all four components with laplacian
+        [V2F, F2V] = meshAveragingOperators(mesh.f, mesh.v) ;
+        
+        % Force no imaginary values in V2F and F2V
+        F2V = real(F2V) ;
+        smoothing_options = struct('widthX', 3, 'nmodes', 5) ;
+        e11 = modeFilterQuasi1D(reshape(F2V * e11, [nU, nV]), smoothing_options) ;
+        e12 = modeFilterQuasi1D(reshape(F2V * e12, [nU, nV]), smoothing_options) ;
+        e21 = modeFilterQuasi1D(reshape(F2V * e21, [nU, nV]), smoothing_options) ;
+        e22 = modeFilterQuasi1D(reshape(F2V * e22, [nU, nV]), smoothing_options) ;
+        dA0 = modeFilterQuasi1D(reshape(F2V * fractionalAreaChange, [nU, nV]), smoothing_options) ;
+        % e11 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e11,1000) ;
+        % e12 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e12,1000) ;
+        % e21 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e21,1000) ;
+        % e22 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e22,1000) ;
+        strain_sm_vertices = zeros(numel(e11(:)), 2, 2) ;
+        strain_sm_vertices(:, 1, 1) = e11(:) ;
+        strain_sm_vertices(:, 1, 2) = e12(:) ;
+        strain_sm_vertices(:, 2, 1) = e21(:) ;
+        strain_sm_vertices(:, 2, 2) = e22(:) ;
+        fractionalAreaChange_sm_vertices = dA0 ;
+        
+        % % Check result
+        % subplot(2, 2, 1)
+        % trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+        %     'facevertexcdata', strain_sm_vertices(:, 1, 1)); axis equal; view([0,0]) ;
+        % subplot(2, 2, 2)
+        % trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+        %     'facevertexcdata', strain_sm_vertices(:, 1, 2)); axis equal; view([0,0]) ;
+        % subplot(2, 2, 3)
+        % trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+        %     'facevertexcdata', strain_sm_vertices(:, 2, 1)); axis equal; view([0,0]) ;
+        % subplot(2, 2, 4)
+        % trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+        %     'facevertexcdata', strain_sm_vertices(:, 2, 2)); axis equal; view([0,0]) ;
+        % sgtitle(['t=' num2str(tp)])
+        % pause(0.1)
+        
+        % Smooth the strain tensors
+        strain_sm = zeros(numel(faceIDs), 2, 2) ;
+        strain_sm(:, 1, 1) = V2F*e11(:) ;
+        strain_sm(:, 1, 2) = V2F*e12(:) ;
+        strain_sm(:, 2, 1) = V2F*e21(:) ;
+        strain_sm(:, 2, 2) = V2F*e22(:) ;
+        fractionalAreaChange_sm = V2F*fractionalAreaChange_sm_vertices(:) ; 
+
+        tre_sm = zeros(numel(faceIDs), 1) ;
+        dev_sm = zeros(numel(faceIDs), 1) ;
+        theta_sm = zeros(numel(faceIDs), 1) ;
+        for qq = 1:numel(faceIDs)
+            fid = faceIDs(qq) ;
+            eq = squeeze(strain_sm(qq, :, :)) ;
+            gq = squeeze(fundForms.g0(fid, :, :)) ;
+            dxTiled_ii = bondDxDy.dxTiled(fid) ;
+            dyTiled_ii = bondDxDy.dyTiled(fid) ;
+            try
+                [tre_sm(qq), dev_sm(qq), theta_sm(qq), theta_pb_sm(qq)] = ...
+                    traceDeviatorPullback(eq, gq, dxTiled_ii, dyTiled_ii) ;
+            catch
+                tre_sm(qq) = NaN ;
+                dev_sm(qq) = NaN ;
+                theta_sm(qq) = NaN ;
+                theta_pb_sm(qq) = NaN ;
+            end
+        end
+        
+        % Check result
+        if preview
+            subplot(2, 2, 1)
+            trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+                'facevertexcdata', tre_sm) ; axis equal; view([0,0]) ; colorbar
+            title('tre')
+            subplot(2, 2, 2)
+            trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+                'facevertexcdata', dev_sm) ; axis equal; view([0,0]) ; colorbar
+            title('dev')
+            subplot(2, 2, 3)
+            trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+                'facevertexcdata', fractionalAreaChange_sm) ; axis equal; view([0,0]) ; colorbar
+            title('(A-A_0)/A_0')
+            subplot(2, 2, 4)
+            trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', ...
+                'facevertexcdata', theta_sm) ; axis equal; view([0,0]) ; colorbar
+            title('theta')
+            pause(0.1)
+        end
+        
         save(ffn, 'strain', 'tre', 'dev', 'theta', 'fundForms', 'bondDxDy', ...
-            'theta_pb', 'faceIDs') ;
+            'theta_pb', 'faceIDs', ...
+            'fractionalAreaChange', ...
+            'strain_sm', 'strain_sm_vertices', ...
+            'tre_sm', 'dev_sm', 'theta_sm', 'theta_pb_sm', ...
+            'fractionalAreaChange_sm', 'fractionalAreaChange_sm_vertices', ...
+            'smoothing_options') ;
     else
         disp(['Strain + fundForms for t = ' num2str(tp) ' already on disk'])
     end
 
     %% Plot strain for this timepoint
-    strainFn = fullfile(sprintf(QS.dir.pathlines.strain, ...
-            t0Pathline), sprintf(QS.fileBase.strain, tp)) ;
-    if ~exist(strainFn, 'file') || overwriteImages
-        options.overwrite = overwriteImages ;
-        QS.plotPathlineStrainTimePoint(tp, options)
-    end
+    options.overwrite = overwriteImages ;
+    tubi.plotPathlineStrainTimePoint(tp, options)
 end
+
 disp('done with integrated pathline strain calculations')
 
 
@@ -286,8 +398,8 @@ files_exist = exist(apKymoFn, 'file') && ...
     exist(dKymoFn, 'file') && exist(vKymoFn, 'file') ;
 if ~files_exist || overwrite || true
     disp('Compiling kymograph data to save to disk...')
-    for tp = QS.xp.fileMeta.timePoints(1:end-1)
-        tidx = QS.xp.tIdx(tp) ;
+    for tp = tubi.xp.fileMeta.timePoints(1:end-1)
+        tidx = tubi.xp.tIdx(tp) ;
 
         % Check for timepoint measurement on disk
         srfn = fullfile(outdir, sprintf('strain_%06d.mat', tp))   ;
@@ -311,7 +423,7 @@ if ~files_exist || overwrite || true
         %% Average strainRATE along pathline DV hoops
         % Average along DV -- ignore last redudant row at nV
         [dv_ap, th_ap] = ...
-            QS.dvAverageNematic(dev(:, 1:nV-1), theta(:, 1:nV-1)) ;
+            tubi.dvAverageNematic(dev(:, 1:nV-1), theta(:, 1:nV-1)) ;
         tr_ap = mean(tre(:, 1:nV-1), 2) ;
         
         % quarter bounds
@@ -326,22 +438,22 @@ if ~files_exist || overwrite || true
         
         % left quarter
         [dv_l, th_l] = ...
-            QS.dvAverageNematic(dev(:, left), theta(:, left)) ;
+            tubi.dvAverageNematic(dev(:, left), theta(:, left)) ;
         tr_l = mean(tre(:, left), 2) ;
         
         % right quarter
         [dv_r, th_r] = ...
-            QS.dvAverageNematic(dev(:, right), theta(:, right)) ;
+            tubi.dvAverageNematic(dev(:, right), theta(:, right)) ;
         tr_r = mean(tre(:, right), 2) ;
         
         % dorsal quarter
         [dv_d, th_d] = ...
-            QS.dvAverageNematic(dev(:, dorsal), theta(:, dorsal)) ;
+            tubi.dvAverageNematic(dev(:, dorsal), theta(:, dorsal)) ;
         tr_d = mean(tre(:, dorsal), 2) ;
         
         % ventral quarter
         [dv_v, th_v] = ...
-            QS.dvAverageNematic(dev(:, ventral), theta(:, ventral)) ;
+            tubi.dvAverageNematic(dev(:, ventral), theta(:, ventral)) ;
         tr_v = mean(tre(:, ventral), 2) ;
         
         %% Store accumulated strain in matrices

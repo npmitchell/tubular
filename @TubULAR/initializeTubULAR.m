@@ -158,6 +158,11 @@ try
     if strcmpi(tubi.fileBase.mesh(end-3:end), '.ply')
         tubi.fileBase.mesh = tubi.fileBase.mesh(1:end-4) ;
     end
+    if length(tubi.xp.fileMeta.timePoints) > 1
+        if ~contains(tubi.fileBase.mesh, '%')
+            tubi.fileBase.mesh = [tubi.fileBase.mesh '%06d'] ;
+        end
+    end
 catch
     if contains(xp.detectOptions.ofn_smoothply, '%') && ...
              contains(xp.detectOptions.ofn_smoothply, 'd')
@@ -796,7 +801,30 @@ for ii=1:length(dirs2make)
 end
 
 
-% Save t0 if supplied
+%% Segmentation / tracking -- could be extra functionality
+tubi.dir.segmentation = fullfile(tubi.dir.mesh, 'cellSegmentation') ;
+tubi.dir.tracking = fullfile(tubi.dir.mesh, 'cellTracking') ;
+
+tubi.fullFileBase.segmentation = ...
+     fullfile(tubi.dir.segmentation, ...
+     [tubi.fileBase.name, '_Probabilities.h5']) ;
+tubi.fileBase.segmentation2d = [tubi.fileBase.name, '_segmentation2d'] ;
+tubi.fileBase.segmentation3d = [tubi.fileBase.name, '_segmentation3d'] ;
+tubi.fullFileBase.segmentation2d = fullfile(tubi.dir.segmentation, 'seg2d', ...
+     [tubi.fileBase.segmentation2d '.mat']) ;
+tubi.fullFileBase.segmentation3d = fullfile(tubi.dir.segmentation, 'seg3d', ...
+     [tubi.fileBase.segmentation3d '.mat']) ;
+ 
+% corrected segmentations
+tubi.fullFileBase.segmentation2dCorrected = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
+     [tubi.fileBase.segmentation2d '.mat']) ;
+tubi.fullFileBase.segmentation3dCorrected = fullfile(tubi.dir.segmentation, 'seg3d_corrected', ...
+    [tubi.fileBase.segmentation3d '.mat']) ;
+tubi.fullFileBase.segmentation2dCorrectedBinary = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
+     'binary_maps', [tubi.fileBase.segmentation2d '_binary_map.png']) ;
+ 
+
+%% Save t0 if supplied
 if t0supplied_in_opts
     disp(['Writing t0 to disk: ' tubi.fileName.t0])
     write_txt_with_header(tubi.fileName.t0, tubi.t0, 't0, the reference timestamp')

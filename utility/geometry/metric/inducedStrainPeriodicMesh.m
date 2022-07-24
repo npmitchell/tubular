@@ -50,9 +50,13 @@ function [strain, tre, dev, theta, outputStruct] = ...
 %
 % Returns
 % -------
-% strainrate : #faces x 1 cell array of 2x2 float matrices
+% strain : #faces x 1 cell array of 2x2 float matrices
+%   difference between metrics 
 % tre : #faces x 1 float array
+%   trace of the difference between metrics, so trace of strain is 1/2*tre
+%   since the strain is defined as 0.5 * (g1-g0)
 % dev : #faces x 1 float array
+%   Frobenius norm of the deviator of the difference
 % theta : #faces x 1 float array
 % outputStruct
 %   fundForms : struct with fields
@@ -176,6 +180,8 @@ tre = zeros(size(strain, 1), 1) ;  % traceful dilation
 dev = zeros(size(strain, 1), 1) ;  % deviatoric magnitude
 theta = zeros(size(strain, 1), 1) ;  % angle of elongation
 for qq = 1:size(strain, 1)
+    % This is one half of the difference between metrics, pushed forward
+    % so this is 1/2 g^{-1} (g1-g0)
     eq = squeeze(gdiffs(qq, :, :)) ;
     gq = g0cell{qq} ;
     

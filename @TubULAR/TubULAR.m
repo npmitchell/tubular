@@ -1872,6 +1872,12 @@ classdef TubULAR < handle
             % Discern if we must load pathlines or if already loaded
             doneLoading = false ;
             if nargin > 1 
+                
+                % Default t0 is tubi.t0 if not supplied explicitly
+                if isempty(t0)
+                    t0 = tubi.t0 ;
+                end
+                
                 if tubi.pathlines.t0 ~= t0
                     % The timestamp at which pathlines form grid that is 
                     % requested is different than the one that is loaded,
@@ -1966,9 +1972,9 @@ classdef TubULAR < handle
             end
         end
         function loadPullbackPathlines(tubi, t0, varargin)
-            if nargin < 2
-                t0 = tubi.t0set() ;
-            elseif isempty(t0)
+            %
+            %
+            if nargin < 2 || isempty(t0)
                 t0 = tubi.t0set() ;
             else
                 try
@@ -1999,7 +2005,7 @@ classdef TubULAR < handle
                 load(sprintf(tubi.fileName.pathlines.fXY, t0), 'facePathlines')
                 tubi.pathlines.faces = facePathlines ;
             end
-            if any(contains(varargin, 'vertexPathlines3d'))
+            if any(contains(varargin, 'vertexPathlines3d')) || any(contains(varargin, 'vertices3d'))
                 tmp = load(sprintf(tubi.fileName.pathlines.v3d, t0)) ;
                 tubi.pathlines.vertices3d = tmp.v3dPathlines ;
                 tubi.pathlines.vertices3d.smoothing_sigma = tmp.smoothing_sigma ;
@@ -2212,11 +2218,41 @@ classdef TubULAR < handle
             end
         end
         measurePathlineStrain(tubi, options)
-        function getPathlineStrain(tubi, options)
-            for tidx = 1:length(tubi.xp.fileMeta.timePoints)
+        function [strain, tre, dev, theta] = getPathlineStrain(tubi, options)
+            % Parameters
+            % ----------
+            % tubi : TubULAR instance
+            % options : optional struct with fields 
+            %   t0Pathlines : int  (default = t0) 
+            % 
+            % Returns
+            % --------
+            % strain : #tps x nFaces x 2 x 2 float array
+            if nargin < 2
+                options = struct() ;
+            end
+            if isfield(options, 't0Pathlines')
+                t0Pathlines = options.t0Pathlines ;
+            else
+                t0Pathlines = tubi.t0set() ;
+            end
+            ntps = length(tubi.xp.fileMeta.timePoints)-1 ;
+            for tidx = 1:ntps
                 tp = tubi.xp.fileMeta.timePoints(tidx) ;
+                disp(['t = ' num2str(tp)])
                 ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0Pathlines, tp) ;
-                strains(tidx, :) = load(ffn) ;
+                tmp = load(ffn, 'strain', 'tre', 'dev', 'theta') ;
+                
+                if tidx == 1
+                    dev = zeros(ntps, length(tmp.faceIDs)) ;
+                    tre = zeros(ntps, length(tmp.faceIDs)) ;
+                    theta = zeros(ntps, length(tmp.faceIDs)) ;
+                    strain = zeros(ntps, length(tmp.faceIDs), 2, 2) ;
+                end
+                dev(tidx, :) = tmp.dev(tmp.faceIDs) ;
+                tre(tidx, :) = tmp.tre(tmp.faceIDs) ;
+                theta(tidx, :) = tmp.theta(tmp.faceIDs) ;
+                strain(tidx, :) = tmp.strain(tmp.faceIDs, :, :) ;
             end
             tubi.pathlines.strains = strains ;
         end

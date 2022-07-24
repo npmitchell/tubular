@@ -322,6 +322,10 @@ tubi = TubULAR(xp, opts) ;
 disp('done defining TubULAR instance')
 
 
+error('here')
+%% Show accumulated strain as magnitude
+tubi.plot
+
 
 
 %% 

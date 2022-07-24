@@ -26,7 +26,7 @@ addpath(genpath(tubularDir));
 
 % Add optional external code to the path
 % rmpath(genpath('mnt/data/code/gptooolbox'));
-addpath(genpath('/mnt/data/code/gptoolbox'));
+% addpath(genpath('/mnt/data/code/gptoolbox'));
 
 %% TubULAR Pipeline Initialization ========================================
 
@@ -37,11 +37,12 @@ clear; close all; clc;
 dataDir = '/mnt/data/tubular_test/zebrafish_heart/';
 
 % The directory where project files will be generated and saved
-[projectDir, ~, ~] = fileparts(matlab.desktop.editor.getActiveFilename);
+projectDir = fullfile(dataDir, 'analysis') ;
+% [projectDir, ~, ~] = fileparts(matlab.desktop.editor.getActiveFilename);
 cd(projectDir);
 
 % Define TubULAR master settings
-overwriteSettings = true;
+overwriteSettings = false;
 if (~exist(fullfile(projectDir, 'masterSettings.mat'), 'file') || overwriteSettings)
 
     stackResolution = [.3524 .3524 2];  % resolution in spaceUnits per pixel
@@ -272,7 +273,7 @@ else
     detectOptions.physicalaxisorder = 'yxzc';
     detectOptions.include_boundary_faces = true;
     detectOptions.smooth_with_matlab = 0.01;
-    detectOptions.pythonVersion = '';
+    detectOptions.pythonVersion = '' ;
     
 end
 
@@ -871,7 +872,7 @@ clear meshFile V F
 % *************************************************************************
 
 %% Set Up TubULAR Directories =============================================
-
+overwrite = false ;
 if ~exist('TubULAR_Results', 'dir')
     
     mkdir(fullfile(projectDir, 'TubULAR_Results'));
@@ -879,19 +880,23 @@ if ~exist('TubULAR_Results', 'dir')
     % Re-write meshes into the format used by TubULAR
     for t = xp.fileMeta.timePoints()
         
-        % Load the mesh
-        meshFile = fullfile( projectDir, ...
-            sprintf('meshFiles/mesh_T%03d.off', t) );
-        [V, F, ~, ~, ~] = readOFF(meshFile);
-        
-        VN = per_vertex_normals(V, F, 'Weighting', 'angle');
-        VN = normalizerow(VN);
-        
         outputMeshFile = fullfile( projectDir, ...
             sprintf(['TubULAR_Results/'...
             detectOptions.ofn_smoothply '%06d.ply'], t) );
         
-        plywrite_with_normals(outputMeshFile, F, V, VN);
+        if ~exist(outputMeshFile, 'file') || overwrite        
+
+            % Load the mesh
+            meshFile = fullfile( projectDir, ...
+                sprintf('meshFiles/mesh_T%03d.off', t) );
+            [V, F, ~, ~, ~] = readOFF(meshFile);
+
+            VN = per_vertex_normals(V, F, 'Weighting', 'angle');
+            VN = normalizerow(VN);
+
+            plywrite_with_normals(outputMeshFile, F, V, VN);
+
+        end
         
     end
     
@@ -1273,3 +1278,184 @@ disp('Done with generating spcutMeshes and cutMeshes')
 options = struct() ;
 options.coordSys = 'sp' ;
 tubi.coordSystemDemo(options)
+
+
+%% Smooth the (s, phi) Grid Meshes in Time ================================
+options = struct() ;
+options.overwrite = false ;
+options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
+tubi.smoothDynamicSPhiMeshes(options) ;
+clear options
+
+%% Plot the Time-Smoothed Meshes ==========================================
+options = struct() ;
+options.overwrite = false ;
+options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
+tubi.plotSPCutMeshSmRS(options) ;
+
+%% Inspect coordinate system charts using smoothed meshes
+options = struct() ;
+options.coordSys = 'spsm' ;
+tubi.coordSystemDemo(options)
+clear options
+
+%% Redo Pullbacks with Time-Smoothed Meshes ===============================
+disp('Create pullback using S,Phi coords with time-averaged Meshes')
+for tt = tubi.xp.fileMeta.timePoints
+    disp(['NOW PROCESSING TIME POINT ', num2str(tt)]);
+    tidx = tubi.xp.tIdx(tt);
+    
+    % Load the data for the current time point ------------------------
+    tubi.setTime(tt) ;
+    
+    % Establish custom Options for MIP --> choose which pullbacks to use
+    pbOptions = struct() ;
+    pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
+    pbOptions.generate_spsm = true ;
+    pbOptions.generate_sp = false ;
+    pbOptions.overwrite = false ;
+    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
+end
+
+%% ************************************************************************
+% *************************************************************************
+%          PART 4: TubULAR -- COMPUTATION OF TISSUE DEFORMATION
+% *************************************************************************
+% *************************************************************************
+
+%% Tile/Extend Smoothed Images in Y and Re-save ===========================
+% Skip if already done
+options = struct() ;
+options.coordsys = 'spsm' ;
+tubi.doubleCoverPullbackImages(options)
+disp('done');
+
+%% Perform PIV on Pullback MIPS ===========================================
+% % Compute PIV either with built-in phase correlation or in PIVLab
+options = struct() ;
+options.overwrite = false ;
+tubi.measurePIV2d(options) ;
+
+%% Measure Velocities =====================================================
+disp(['Making map from pixel to xyz to compute velocities ' ...
+    'in 3d for smoothed meshes...']);
+options = struct() ;
+options.show_v3d_on_data = false ;
+tubi.measurePIV3d(options) ;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Lagrangian dynamics
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Pullback pathline time averaging of velocities
+options = struct() ;
+tubi.timeAverageVelocities(options)
+% Velocity plots for pathline time averaging 
+options.plot_vxyz = false ;
+options.invertImage = true ;
+options.averagingStyle = 'Lagrangian'; 
+tubi.plotTimeAvgVelocities(options)
+% Divergence and Curl (Helmholtz-Hodge) for Lagrangian
+options = struct() ;
+options.averagingStyle = 'Lagrangian' ;
+options.lambda = 0 ;
+options.lambda_mesh = 0 ; 
+tubi.helmholtzHodge(options) ;
+
+% Compressibility & kinematics for Lagrangian
+options = struct() ;
+tubi.measureMetricKinematics(options)
+
+%% Metric Kinematics Kymographs & Correlations -- Bandwidth Filtered
+options = struct() ;
+options.overwrite = false ;
+tubi.plotMetricKinematics(options)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DYNAMICS of MATERIAL PATHLINES                                        %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Pullback pathlines connecting Lagrangian grids
+options = struct() ;
+options.overwrite = true ;
+tubi.measurePullbackPathlines(options)
+
+%% Query velocities along pathlines
+options = struct() ;
+tubi.measurePathlineVelocities(options)
+% plot the pathline velocities 
+options = struct() ;
+options.gridTopology = 'triangulated' ;
+options.overwrite = true ;
+tubi.plotPathlineVelocities(options)
+
+% Measure Pathline Kinematics
+options = struct() ;
+options.overwrite = true ;
+tubi.measurePathlineMetricKinematics(options)
+
+% Plot Pathline Kinematics
+options = struct() ;
+options.overwrite = true ;
+tubi.plotPathlineMetricKinematics(options)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Create ricci mesh at t0 to measure Beltrami coefficient in pathlines
+options = struct() ;
+options.climit = 1 ;
+options.coordSys = 'ricci' ;
+tubi.measureBeltramiCoefficient(options) ;
+
+%% Strain rate (epsilon = 1/2 (djvi+divj) -vn bij)
+options = struct() ;
+tubi.measureStrainRate(options) 
+
+%% Plot time-averaged strain rates in 3d on mesh
+options = struct() ;
+tubi.plotStrainRate3DFiltered(options) 
+
+%% Kymograph strain rates
+options = struct() ;
+options.clim_trace = 0.05 ;
+options.clim_deviatoric = 0.05 ;
+tubi.plotStrainRate(options)
+
+% Measure strain rate along pathlines
+options = struct() ;
+options.overwriteImages = false ;
+options.plot_dzdp = false ;
+tubi.measurePathlineStrainRate(options)
+
+%% Measure divergence and out-of-plane deformation along pathlines
+tubi.measurePathlineMetricKinematics()
+
+% Pathline strain rate plots
+options = struct() ;
+options.climit = 0.05 ;
+options.climitWide = 1.0 ;
+tubi.plotPathlineStrainRate(options)
+
+%% Measure strain along pathlines -- note this is from pathlines, not integrating rates
+options = struct() ;
+options.plot_dzdp = false ;
+options.climitInitial = 0.05 ;
+options.climitRamp = 0.01 ;
+options.climitRatio = 1 ;
+tubi.measurePathlineStrain(options)
+tubi.plotPathlineStrain(options)
+
+
+
+%% Perform PCA
+options = struct() ;
+options.overwrite = true ;
+options.convert_to_period = true ;
+options.T = 11 ;
+options.NmodesToView = 3 ;
+options.nTimePoints2RmEnds = 3 ;
+options.drawArrowsInPCA3D = true ;
+options.drawArrowsInPCAPlane = true ;
+options.meshChoice = 'sphi' ;
+options.pcaTypes = {'v3d'} ;
+options.plotArrowsOnModes = true ;
+options.nArrows = 150 ;
+tubi.getPCAoverTime(options) ;
+
