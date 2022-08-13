@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR after making an ImSAnE experiment instance" href="example_usage_tubular.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR" href="example_usage_tubular.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
         <title>TubULAR 2022 documentation</title>
@@ -153,16 +153,22 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_for_surface_visualization.html">Example for using TubULAR just for surface visualization</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_zebrafish_heart.html">Example for using TubULAR: zebrafish heart dynamics</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq_debugging.html">Common issues in TubULAR and suggestions</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul>
@@ -174,12 +180,11 @@
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#properties">Properties</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#module-@TubULAR">Full Contents:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="DEC.html">Example Usage</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="DEC.html">DEC is a Discrete Exterior Calculus toolbox for MATLAB.</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="example_DEC_diskMesh.html">Example for analyzing flow on a planar surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="example_DEC_sphericalMesh.html">Example for analyzing flow on a spherical surface</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="DEC.html#indices-and-tables">Indices and tables</a></li>
 </ul>
 
 </div>
@@ -214,7 +219,6 @@
         <article role="main">
           <section id="welcome-to-tubular-s-documentation">
 <h1>Welcome to TubULAR’s documentation!<a class="headerlink" href="#welcome-to-tubular-s-documentation" title="Permalink to this headline">#</a></h1>
-<p>Note: This site is under construction, with an estimated completion date of May 6, 2022. Certain steps of the workflow may still require dependencies, to be fixed ASAP.</p>
 <section id="what-is-it">
 <h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">#</a></h2>
 <p>TubULAR is a set of tools for working with 3D data of surfaces – potentially complex and dynamic – that can be described as tubes.
@@ -239,7 +243,26 @@ However, there is additional functionality included in the tutorials that use Im
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span>
 </pre></div>
 </div>
-<p>Now that you’ve downloaded TubULAR, let’s look over the components and walk through an example.</p>
+<p>So now your tubular is definitely up-to-date.</p>
+<p>We have tried our best to keep dependencies to an absolute minimum. One package that TubULAR will try to use if your surfaces are so “prickly” that they would cause potential issues is gptoolbox. This is a <em>MATLAB</em> package, but it has some mex files, which are <em>MATLAB</em>’s way of interfacing with custom <em>C++</em> code. If that sounds complicated, don’t worry – all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a <em>Terminal</em> window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR’s surface extraction parameters.</p>
+<p>First download <strong>gptoolbox</strong> inside <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code>.</p>
+<blockquote>
+<div><p>cd tubular/external/
+git clone <a class="reference external" href="https://github.com/alecjacobson/gptoolbox.git">https://github.com/alecjacobson/gptoolbox.git</a></p>
+</div></blockquote>
+<p>Now that you’ve downloaded gptoolbox, go into the mex folder and compile</p>
+<blockquote>
+<div><blockquote>
+<div><p>cd gptoolbox
+cd mex</p>
+</div></blockquote>
+<p>mkdir build
+cd build
+cmake ..
+make</p>
+</div></blockquote>
+<p>If you find trouble here, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.
+Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the components of <strong>TubULAR</strong> and walk through an example.</p>
 </section>
 <section id="components">
 <h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">#</a></h2>
@@ -253,7 +276,26 @@ However, there is additional functionality included in the tutorials that use Im
 <h2>Let’s walk through an example or two<a class="headerlink" href="#let-s-walk-through-an-example-or-two" title="Permalink to this headline">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_for_surface_visualization.html">Example for using TubULAR just for surface visualization</a></li>
+</ul>
+</div>
+<p>Here is a very detailed example using the zebrafish heart data that highlights an alternative method for surface extraction.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_zebrafish_heart.html">Example for using TubULAR: zebrafish heart dynamics</a></li>
+</ul>
+</div>
+</section>
+<section id="faq-common-debugging-issues">
+<h2>FAQ / Common Debugging Issues<a class="headerlink" href="#faq-common-debugging-issues" title="Permalink to this headline">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq_debugging.html">Common issues in TubULAR and suggestions</a></li>
 </ul>
 </div>
 </section>
@@ -267,7 +309,7 @@ However, there is additional functionality included in the tutorials that use Im
 </div>
 <p>Then, before running an example script that uses ImSAnE, you’ll need to navigate to the ImSAnE repository in MATLAB and run <code class="docutils literal notranslate"><span class="pre">setup.m</span></code> from there.</p>
 <p><strong>Morphsnakes</strong></p>
-<p>Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez. The original version was posted to github here: &lt;<a class="reference external" href="https://github.com/pmneila/morphsnakes">https://github.com/pmneila/morphsnakes</a>&gt;, but to use this with TubULAR and ImSAnE, we use a lightly modified version:</p>
+<p>Maybe you want some extra knobs to fine-tune your surfaces, beyond the built-in <strong>MATLAB</strong> <code class="docutils literal notranslate"><span class="pre">activecontour</span></code> implemented in the <strong>TubULAR</strong> pipeline. Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez. The original version was posted to github here: &lt;<a class="reference external" href="https://github.com/pmneila/morphsnakes">https://github.com/pmneila/morphsnakes</a>&gt;, but to use this with TubULAR and ImSAnE, we use a lightly modified version:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">PyMCubes</span>
 
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">morphsnakes</span><span class="o">.</span><span class="n">git</span>
@@ -307,13 +349,6 @@ However, there is additional functionality included in the tutorials that use Im
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
 </ul>
 </div>
-<p><strong>Using TubULAR within ImSAnE with Morphsnakes</strong>
-To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
-</ul>
-</div>
 </section>
 <section id="overview-of-contents">
 <h2>Overview of contents<a class="headerlink" href="#overview-of-contents" title="Permalink to this headline">#</a></h2>
@@ -328,12 +363,12 @@ To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, fol
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#properties">Properties</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#module-@TubULAR">Full Contents:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DEC.html">Example Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="example_DEC_diskMesh.html">Example for analyzing flow on a planar surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="example_DEC_sphericalMesh.html">Example for analyzing flow on a spherical surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DEC.html">DEC is a Discrete Exterior Calculus toolbox for MATLAB.</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="DEC.html#example-usage">Example Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DEC.html#full-contents">Full Contents:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DEC.html#indices-and-tables">Indices and tables</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="DEC.html#indices-and-tables">Indices and tables</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -359,7 +394,7 @@ To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, fol
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Example for using TubULAR after making an ImSAnE experiment instance</div>
+                <div class="title">Example for using TubULAR</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -401,7 +436,10 @@ To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, fol
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#let-s-get-going">Let’s get going</a></li>
 <li><a class="reference internal" href="#components">Components</a></li>
-<li><a class="reference internal" href="#let-s-walk-through-an-example-or-two">Let’s walk through an example or two</a></li>
+<li><a class="reference internal" href="#let-s-walk-through-an-example-or-two">Let’s walk through an example or two</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#faq-common-debugging-issues">FAQ / Common Debugging Issues</a></li>
 <li><a class="reference internal" href="#optional-dependencies-for-extra-functionality">Optional dependencies for extra functionality</a></li>
 <li><a class="reference internal" href="#example-usage-with-optional-dependencies">Example usage with optional dependencies</a><ul>
 </ul>

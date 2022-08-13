@@ -1,16 +1,7 @@
-<<<<<<< Local Changes
-DEC
-===
-=======
-DiscreteExteriorCalculus
-========================
->>>>>>> External Changes
 
-<<<<<<< Local Changes
 DEC is a Discrete Exterior Calculus toolbox for MATLAB. 
 =======
 The DiscreteExteriorCalculus (DEC) package is a self-contained MATLAB toolkit for analysis of motion of velocities/flows on curved surfaces, applicable to shape-changing shapes.
->>>>>>> External Changes
 
 .. toctree::
    :maxdepth: 4
@@ -20,8 +11,7 @@ The DiscreteExteriorCalculus (DEC) package is a self-contained MATLAB toolkit fo
 Example Usage
 -------------
 
-<<<<<<< Local Changes
-Suppose we have a triangulated mesh called ``mesh`` with f
+Suppose we have a triangulated mesh called ``mesh`` with faces ``mesh.f'' and 
 
 .. code-block:: matlab
 
@@ -51,7 +41,6 @@ Example script for a sphere-like mesh:
   :width: 891
    
    	
->>>>>>> External Changes
 Full Contents:
 --------------
 

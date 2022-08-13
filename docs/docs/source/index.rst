@@ -7,8 +7,6 @@ Welcome to TubULAR's documentation!
 ===================================
 
 
-Note: This site is under construction, with an estimated completion date of May 6, 2022. Certain steps of the workflow may still require dependencies, to be fixed ASAP.
-
 What is it?
 -----------
 TubULAR is a set of tools for working with 3D data of surfaces -- potentially complex and dynamic -- that can be described as tubes.
@@ -40,7 +38,26 @@ Updates to the code are installed running the following command from the ``tubul
 
     git pull
 
-Now that you've downloaded TubULAR, let's look over the components and walk through an example.
+So now your tubular is definitely up-to-date. 
+
+We have tried our best to keep dependencies to an absolute minimum. One package that TubULAR will try to use if your surfaces are so "prickly" that they would cause potential issues is gptoolbox. This is a *MATLAB* package, but it has some mex files, which are *MATLAB*'s way of interfacing with custom *C++* code. If that sounds complicated, don't worry -- all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a *Terminal* window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR's surface extraction parameters.
+
+First download **gptoolbox** inside ``tubular/external/``.
+	
+	cd tubular/external/
+	git clone https://github.com/alecjacobson/gptoolbox.git
+	
+Now that you've downloaded gptoolbox, go into the mex folder and compile 
+
+	cd gptoolbox
+	cd mex
+    mkdir build
+    cd build
+    cmake ..
+    make 
+
+If you find trouble here, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.  
+Now that you've downloaded TubULAR and built gptoolbox, let's look over the components of **TubULAR** and walk through an example.
 
 
 Components
@@ -66,7 +83,28 @@ Let's walk through an example or two
   :maxdepth: 1
 
   example_usage_tubular
+
+.. toctree::
+  :maxdepth: 1
+
+  example_usage_tubular_for_surface_visualization
   
+Here is a very detailed example using the zebrafish heart data that highlights an alternative method for surface extraction.
+
+.. toctree::
+  :maxdepth: 1
+
+  example_usage_zebrafish_heart
+  
+  
+FAQ / Common Debugging Issues
+-----------------------------
+
+.. toctree::
+  :maxdepth: 1
+
+  faq_debugging
+
   
 Optional dependencies for extra functionality
 ---------------------------------------------
@@ -81,7 +119,7 @@ Then, before running an example script that uses ImSAnE, you'll need to navigate
 	
 **Morphsnakes**
 
-Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez. The original version was posted to github here: <https://github.com/pmneila/morphsnakes>, but to use this with TubULAR and ImSAnE, we use a lightly modified version::
+Maybe you want some extra knobs to fine-tune your surfaces, beyond the built-in **MATLAB** ``activecontour`` implemented in the **TubULAR** pipeline. Morphsnakes was developed by Pablo Marquez-Neila, Luis Baumela and Luis Alvarez. The original version was posted to github here: <https://github.com/pmneila/morphsnakes>, but to use this with TubULAR and ImSAnE, we use a lightly modified version::
 
    sudo pip3 install PyMCubes	
 
@@ -127,15 +165,6 @@ Conversely, to follow a TubULAR pipeline using an ImSaNE Experiment class instan
   :maxdepth: 1
 
   example_usage_tubular_with_imsane
-  
-
-**Using TubULAR within ImSAnE with Morphsnakes**
-To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.
-
-.. toctree::
-  :maxdepth: 1
-
-  example_usage_imsane_morphsnakes_tubular
   
   
    

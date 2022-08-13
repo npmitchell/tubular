@@ -1,9 +1,7 @@
-Example for using TubULAR methods within imsane, using morphsnakes for surface detection
+Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection
 ========================================================================================
 
-.. code-block:: matlab
-
-	# CODE HERE
+morphsnakes_wrapper has been removed from TubULAR as is available as a separate repository.
 
 
 

@@ -2,10 +2,12 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/><title>MATLAB Module Index - TubULAR 2022 documentation</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
+        <title>Common issues in TubULAR and suggestions - TubULAR 2022 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=935aa2abcc5c1da4283d1dc201fb1f0add16d23a" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=25ceb02ed1c46dc30f2321ff83e92799f69dfdb9" />
     
@@ -160,13 +162,13 @@
 <li class="toctree-l1"><a class="reference internal" href="example_usage_zebrafish_heart.html">Example for using TubULAR: zebrafish heart dynamics</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="faq_debugging.html">Common issues in TubULAR and suggestions</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul>
@@ -215,25 +217,25 @@
           </label>
         </div>
         <article role="main">
-          
-<section class="domainindex-section">
-  <h1>MATLAB Module Index</h1>
-  <div class="domainindex-jumpbox"><a href="#cap-@"><strong>@</strong></a></div>
+          <section id="common-issues-in-tubular-and-suggestions">
+<h1>Common issues in TubULAR and suggestions<a class="headerlink" href="#common-issues-in-tubular-and-suggestions" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Data loads but only one slice is present</p></li>
+</ul>
+<p>&gt; Try toggling the swapZT parameter in the xp metadata.</p>
+<ul class="simple">
+<li><p>Data loads but each timepoint is loaded as multiple timestamps</p></li>
+</ul>
+<p>&gt; Try toggling the swapZT parameter in the xp metadata, since the Z dimension is likely interpreted as time T.</p>
+<ul class="simple">
+<li><p>Fast marching centerline extraction fails and/or the image output shows the path leaving the outside of the tubular surface.</p></li>
+</ul>
+<p>&gt; First erase the existing (bad) centerline files from disk (txt files) and try re-running with options.preview = true. If the visual output doesn’t tell you what’s wrong right away, try reducing the subsampling factor (<a href="#id1"><span class="problematic" id="id2">`</span></a>options.res’) by which the volume is reduced for fast marching. You may also/alternatively need to adjust options.normal_step in tubi.alignAPDVCoords(), which places the A and P points connected by the centerline a distance options.normal_step from the surface.</p>
+<ul class="simple">
+<li><p>Fast marching centerline extraction takes too long to calculate.</p></li>
+</ul>
+<p>&gt; Increase the subsampling factor (<a href="#id3"><span class="problematic" id="id4">`</span></a>options.res’). These crude fast-marching centerlines will be superceded by centerlines computed from the conformal mapping to the plane later anyway, so there is no point wasting too much time on them. Their only purpose is to topologically constrain the conformal map minimizing Dirichlet energy (creaing uv/sphi coordinates), so as long as they are curves that live inside the mesh and span the system, they should work fine.</p>
 </section>
-<table class="domainindex-table">
-  <tr class="pcap">
-    <td></td><td>&#160;</td><td></td>
-  </tr>
-  <tr class="cap" id="cap-@">
-    <td></td><td><strong>@</strong></td><td></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-        <a href="TubULAR.html#module-@TubULAR"><code class="xref">@TubULAR</code></a></td><td>
-    <em></em></td>
-  </tr>
-</table>
 
         </article>
       </div>
@@ -273,6 +275,5 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
-    
-    <script>DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true</script></body>
+    </body>
 </html>

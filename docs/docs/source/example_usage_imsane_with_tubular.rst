@@ -1,7 +1,7 @@
 Example for using TubULAR methods within ImSAnE
 ===============================================
 
-THIS SITE IS UNDER CONSTRUCTION, WITH AN ESTIMATED COMPLETION DATE OF MAY 6, 2022
+THIS SITE IS UNDER CONSTRUCTION
 
 .. code-block:: matlab
 

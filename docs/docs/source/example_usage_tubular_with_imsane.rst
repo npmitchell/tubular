@@ -1,7 +1,7 @@
 Example for using TubULAR after making an ImSAnE experiment instance
 ====================================================================
 
-THIS SITE IS UNDER CONSTRUCTION, WITH AN ESTIMATED COMPLETION DATE OF MAY 6, 2022
+
 
 .. code-block:: matlab
 

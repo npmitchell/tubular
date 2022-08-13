@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR methods within ImSAnE" href="example_usage_imsane_with_tubular.html" /><link rel="prev" title="Welcome to TubULAR’s documentation!" href="index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR just for surface visualization" href="example_usage_tubular_for_surface_visualization.html" /><link rel="prev" title="Welcome to TubULAR’s documentation!" href="index.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
-        <title>Example for using TubULAR after making an ImSAnE experiment instance - TubULAR 2022 documentation</title>
+        <title>Example for using TubULAR - TubULAR 2022 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=935aa2abcc5c1da4283d1dc201fb1f0add16d23a" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=25ceb02ed1c46dc30f2321ff83e92799f69dfdb9" />
@@ -153,16 +153,19 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Example for using TubULAR</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_for_surface_visualization.html">Example for using TubULAR just for surface visualization</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_zebrafish_heart.html">Example for using TubULAR: zebrafish heart dynamics</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul>
@@ -174,12 +177,11 @@
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#properties">Properties</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#module-@TubULAR">Full Contents:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="DEC.html">Example Usage</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="DEC.html">DEC is a Discrete Exterior Calculus toolbox for MATLAB.</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="example_DEC_diskMesh.html">Example for analyzing flow on a planar surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="example_DEC_sphericalMesh.html">Example for analyzing flow on a spherical surface</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="DEC.html#indices-and-tables">Indices and tables</a></li>
 </ul>
 
 </div>
@@ -212,10 +214,564 @@
           </label>
         </div>
         <article role="main">
-          <section id="example-for-using-tubular-after-making-an-imsane-experiment-instance">
-<h1>Example for using TubULAR after making an ImSAnE experiment instance<a class="headerlink" href="#example-for-using-tubular-after-making-an-imsane-experiment-instance" title="Permalink to this headline">#</a></h1>
-<p>THIS SITE IS UNDER CONSTRUCTION, WITH AN ESTIMATED COMPLETION DATE OF MAY 6, 2022</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span>#<span class="w"> </span><span class="n">CODE</span><span class="w"> </span><span class="n">HERE</span><span class="w"></span>
+          <section id="example-for-using-tubular">
+<h1>Example for using TubULAR<a class="headerlink" href="#example-for-using-tubular" title="Permalink to this headline">#</a></h1>
+<p>Here is an example using a synthetic dataset available for download on FigShare:
+Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. <a class="reference external" href="https://doi.org/10.6084/m9.figshare.20484345.v1">https://doi.org/10.6084/m9.figshare.20484345.v1</a></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% figure_tubular_generate_synthetic_dataset</span><span class="w"></span>
+
+<span class="nb">close</span><span class="w"> </span><span class="nb">all</span><span class="w"></span>
+<span class="nb">clear</span><span class="w"> </span><span class="nb">all</span><span class="w"></span>
+
+<span class="c">%% Add paths</span><span class="w"></span>
+<span class="n">dataDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'/mnt/data/tubular_test/single_coil_dynamic/'</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% This is the path where the example dataset is downloaded</span><span class="w"></span>
+<span class="n">origpath</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'../../'</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% This should be the path to tubular, like /mnt/data/code/tubular/</span><span class="w"></span>
+<span class="nb">cd</span><span class="p">(</span><span class="n">origpath</span><span class="p">)</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="n">origpath</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="s">'utility'</span><span class="p">,</span><span class="w"> </span><span class="s">'addpath_recurse'</span><span class="p">))</span><span class="w"></span>
+<span class="n">addpath_recurse</span><span class="p">(</span><span class="s">'utility'</span><span class="p">)</span><span class="w"></span>
+<span class="c">% Here we do use gptoolbox code: add to the MATLAB path here the location</span><span class="w"></span>
+<span class="c">% of your gptoolbox copy:</span><span class="w"></span>
+<span class="n">addpath_recurse</span><span class="p">(</span><span class="s">'/mnt/data/code/gptoolbox'</span><span class="p">)</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="s">'TexturePatch'</span><span class="p">)</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="s">'DECLab'</span><span class="p">)</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="s">'RicciFlow_MATLAB'</span><span class="p">)</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="s">'utility'</span><span class="p">,</span><span class="s">'plotting'</span><span class="p">))</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="s">'utility'</span><span class="p">,</span><span class="s">'plotting'</span><span class="p">))</span><span class="w"></span>
+<span class="c">% go back to the data</span><span class="w"></span>
+<span class="nb">cd</span><span class="p">(</span><span class="n">dataDir</span><span class="p">)</span><span class="w"></span>
+
+
+<span class="c">%%</span><span class="w"></span>
+<span class="n">outdir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">dataDir</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="k">if</span><span class="w"> </span><span class="o">~</span><span class="nb">exist</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="n">dataDir</span><span class="p">,</span><span class="w"> </span><span class="s">'xp.mat'</span><span class="p">),</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="c">%% DEFINE NEW MASTER SETTINGS</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">~</span><span class="nb">exist</span><span class="p">(</span><span class="s">'./masterSettings.mat'</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">overwrite</span><span class="w"></span>
+<span class="w">        </span><span class="c">% Metadata about the experiment</span><span class="w"></span>
+<span class="w">        </span><span class="n">stackResolution</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% resolution in spaceUnits per pixel</span><span class="w"></span>
+<span class="w">        </span><span class="n">nChannels</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w">             </span><span class="c">% how many channels is the data (ex 2 for GFP + RFP)</span><span class="w"></span>
+<span class="w">        </span><span class="n">channelsUsed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w">          </span><span class="c">% which channels are used for analysis</span><span class="w"></span>
+<span class="w">        </span><span class="n">timePoints</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span><span class="mi">25</span><span class="p">;</span><span class="w">       </span><span class="c">% timepoints to include in the analysis</span><span class="w"></span>
+<span class="w">        </span><span class="n">ssfactor</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">;</span><span class="w">              </span><span class="c">% subsampling factor</span><span class="w"></span>
+<span class="w">        </span><span class="n">flipy</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w">             </span><span class="c">% whether the data is stored inverted relative to real position in lab frame</span><span class="w"></span>
+<span class="w">        </span><span class="n">timeInterval</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w">          </span><span class="c">% physical interval between timepoints</span><span class="w"></span>
+<span class="w">        </span><span class="n">timeUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'min'</span><span class="w"> </span><span class="p">;</span><span class="w">         </span><span class="c">% physical unit of time between timepoints</span><span class="w"></span>
+<span class="w">        </span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="nb">char</span><span class="p">(</span><span class="mi">956</span><span class="p">)</span><span class="w"> </span><span class="s">'m'</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w">     </span><span class="c">% physical unit of time between timepoints</span><span class="w"></span>
+<span class="w">        </span><span class="n">fn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'Time_%06d'</span><span class="p">;</span><span class="w">        </span><span class="c">% filename string pattern</span><span class="w"></span>
+<span class="w">        </span><span class="n">set_preilastikaxisorder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'xyzc'</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% data axis order for subsampled h5 data (ilastik input)</span><span class="w"></span>
+<span class="w">        </span><span class="n">swapZT</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w">                </span><span class="c">% whether to swap the z and t dimensions</span><span class="w"></span>
+<span class="w">        </span><span class="n">masterSettings</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">'stackResolution'</span><span class="p">,</span><span class="w"> </span><span class="n">stackResolution</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'nChannels'</span><span class="p">,</span><span class="w"> </span><span class="n">nChannels</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'channelsUsed'</span><span class="p">,</span><span class="w"> </span><span class="n">channelsUsed</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'timePoints'</span><span class="p">,</span><span class="w"> </span><span class="n">timePoints</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'ssfactor'</span><span class="p">,</span><span class="w"> </span><span class="n">ssfactor</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'flipy'</span><span class="p">,</span><span class="w"> </span><span class="n">flipy</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'timeInterval'</span><span class="p">,</span><span class="w"> </span><span class="n">timeInterval</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'timeUnits'</span><span class="p">,</span><span class="w"> </span><span class="n">timeUnits</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'spaceUnits'</span><span class="p">,</span><span class="w"> </span><span class="n">spaceUnits</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'fn'</span><span class="p">,</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'swapZT'</span><span class="p">,</span><span class="w"> </span><span class="n">swapZT</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'set_preilastikaxisorder'</span><span class="p">,</span><span class="w"> </span><span class="n">set_preilastikaxisorder</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'nU'</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'nV'</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Saving masterSettings to ./masterSettings.mat'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nb">exist</span><span class="p">(</span><span class="s">'./masterSettings.mat'</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="n">ui</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">input</span><span class="p">(</span><span class="s">'This will overwrite the masterSettings. Proceed (Y/n)?'</span><span class="p">,</span><span class="w"> </span><span class="s">'s'</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="o">~</span><span class="nb">isempty</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="nb">strcmp</span><span class="p">(</span><span class="n">ui</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="s">'Y'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">strcmp</span><span class="p">(</span><span class="n">ui</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="s">'y'</span><span class="p">))</span><span class="w"></span>
+<span class="w">                </span><span class="nb">save</span><span class="p">(</span><span class="s">'./masterSettings.mat'</span><span class="p">,</span><span class="w"> </span><span class="s">'masterSettings'</span><span class="p">)</span><span class="w"></span>
+<span class="w">                </span><span class="n">loadMaster</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="k">else</span><span class="w"></span>
+<span class="w">                </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Loading masterSettings from disk instead of overwriting'</span><span class="p">)</span><span class="w"></span>
+<span class="w">                </span><span class="n">loadMaster</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="k">end</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">            </span><span class="nb">save</span><span class="p">(</span><span class="s">'./masterSettings.mat'</span><span class="p">,</span><span class="w"> </span><span class="s">'masterSettings'</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="n">loadMaster</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">end</span><span class="w"></span>
+<span class="w">    </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="n">loadMaster</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">loadMaster</span><span class="w"></span>
+<span class="w">        </span><span class="c">% LOAD EXISTING MASTER SETTINGS</span><span class="w"></span>
+<span class="w">        </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Loading masterSettings from ./masterSettings.mat'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="nb">load</span><span class="p">(</span><span class="s">'./masterSettings.mat'</span><span class="p">,</span><span class="w"> </span><span class="s">'masterSettings'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="c">% Unpack existing master settings</span><span class="w"></span>
+<span class="w">        </span><span class="n">stackResolution</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">stackResolution</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">nChannels</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">nChannels</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">channelsUsed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">channelsUsed</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">timePoints</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">timePoints</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">ssfactor</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">ssfactor</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="c">% whether the data is stored inverted relative to real position</span><span class="w"></span>
+<span class="w">        </span><span class="n">flipy</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">flipy</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">timeInterval</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">timeInterval</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% physical interval between timepoints</span><span class="w"></span>
+<span class="w">        </span><span class="n">timeUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">timeUnits</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% physical unit of time between timepoints</span><span class="w"></span>
+<span class="w">        </span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% unit of distance of full resolution data pixels ('$\mu$m')</span><span class="w"></span>
+<span class="w">        </span><span class="n">fn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">fn</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">set_preilastikaxisorder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">set_preilastikaxisorder</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">swapZT</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">swapZT</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">nU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">nU</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">nV</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">nV</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"></span>
+<span class="w">    </span><span class="n">dir16bit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">fullfile</span><span class="p">(</span><span class="n">dataDir</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="w">    </span><span class="c">%% PART 1: Define the metadata for the project</span><span class="w"></span>
+<span class="w">    </span><span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+
+<span class="w">    </span><span class="nb">cd</span><span class="p">(</span><span class="n">dir16bit</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="n">dataDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">projectDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">dataDir</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% A filename base template - to be used throughout this script</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="w">                    </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">dataDir</span><span class="w">            </span><span class="p">=</span><span class="w"> </span><span class="n">dataDir</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">filenameFormat</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="s">'.tif'</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">nChannels</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="n">nChannels</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">timePoints</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="n">timePoints</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">stackResolution</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="n">stackResolution</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">swapZT</span><span class="w">             </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">swapZT</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% first_tp is also required, which sets the tp to do individually.</span><span class="w"></span>
+<span class="w">    </span><span class="n">first_tp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="w">                     </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="p">.</span><span class="n">channelsUsed</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="n">channelsUsed</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="p">.</span><span class="n">channelColor</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="p">.</span><span class="n">description</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">'example tube'</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="p">.</span><span class="n">dynamicSurface</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="p">.</span><span class="n">jitterCorrection</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c">% 1: Correct for sample translation</span><span class="w"></span>
+<span class="w">    </span><span class="n">expMeta</span><span class="p">.</span><span class="n">fitTime</span><span class="w">             </span><span class="p">=</span><span class="w"> </span><span class="n">fileMeta</span><span class="p">.</span><span class="n">timePoints</span><span class="p">(</span><span class="n">first_tp</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">%% SET DETECTION OPTIONS ==================================================</span><span class="w"></span>
+<span class="w">    </span><span class="c">% Load/define the surface detection parameters</span><span class="w"></span>
+<span class="w">    </span><span class="n">detOpts_fn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">fullfile</span><span class="p">(</span><span class="n">projectDir</span><span class="p">,</span><span class="w"> </span><span class="s">'detectOpts.mat'</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nb">exist</span><span class="p">(</span><span class="n">detOpts_fn</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="nb">disp</span><span class="p">(</span><span class="s">'loading detectOptions'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="nb">load</span><span class="p">(</span><span class="n">detOpts_fn</span><span class="p">,</span><span class="w"> </span><span class="s">'detectOptions'</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="n">outputfilename_ply</span><span class="p">=</span><span class="s">'mesh_ls_'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">outputfilename_ls</span><span class="p">=</span><span class="s">'ls_'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">outputfilename_smoothply</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'mesh_'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">init_ls_fn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'ls_initguess'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">prob_searchstr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'_stab_Probabilities.h5'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">preilastikaxisorder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">set_preilastikaxisorder</span><span class="p">;</span><span class="w"> </span><span class="k">...</span><span class="c"> % axis order in input to ilastik as h5s. To keep as saved coords use xyzc</span><span class="w"></span>
+<span class="w">        </span><span class="n">ilastikaxisorder</span><span class="p">=</span><span class="w"> </span><span class="s">'cxyz'</span><span class="p">;</span><span class="w"> </span><span class="k">...</span><span class="c"> % axis order as output by ilastik probabilities h5</span><span class="w"></span>
+<span class="w">        </span><span class="n">imsaneaxisorder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'xyzc'</span><span class="p">;</span><span class="w"> </span><span class="k">...</span><span class="c"> % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc</span><span class="w"></span>
+
+<span class="w">        </span><span class="c">% Name the output mesh directory --------------------------------------</span><span class="w"></span>
+<span class="w">        </span><span class="n">meshDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="nb">fullfile</span><span class="p">(</span><span class="n">projectDir</span><span class="p">,</span><span class="w"> </span><span class="s">'mesh_output'</span><span class="p">)</span><span class="w"> </span><span class="nb">filesep</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">        </span><span class="c">% Surface detection parameters ----------------------------------------</span><span class="w"></span>
+<span class="w">        </span><span class="n">detectOptions</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="w"> </span><span class="s">'channel'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'ssfactor'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'niter'</span><span class="p">,</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'niter0'</span><span class="p">,</span><span class="w"> </span><span class="mi">160</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'pre_pressure'</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'pre_tension'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'pressure'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'tension'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'post_pressure'</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'post_tension'</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'exit_thres'</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-7</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'foreGroundChannel'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'fileName'</span><span class="p">,</span><span class="w"> </span><span class="nb">sprintf</span><span class="p">(</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'meshDir'</span><span class="p">,</span><span class="w"> </span><span class="n">meshDir</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'ofn_ls'</span><span class="p">,</span><span class="w"> </span><span class="n">outputfilename_ls</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'ofn_ply'</span><span class="p">,</span><span class="w"> </span><span class="n">outputfilename_ply</span><span class="p">,</span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'timepoint'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'zdim'</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'ofn_smoothply'</span><span class="p">,</span><span class="w"> </span><span class="n">outputfilename_smoothply</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'init_ls_fn'</span><span class="p">,</span><span class="w"> </span><span class="n">init_ls_fn</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="c"> % set to none to load prev tp</span><span class="w"></span>
+<span class="w">            </span><span class="s">'run_full_dataset'</span><span class="p">,</span><span class="w"> </span><span class="n">projectDir</span><span class="p">,</span><span class="k">...</span><span class="c"> % projectDir, ... % set to 'none' for single tp</span><span class="w"></span>
+<span class="w">            </span><span class="s">'radius_guess'</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'dset_name'</span><span class="p">,</span><span class="w"> </span><span class="s">'exported_data'</span><span class="p">,</span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'center_guess'</span><span class="p">,</span><span class="w"> </span><span class="s">'200,75,75'</span><span class="p">,</span><span class="k">...</span><span class="c"> % xyz of the initial guess sphere ;</span><span class="w"></span>
+<span class="w">            </span><span class="s">'save'</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="c"> % whether to save images of debugging output</span><span class="w"></span>
+<span class="w">            </span><span class="s">'plot_mesh3d'</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'dtype'</span><span class="p">,</span><span class="w"> </span><span class="s">'h5'</span><span class="p">,</span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'mask'</span><span class="p">,</span><span class="w"> </span><span class="s">'none'</span><span class="p">,</span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'mesh_from_pointcloud'</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'prob_searchstr'</span><span class="p">,</span><span class="w"> </span><span class="n">prob_searchstr</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'preilastikaxisorder'</span><span class="p">,</span><span class="w"> </span><span class="n">preilastikaxisorder</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'ilastikaxisorder'</span><span class="p">,</span><span class="w"> </span><span class="n">ilastikaxisorder</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'physicalaxisorder'</span><span class="p">,</span><span class="w"> </span><span class="n">imsaneaxisorder</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'include_boundary_faces'</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">            </span><span class="s">'smooth_with_matlab'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="c">% save options</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nb">exist</span><span class="p">(</span><span class="n">detOpts_fn</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Overwriting detectOptions --&gt; renaming existing as backup'</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="n">backupfn1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="n">detOpts_fn</span><span class="w"> </span><span class="s">'_backup1'</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="nb">exist</span><span class="p">(</span><span class="n">backupfn1</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"></span>
+<span class="w">                </span><span class="n">backupfn2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="n">detOpts_fn</span><span class="w"> </span><span class="s">'_backup2'</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">                </span><span class="nb">system</span><span class="p">([</span><span class="s">'mv '</span><span class="w"> </span><span class="n">backupfn1</span><span class="w"> </span><span class="s">' '</span><span class="w"> </span><span class="n">backupfn2</span><span class="p">])</span><span class="w"></span>
+<span class="w">            </span><span class="k">end</span><span class="w"></span>
+<span class="w">            </span><span class="nb">system</span><span class="p">([</span><span class="s">'mv '</span><span class="w"> </span><span class="n">detOpts_fn</span><span class="w"> </span><span class="s">' '</span><span class="w"> </span><span class="n">backupfn1</span><span class="p">])</span><span class="w"></span>
+<span class="w">        </span><span class="k">end</span><span class="w"></span>
+<span class="w">        </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Saving detect Options to disk'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="nb">save</span><span class="p">(</span><span class="n">detOpts_fn</span><span class="p">,</span><span class="w"> </span><span class="s">'detectOptions'</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% Overwrite certain parameters for script structure</span><span class="w"></span>
+<span class="w">    </span><span class="n">meshDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">detectOptions</span><span class="p">.</span><span class="n">meshDir</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">%% Define Experiment as struct</span><span class="w"></span>
+<span class="w">    </span><span class="n">xp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">'fileMeta'</span><span class="p">,</span><span class="w"> </span><span class="n">fileMeta</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">        </span><span class="s">'expMeta'</span><span class="p">,</span><span class="w"> </span><span class="n">expMeta</span><span class="p">,</span><span class="w"> </span><span class="s">'detectOptions'</span><span class="p">,</span><span class="w"> </span><span class="n">detectOptions</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="nb">disp</span><span class="p">(</span><span class="s">'done'</span><span class="p">)</span><span class="w"></span>
+
+
+<span class="w">    </span><span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="w">    </span><span class="c">%% PART 2: TubULAR -- surface parameterization</span><span class="w"></span>
+<span class="w">    </span><span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="w">    </span><span class="c">%% Now we have 3d data volumes and surfaces. Define a TubULAR object.</span><span class="w"></span>
+<span class="w">    </span><span class="c">% To visualize data on these surfaces and compute how these surfaces deform</span><span class="w"></span>
+<span class="w">    </span><span class="c">% we now define TubULAR object.</span><span class="w"></span>
+<span class="w">    </span><span class="n">nU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">nU</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">nV</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">masterSettings</span><span class="p">.</span><span class="n">nV</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">meshDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">meshDir</span><span class="w"> </span><span class="p">;</span><span class="w">        </span><span class="c">% Directory where meshes reside</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">flipy</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">flipy</span><span class="w"> </span><span class="p">;</span><span class="w">            </span><span class="c">% Set to true if data volume axes are inverted in chirality wrt physical lab coordinates</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">timeInterval</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">timeInterval</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% Spacing between adjacent timepoints in units of timeUnits</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">timeUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">timeUnits</span><span class="w"> </span><span class="p">;</span><span class="w">    </span><span class="c">% units of time, so that adjacent timepoints are timeUnits * timeInterval apart</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% Units of space in LaTeX, for ex '$mu$m' for micron</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">nU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">nU</span><span class="w"> </span><span class="p">;</span><span class="w">                  </span><span class="c">% How many points along the longitudinal axis to sample surface</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">nV</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">nV</span><span class="w"> </span><span class="p">;</span><span class="w">                  </span><span class="c">% How many points along the circumferential axis to sample surface</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">normalShift</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w">         </span><span class="c">% Additional dilation acting on surface for texture mapping</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">a_fixed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="p">;</span><span class="w">            </span><span class="c">% Fixed aspect ratio of pullback images. Setting to 1.0 is most conformal mapping option.</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">adjustlow</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.00</span><span class="w"> </span><span class="p">;</span><span class="w">         </span><span class="c">% floor for intensity adjustment</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">adjusthigh</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">99.9</span><span class="w"> </span><span class="p">;</span><span class="w">        </span><span class="c">% ceil for intensity adjustment (clip)</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">phiMethod</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'curves3d'</span><span class="w"> </span><span class="p">;</span><span class="w">   </span><span class="c">% Method for following surface in surface-Lagrangian mapping [(s,phi) coordinates]</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">lambda_mesh</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.00</span><span class="w"> </span><span class="p">;</span><span class="w">       </span><span class="c">% Smoothing applied to the mesh before DEC measurements</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">lambda</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">;</span><span class="w">             </span><span class="c">% Smoothing applied to computed values on the surface</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">lambda_err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">;</span><span class="w">         </span><span class="c">% Additional smoothing parameter, optional</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">zwidth</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">opts</span><span class="p">.</span><span class="n">nmodes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="c">% opts.t0 = xp.fileMeta.timePoints(1) ;   % reference timepoint used to define surface-Lagrangian and Lagrangian measurements</span><span class="w"></span>
+<span class="w">    </span><span class="c">% opts.t0 = 123 ;</span><span class="w"></span>
+<span class="w">    </span><span class="c">% opts.t0 = 37 ;</span><span class="w"></span>
+<span class="w">    </span><span class="c">% opts.t0 = 1 ;</span><span class="w"></span>
+
+<span class="w">    </span><span class="nb">disp</span><span class="p">(</span><span class="s">'saving xp struct and opts to disk'</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nb">save</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="n">dataDir</span><span class="p">,</span><span class="w"> </span><span class="s">'xp.mat'</span><span class="p">),</span><span class="w"> </span><span class="s">'xp'</span><span class="p">,</span><span class="w"> </span><span class="s">'opts'</span><span class="p">)</span><span class="w"></span>
+<span class="k">else</span><span class="w"></span>
+<span class="w">    </span><span class="nb">disp</span><span class="p">(</span><span class="s">'loading xp struct from disk'</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nb">load</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="n">dataDir</span><span class="p">,</span><span class="w"> </span><span class="s">'xp.mat'</span><span class="p">),</span><span class="w"> </span><span class="s">'xp'</span><span class="p">,</span><span class="w"> </span><span class="s">'opts'</span><span class="p">)</span><span class="w"></span>
+<span class="k">end</span><span class="w"></span>
+
+<span class="c">%% TubULAR class instance</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'defining TubULAR class instance (tubi= tubular instance)'</span><span class="p">)</span><span class="w"></span>
+<span class="n">tubi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">TubULAR</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span><span class="w"> </span><span class="n">opts</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'done defining TubULAR instance'</span><span class="p">)</span><span class="w"></span>
+
+
+<span class="c">%% Define global orientation frame (for viewing in canonical frame)</span><span class="w"></span>
+<span class="c">% Compute APDV coordinate system</span><span class="w"></span>
+<span class="n">alignAPDVOpts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">alignAPDVOpts</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">computeAPDVCoords</span><span class="p">(</span><span class="n">alignAPDVOpts</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">%% Select the endcaps for the centerline computation (A and P) and a point</span><span class="w"></span>
+<span class="c">% along which we will form a branch cut for mapping to the plane (D).</span><span class="w"></span>
+<span class="n">apdvOpts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">apdvOpts</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">apdvOpts</span><span class="p">.</span><span class="n">autoAP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="p">[</span><span class="n">apts_sm</span><span class="p">,</span><span class="w"> </span><span class="n">ppts_sm</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">computeAPDpoints</span><span class="p">(</span><span class="n">apdvOpts</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">% Align the meshes in the APDV global frame &amp; plot them</span><span class="w"></span>
+<span class="n">alignAPDVOpts</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">alignAPDVOpts</span><span class="p">.</span><span class="n">forceEndpointsInside</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">alignAPDVOpts</span><span class="p">.</span><span class="n">normal_step</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">alignMeshesAPDV</span><span class="p">(</span><span class="n">alignAPDVOpts</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="nb">disp</span><span class="p">(</span><span class="s">'done'</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% EXTRACT CENTERLINES</span><span class="w"></span>
+<span class="c">% Note: these just need to be 'reasonable' centerlines for topological</span><span class="w"></span>
+<span class="c">% checks on the orbifold cuts. Therefore, use as large a resolution ('res')</span><span class="w"></span>
+<span class="c">% as possible that still forms a centerline passing through the mesh</span><span class="w"></span>
+<span class="c">% surface, since the centerline computed here is just for constraining the</span><span class="w"></span>
+<span class="c">% mapping to the plane.</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w">         </span><span class="c">% overwrite previous results</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">overwrite_ims</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w">     </span><span class="c">% overwrite previous results</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">weight</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.1</span><span class="p">;</span><span class="w">               </span><span class="c">% for speedup of centerline extraction. Larger is less precise</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">exponent</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="p">;</span><span class="w">            </span><span class="c">% how heavily to scale distance transform for speed through voxel</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">res</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w">                 </span><span class="c">% resolution of distance tranform grid in which to compute centerlines</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">preview</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w">           </span><span class="c">% preview intermediate results</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">reorient_faces</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w">    </span><span class="c">% not needed for our well-constructed meshes</span><span class="w"></span>
+<span class="n">cntrlineOpts</span><span class="p">.</span><span class="n">dilation</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w">              </span><span class="c">% how many voxels to dilate the segmentation inside/outside before path computation</span><span class="w"></span>
+
+<span class="c">% Note: this can take about 400s per timepoint for res=2.0, so use as big a</span><span class="w"></span>
+<span class="c">%   res value as possible.</span><span class="w"></span>
+<span class="c">%</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">generateFastMarchingCenterlines</span><span class="p">(</span><span class="n">cntrlineOpts</span><span class="p">)</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'done with centerlines'</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Identify anomalies in centerline data</span><span class="w"></span>
+<span class="n">idOptions</span><span class="p">.</span><span class="n">ssr_thres</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% distance of sum squared residuals in um as threshold for removing spurious centerlines</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">cleanFastMarchingCenterlines</span><span class="p">(</span><span class="n">idOptions</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'done with cleaning up centerlines'</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Cylinder cut mesh --&gt; transforms a topological sphere into a topological cylinder</span><span class="w"></span>
+<span class="c">% Look for options on disk. If not saved, define options.</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="o">~</span><span class="nb">exist</span><span class="p">(</span><span class="n">tubi</span><span class="p">.</span><span class="n">fileName</span><span class="p">.</span><span class="n">endcapOptions</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">overwrite</span><span class="w"></span>
+<span class="w">    </span><span class="n">endcapOpts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="w"> </span><span class="s">'adist_thres'</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="c">  % 20, distance threshold for cutting off anterior in pix</span><span class="w"></span>
+<span class="w">                </span><span class="s">'pdist_thres'</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="c">  % 15-20, distance threshold for cutting off posterior in pix</span><span class="w"></span>
+<span class="w">                </span><span class="s">'tref'</span><span class="p">,</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">t0</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% reference timepoint at which time dorsal-most endcap vertices are defined</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">setEndcapOptions</span><span class="p">(</span><span class="n">endcapOpts</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="c">% Save the options to disk</span><span class="w"></span>
+<span class="w">    </span><span class="nb">disp</span><span class="p">(</span><span class="s">'saving endcap options to disk'</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">saveEndcapOptions</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="k">else</span><span class="w"></span>
+<span class="w">    </span><span class="c">% load endcapOpts</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">loadEndcapOptions</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">endcapOpts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">endcapOptions</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="k">end</span><span class="w"></span>
+
+<span class="n">methodOpts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">methodOpts</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">methodOpts</span><span class="p">.</span><span class="n">save_figs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w">   </span><span class="c">% save images of cutMeshes along the way</span><span class="w"></span>
+<span class="n">methodOpts</span><span class="p">.</span><span class="n">preview</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w">  </span><span class="p">;</span><span class="w">     </span><span class="c">% display intermediate results</span><span class="w"></span>
+<span class="c">% methodOpts.timePoints = 14 ;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">sliceMeshEndcaps</span><span class="p">(</span><span class="n">endcapOpts</span><span class="p">,</span><span class="w"> </span><span class="n">methodOpts</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">% Clean Cylinder Meshes</span><span class="w"></span>
+<span class="c">% This removes "ears" from the endcaps of the tubular meshes (cylindrical</span><span class="w"></span>
+<span class="c">% meshes)</span><span class="w"></span>
+<span class="n">cleanCylOptions</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">cleanCylOptions</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">cleanCylMeshes</span><span class="p">(</span><span class="n">cleanCylOptions</span><span class="p">)</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'done cleaning cylinder meshes'</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">%% ORBIFOLD -&gt; begin populating tubi.dir.mesh/gridCoords_nUXXXX_nVXXXX/</span><span class="w"></span>
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="c">% Iterate Through Time Points to Create Pullbacks ========================</span><span class="w"></span>
+<span class="k">for</span><span class="w"> </span><span class="n">tt</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">xp</span><span class="p">.</span><span class="n">fileMeta</span><span class="p">.</span><span class="n">timePoints</span><span class="w"></span>
+<span class="w">    </span><span class="nb">disp</span><span class="p">([</span><span class="s">'NOW PROCESSING TIME POINT '</span><span class="p">,</span><span class="w"> </span><span class="nb">num2str</span><span class="p">(</span><span class="n">tt</span><span class="p">)]);</span><span class="w"></span>
+<span class="w">    </span><span class="n">tidx</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">xp</span><span class="p">.</span><span class="n">tIdx</span><span class="p">(</span><span class="n">tt</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% Load the data for the current time point ------------------------</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">setTime</span><span class="p">(</span><span class="n">tt</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">%----------------------------------------------------------------------</span><span class="w"></span>
+<span class="w">    </span><span class="c">% Create the Cut Mesh</span><span class="w"></span>
+<span class="w">    </span><span class="c">%----------------------------------------------------------------------</span><span class="w"></span>
+<span class="w">    </span><span class="n">cutMeshfn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sprintf</span><span class="p">(</span><span class="n">tubi</span><span class="p">.</span><span class="n">fullFileBase</span><span class="p">.</span><span class="n">cutMesh</span><span class="p">,</span><span class="w"> </span><span class="n">tt</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cutPathfn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sprintf</span><span class="p">(</span><span class="n">tubi</span><span class="p">.</span><span class="n">fullFileBase</span><span class="p">.</span><span class="n">cutPath</span><span class="p">,</span><span class="w"> </span><span class="n">tt</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">~</span><span class="nb">exist</span><span class="p">(</span><span class="n">cutMeshfn</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">~</span><span class="nb">exist</span><span class="p">(</span><span class="n">cutPathfn</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">overwrite</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nb">exist</span><span class="p">(</span><span class="n">cutMeshfn</span><span class="p">,</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Overwriting cutMesh...'</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"></span>
+<span class="w">            </span><span class="nb">disp</span><span class="p">(</span><span class="s">'cutMesh not found on disk. Generating cutMesh... '</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">end</span><span class="w"></span>
+<span class="w">        </span><span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">tubi</span><span class="p">.</span><span class="n">generateCurrentCutMesh</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Saving cutP image'</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="c">% Plot the cutPath (cutP) in 3D</span><span class="w"></span>
+<span class="w">        </span><span class="n">tubi</span><span class="p">.</span><span class="n">plotCutPath</span><span class="p">(</span><span class="n">tubi</span><span class="p">.</span><span class="n">currentMesh</span><span class="p">.</span><span class="n">cutMesh</span><span class="p">,</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">currentMesh</span><span class="p">.</span><span class="n">cutPath</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">compute_pullback</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="n">compute_pullback</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">uvcutMesh</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">getCurrentUVCutMesh</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">spcutMeshOptions</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">spcutMeshOptions</span><span class="p">.</span><span class="n">t0_for_phi0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">t0set</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% which timepoint do we define corners of pullback map</span><span class="w"></span>
+<span class="w">    </span><span class="n">spcutMeshOptions</span><span class="p">.</span><span class="n">save_phi0patch</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">spcutMeshOptions</span><span class="p">.</span><span class="n">iterative_phi0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">spcutMeshOptions</span><span class="p">.</span><span class="n">smoothingMethod</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'none'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">plotting</span><span class="p">.</span><span class="n">preview</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">generateCurrentSPCutMesh</span><span class="p">([],</span><span class="w"> </span><span class="n">spcutMeshOptions</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% Compute the pullback if the cutMesh is ok</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">compute_pullback</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">~</span><span class="nb">exist</span><span class="p">(</span><span class="nb">sprintf</span><span class="p">(</span><span class="n">tubi</span><span class="p">.</span><span class="n">fullFileBase</span><span class="p">.</span><span class="n">im_sp</span><span class="p">,</span><span class="w"> </span><span class="n">tt</span><span class="p">),</span><span class="w"> </span><span class="s">'file'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="w">        </span><span class="n">pbOptions</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">pbOptions</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">tubi</span><span class="p">.</span><span class="n">generateCurrentPullbacks</span><span class="p">([],</span><span class="w"> </span><span class="p">[],</span><span class="w"> </span><span class="p">[],</span><span class="w"> </span><span class="n">pbOptions</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">else</span><span class="w"></span>
+<span class="w">        </span><span class="nb">disp</span><span class="p">(</span><span class="s">'Skipping computation of pullback'</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"></span>
+
+<span class="k">end</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'Done with generating spcutMeshes and cutMeshes'</span><span class="p">)</span><span class="w"></span>
+
+
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">%% PART 3: Further refinement of dynamic meshes</span><span class="w"></span>
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">%% Smooth the sphi grid meshes in time ====================================</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">width</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% width of kernel, in #timepoints, to use in smoothing meshes</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">smoothDynamicSPhiMeshes</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">%% Plot the time-smoothed meshes</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotSPCutMeshSmRS</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">% Inspect coordinate system charts using smoothed meshes</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">coordSys</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'spsm'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">coordinateSystemDemo</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Redo Pullbacks with time-smoothed meshes ===============================</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'Create pullback using S,Phi coords with time-averaged Meshes'</span><span class="p">)</span><span class="w"></span>
+<span class="k">for</span><span class="w"> </span><span class="n">tt</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">xp</span><span class="p">.</span><span class="n">fileMeta</span><span class="p">.</span><span class="n">timePoints</span><span class="w"></span>
+<span class="w">    </span><span class="nb">disp</span><span class="p">([</span><span class="s">'NOW PROCESSING TIME POINT '</span><span class="p">,</span><span class="w"> </span><span class="nb">num2str</span><span class="p">(</span><span class="n">tt</span><span class="p">)]);</span><span class="w"></span>
+<span class="w">    </span><span class="n">tidx</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tubi</span><span class="p">.</span><span class="n">xp</span><span class="p">.</span><span class="n">tIdx</span><span class="p">(</span><span class="n">tt</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% Load the data for the current time point ------------------------</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">setTime</span><span class="p">(</span><span class="n">tt</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c">% Establish custom Options for MIP --&gt; choose which pullbacks to use</span><span class="w"></span>
+<span class="w">    </span><span class="n">pbOptions</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">pbOptions</span><span class="p">.</span><span class="n">numLayers</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% how many onion layers over which to take MIP</span><span class="w"></span>
+<span class="w">    </span><span class="n">pbOptions</span><span class="p">.</span><span class="n">generate_spsm</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">pbOptions</span><span class="p">.</span><span class="n">generate_sp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">pbOptions</span><span class="p">.</span><span class="n">overwrite</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">tubi</span><span class="p">.</span><span class="n">generateCurrentPullbacks</span><span class="p">([],</span><span class="w"> </span><span class="p">[],</span><span class="w"> </span><span class="p">[],</span><span class="w"> </span><span class="n">pbOptions</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="k">end</span><span class="w"></span>
+
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow</span><span class="w"></span>
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE ============================</span><span class="w"></span>
+<span class="c">% Skip if already done</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">coordsys</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'spsm'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">doubleCoverPullbackImages</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'done'</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">% PERFORM PIV ON PULLBACK MIPS ===========================================</span><span class="w"></span>
+<span class="c">% % Compute PIV either with built-in phase correlation or in PIVLab</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePIV2d</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">% Measure velocities =====================================================</span><span class="w"></span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">'Making map from pixel to xyz to compute velocities in 3d for smoothed meshes...'</span><span class="p">)</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">show_v3d_on_data</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePIV3d</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">% Lagrangian dynamics</span><span class="w"></span>
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">% Pullback pathline time averaging of velocities</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">timeAverageVelocities</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+<span class="c">% Velocity plots for pathline time averaging</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">plot_vxyz</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">invertImage</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">averagingStyle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'Lagrangian'</span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotTimeAvgVelocities</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+<span class="c">% Divergence and Curl (Helmholtz-Hodge) for Lagrangian</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">averagingStyle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'Lagrangian'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">lambda</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">lambda_mesh</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">helmholtzHodge</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">% Compressibility &amp; kinematics for Lagrangian</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measureMetricKinematics</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">% Metric Kinematics Kymographs &amp; Correlations -- Bandwidth Filtered</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotMetricKinematics</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Pullback pathlines connecting Lagrangian grids</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePullbackPathlines</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">% Query velocities along pathlines</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePathlineVelocities</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+<span class="c">% plot the pathline velocities</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">gridTopology</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'triangulated'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotPathlineVelocities</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">% Measure Pathline Kinematics</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePathlineMetricKinematics</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">% Plot Pathline Kinematics</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotPathlineMetricKinematics</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><span class="w"></span>
+<span class="c">%% Create ricci mesh at t0 to measure Beltrami coefficient in pathlines</span><span class="w"></span>
+
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">climit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">coordSys</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'ricci'</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measureBeltramiCoefficient</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+
+<span class="c">%% Strain rate (epsilon = 1/2 (djvi+divj) -vn bij)</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measureStrainRate</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Plot time-averaged strain rates in 3d on mesh</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotStrainRate3DFiltered</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Kymograph strain rates</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">clim_trace</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">clim_deviatoric</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotStrainRate</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">% Measure strain rate along pathlines</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">overwriteImages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">plot_dzdp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePathlineStrainRate</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Measure divergence and out-of-plane deformation along pathlines</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePathlineMetricKinematics</span><span class="p">()</span><span class="w"></span>
+
+<span class="c">% Pathline strain rate plots</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">climit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">climitWide</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotPathlineStrainRate</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Measure strain along pathlines -- note this is from pathlines, not integrating rates</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">()</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">plot_dzdp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">climitInitial</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.05</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">climitRamp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.01</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">climitRatio</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">measurePathlineStrain</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">plotPathlineStrain</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+
+
+<span class="c">%% PCA decomposition</span><span class="w"></span>
+<span class="n">pcaTypes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="s">'vnVector'</span><span class="p">,</span><span class="w"> </span><span class="s">'v3d'</span><span class="p">,</span><span class="w"> </span><span class="s">'vt'</span><span class="p">,</span><span class="w"> </span><span class="s">'H2vn'</span><span class="p">,</span><span class="w"> </span><span class="s">'vnScalar'</span><span class="p">,</span><span class="w"> </span><span class="s">'divv'</span><span class="p">,</span><span class="w"> </span><span class="s">'gdot'</span><span class="p">}</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="c">% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">'overwrite'</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">    </span><span class="s">'overwriteImages'</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">pcaTypes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">pcaTypes</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="c">% options.meshStyles = 'sphi' ;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="nb">char</span><span class="p">(</span><span class="mi">181</span><span class="p">)</span><span class="w"> </span><span class="s">'m'</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">getPCAoverTime</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
+
+<span class="c">%% Laplace-Beltrami Spectral (LBS) decomposition</span><span class="w"></span>
+<span class="nb">close</span><span class="w"> </span><span class="nb">all</span><span class="p">;</span><span class="w"> </span><span class="nb">clc</span><span class="p">;</span><span class="w"></span>
+
+<span class="c">% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;</span><span class="w"></span>
+<span class="n">lbsTypes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="s">'H2vn'</span><span class="p">,</span><span class="w"> </span><span class="s">'vnScalar'</span><span class="p">,</span><span class="w"> </span><span class="s">'divv'</span><span class="p">,</span><span class="w"> </span><span class="s">'gdot'</span><span class="p">}</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">struct</span><span class="p">(</span><span class="s">'overwrite'</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
+<span class="w">    </span><span class="s">'overwriteImages'</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">options</span><span class="p">.</span><span class="n">lbsTypes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">lbsTypes</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="c">% options.meshStyles = 'sphi' ;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">spaceUnits</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="nb">char</span><span class="p">(</span><span class="mi">181</span><span class="p">)</span><span class="w"> </span><span class="s">'m'</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="n">tubi</span><span class="p">.</span><span class="n">getLBSoverTime</span><span class="p">(</span><span class="n">options</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <section id="indices-and-tables">
@@ -233,12 +789,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="example_usage_imsane_with_tubular.html">
+          <a class="next-page" href="example_usage_tubular_for_surface_visualization.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Example for using TubULAR methods within ImSAnE</div>
+                <div class="title">Example for using TubULAR just for surface visualization</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -285,7 +841,7 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Example for using TubULAR after making an ImSAnE experiment instance</a><ul>
+<li><a class="reference internal" href="#">Example for using TubULAR</a><ul>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 </li>
