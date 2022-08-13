@@ -45,6 +45,10 @@ function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 %   smoothingMethod : str specifier (default='none')
 %       method for smoothing phi0 wrt AP axis coordinate (ss)
 %   textureAxisOrder : 'xyz', 'yxz', etc
+%   smoothingWidth : int 
+%       width of kernel for smoothing of phi0 that takes v->phi=v-phi0.
+%       Must be odd if smoothingMethod=='savgol', does not matter 
+%       if smoothingMethod=='none'
 %       
 %
 % Returns
@@ -66,6 +70,8 @@ phi0_sign = tubi.flipy ;  % NOTE: our convention is that new phi = v - phi_0 but
                         % some reason when flipy is true even though we have
                         % flipped cutMesh, we must add a minus sign so that phiv_kk
                         % becomes phi_kk = v + phi0. 
+smoothingWidth = 11 ;  % must be odd if smoothingMethod=='savgol', does not matter if smoothingMethod=='none'
+smoothingOder = 2 ;  % used if smoothingMethod=='savgol', polynomial order of filter
 
 %% Unpack options
 cutMesh = tubi.getCurrentCutMesh() ;
@@ -108,6 +114,12 @@ if nargin > 2
     end
     if isfield(spcutMeshOptions, 'phi0_sign')
         phi0_sign = spcutMeshOptions.phi0_sign ;
+    end
+    if isfield(spcutMeshOptions, 'smoothingWidth')
+        smoothingWidth = spcutMeshOptions.smoothingWidth ;
+    end
+    if isfield(spcutMeshOptions, 'smoothingOrder')
+        smoothingOrder = spcutMeshOptions.smoothingOrder ;
     end
 end
 
@@ -439,7 +451,8 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             % prev2d_uphi = reshape(tmp.spcutMesh.uphi, [nU, nV, 2]) ;
             imfn_sp_prev = sprintf( tubi.fullFileBase.im_sp, tp_for_comparison) ;
 
-            % fit the shifts in the y direction
+            % fit the shifts in the v direction as a curv along the u
+            % direction.
             dmyk = 0 ;
             phi0_fit = zeros(size(uspace_ds)) ;
             phi0s = zeros(size(uspace_ds)) ;
@@ -468,6 +481,8 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                 phiOpts.c3d_dsv = c3d_dsv_pix ;
                 phiOpts.prev_avgpts_ss = prev_avgpts_ss_pix ;
                 phiOpts.prev_avgpts = prev_avgpts_pix ;
+                phiOpts.smoothingWidth = smoothingWidth ;
+                phiOpts.smoothingOrder = smoothingOrder ;
                 
                 % Will we save check pullbacks to preview the algo?
                 % If so, create a struct to pass visualization options

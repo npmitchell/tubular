@@ -1,0 +1,4 @@
+# segmentation_membrane
+getSegmentation.m takes the image of cell membranes and returns its segmentation. Since segmenting the entire image can be challenging, the segmentation is done incrementally over a smaller window that moves across the whole image. The other two arguments, stepsize and windowsize, are how many pixels the window moves in each step and the size of the window. The default values are 20 pix and 100x100 pix. 
+
+If the data has multiple time points, the segmentation of time points in the neighborhood of the time point of interest can be used to enhance the quality of the segmentation. superimpose_membrane.m does it by summing the segmentation at those timepoints, applying a gaussian filter, and then adding them to the original image to enhance the image. The enhanced image can be used for segmentation.

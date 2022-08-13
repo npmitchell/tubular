@@ -24,6 +24,11 @@ function generateCurrentCutMesh(tubi, cutMeshOptions)
 %   definePDviaRicci_t0 : (bool, default=false)
 %       Compute the pullback coords at t0 via Ricci flow, then use Orbifold
 %       for other timepoints
+%   useMaxDeviationPtsForCorrection : bool, default = true)
+%       If the twist of a given cutpath is out of bounds, try different
+%       paths based on piecewise geodesics that have endpoints chosen based
+%       on their distance from the previous cutpath. This makes adjacent
+%       timepoints' cutpaths similar to each other.
 %
 % NPMitchell 2020
 
@@ -32,6 +37,7 @@ nsegs4path = 2 ;
 maxJitter = 100 ;
 maxTwChange = 0.7 ;
 preview = false ;
+useMaxDeviationPtsForCorrection = true ;
 definePDviaRicci_t0 = false ;
 definePDviaRicci = false ;
 ricciOptions = struct() ;
@@ -50,6 +56,8 @@ if nargin > 1
     end
     if isfield(cutMeshOptions, 'maxTwChange')
         maxTwChange = cutMeshOptions.maxTwChange ;
+    elseif isfield(cutMeshOptions, 'maxTwistChange')
+        maxTwChange = cutMeshOptions.maxTwistChange ;
     end
     if isfield(cutMeshOptions, 'preview')
         preview = cutMeshOptions.preview ;
@@ -65,6 +73,9 @@ if nargin > 1
     end
     if isfield(cutMeshOptions, 'ricciOptions')
         ricciOptions = cutMeshOptions.ricciOptions ;
+    end
+    if isfield(cutMeshOptions, 'useMaxDeviationPtsForCorrection')
+        useMaxDeviationPtsForCorrection = cutMeshOptions.useMaxDeviationPtsForCorrection ;
     end
 end
 ricciOptions.t0 = t0 ;
@@ -271,7 +282,8 @@ else
         cntrline,...  % supply the current corrected centerline
         nsegs4path, prevTw, previousP, ...
         'MaxTwChange', maxTwChange, 'MaxJitter', maxJitter, ...
-        'PrevCntrline', prevcline, 'centerlineIsErratic', true) ;
+        'PrevCntrline', prevcline, 'centerlineIsErratic', true, ...
+        'useMaxDeviationPtsForCorrection', useMaxDeviationPtsForCorrection) ;
 end
 
 % Store this path for the next one to be nearby

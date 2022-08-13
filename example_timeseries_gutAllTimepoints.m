@@ -321,11 +321,40 @@ disp('defining TubULAR class instance (tubi= tubular instance)')
 tubi = TubULAR(xp, opts) ;
 disp('done defining TubULAR instance')
 
+%%
+options = struct() ;
+options.coordSys = 'sphi' ;
+options.style = 'curves' ;
+options.exten = '.png' ;
+for subU = [3,5]
+    options.subU = subU;
+    options.fillHoops = 1 ;
+    options.subV =10 ;
+    for tp  = [123, 183, 213] 
+        tubi.setTime(tp)
+        tubi.coordinateSystemDemo(options)
+    end
+end
+
+%%
+options.includeCenterline = false ;
+options.axisOn = false ;
+options.style = 'surface' ;
+for tp  = [123, 183, 213] 
+    tubi.setTime(tp)
+    tubi.coordinateSystemDemo(options)
+end
 
 error('here')
-%% Show accumulated strain as magnitude
-tubi.plot
 
+%% Show accumulated strain as magnitude
+tubi.plotPathlineStrain
+
+%% Visualize Lagrangian patch followed by piv Pathlines
+opts = struct() ;
+opts.timePoints = 96:10:206 ;
+opts.demoPatchName = 'demoPatch005' ;
+tubi.visualizeSegmentationPatch(opts) 
 
 
 %% 

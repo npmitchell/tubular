@@ -31,8 +31,18 @@ function [xloc, ssloc] = equidistantSampling1D(xvals, ss, nsamples, method)
 % 
 % NPMitchell 2020
 
+if nargin < 4
+    method = 'linear' ;
+end
+
 samplingss = linspace(0, max(ss), nsamples) ;
-xloc = interp1(ss, xvals, samplingss, method) ;
-ssloc = interp1(xvals, ss, xloc, method) ;
+if strcmpi(method, 'linear')
+    xloc = interp1(ss, xvals, samplingss, method) ;
+    if nargout > 1
+        ssloc = interp1(xvals, ss, xloc, method) ;
+    end
+else
+    error('code for this method here')
+end
 
 

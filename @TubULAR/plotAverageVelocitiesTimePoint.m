@@ -197,7 +197,13 @@ if ~exist(speedfn, 'file') || overwrite
     colormap parula ;
     labelOpts.label = '$|v|$ [$\mu$m/min]' ;
     labelOpts.title = ['speed, $|v|$: $t=$' num2str(tp - t0) tunit] ;
-    scalarFieldOnImage(im, [xx', yy], ...
+    [tmpx, tmpy] = meshgrid(xx', yy) ;
+    tmpxy = [tmpx(:), tmpy(:)] ;
+    
+    if length(size(im)) > 2
+        im = max(im, [], 3) ;
+    end
+    scalarFieldOnImage(im, tmpxy, ...
         reshape(vecnorm(vsm_ii, 2, 2), gridsz),...
         alphaVal, vscale, labelOpts, 'Style', 'Positive') ;
     ylim([0.25 * size(im, 1), 0.75 * size(im, 1)])
@@ -238,7 +244,9 @@ if ~exist(vnfn, 'file') || overwrite
     else
         imw = im * washout2d + max(im(:)) * (1-washout2d) ;
     end
-    scalarFieldOnImage(imw, [xx', yy], vn, alphaVal, vnscale, ...
+    [tmpx, tmpy] = meshgrid(xx', yy) ;
+    tmpxy = [tmpx(:), tmpy(:)] ;
+    scalarFieldOnImage(imw, tmpxy, vn, alphaVal, vnscale, ...
         labelOpts) ;
     ylim(ylims)
     disp(['saving figure: ' vnfn])
@@ -309,6 +317,9 @@ if ~exist(vtgvnfn, 'file') || overwrite || true
     % VT
     vxb = imgaussfilt(vx, 4) ;
     vyb = imgaussfilt(vy, 4) ;
+    if length(size(im)) > 2
+        im = max(im, [], 3) ;
+    end
     if invertImage
         imw = (max(im(:))-im) * washout2d + max(im(:)) * (1-washout2d) ;
     else
@@ -350,7 +361,9 @@ if ~exist(vtgvnfn, 'file') || overwrite || true
     else
         imw = im * washout2d + max(im(:)) * (1-washout2d) ;
     end
-    scalarFieldOnImage(imw, [xx', yy], vn, alphaVal, vnscale, ...
+    [tmpx, tmpy] = meshgrid(xx, yy) ;
+    tmpxy = [tmpx(:), tmpy(:)] ;
+    scalarFieldOnImage(imw, tmpxy, vn, alphaVal, vnscale, ...
         labelOpts) ;
     ylim(ylims)
     disp(['saving figure: ' vtgvnfn])

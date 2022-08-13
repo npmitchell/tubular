@@ -88,7 +88,11 @@ if redo_meshsmooth
     % Filter in time axis
     % linfilt = 0.1 * ones(10, 1, 1) ;
     % ellipsoid = fspecial3('ellipsoid', [5, 1, 1]) ;
-    v3dsmM = imfilter(vM, tripulse, 'replicate') ;
+    if ~isempty(tripulse)
+        v3dsmM = imfilter(vM, tripulse, 'replicate') ;
+    else
+        v3dsmM = vM ; 
+    end
     % vsmM = permute(vsmM, [2,1,3]) ;
     % nsmM = permute(nsmM, [2,1,3]) ;
 
@@ -132,7 +136,7 @@ if redo_meshsmooth
                 nqqrs(:, 1) = -nqqrs(:, 1) ;
                 nqqrs(:, 3) = -nqqrs(:, 3) ;
             else
-                disp('Keeping normals as they are. I think this is right...')
+                % disp('Keeping normals as they are. I think this is right...')
                 % error('Should we flip normals here? I think we want normals to be outward in APDV coords?')
             end
 

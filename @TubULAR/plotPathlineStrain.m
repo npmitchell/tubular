@@ -28,7 +28,7 @@ function plotPathlineStrain(tubi, options)
 %% Default options 
 overwrite = false ;
 plot_kymographs = true ;
-plot_strain3d = false ;
+plot_strain3d = true ;
 maxWFrac = 0.03 ;  % Maximum halfwidth of feature/fold regions as fraction of ap length
 t0 = tubi.t0set() ;
 t0Pathline = t0 ;
@@ -175,7 +175,7 @@ if plot_strain3d
     refMesh.v = refMesh.vrs ;
     fa = doublearea(refMesh.vrs, refMesh.f) * 0.5 ;
     
-    for tidx = tidx0 + 90 ; %1 :length(tps)
+    for tidx =  [1,6] %:length(tps)
         tp = tubi.xp.fileMeta.timePoints(tidx) ;
         tubi.setTime(tp) ;
         
@@ -207,6 +207,13 @@ if plot_strain3d
         tre2 = tre2(strain.strain.faceIDs) ;
         dev2 = dev2(strain.strain.faceIDs) ;
         
+        % norm of strain
+        enorm = zeros(numel(strain.strain.faceIDs), 1) ;
+        for fid0 = 1:numel(strain.strain.faceIDs)
+            fid = strain.strain.faceIDs(fid0) ;
+            tmp = squeeze(strainTensor(fid, :, :)) ;
+            enorm(fid0) = sum(tmp(:).^2) ;
+        end
         
         ax1 = subtightplot(2, 2, 1) ;
         % tre2 = (doublearea(mesh.v, mesh.f) * 0.5 - fa) ./ fa ;
@@ -221,6 +228,7 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
+        view([0,0])
         
         ax2 = subtightplot(2, 2, 2) ;
         trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', fra, 'edgecolor', 'none')
@@ -234,6 +242,7 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
+        view([0,0])
         
         ax3 = subtightplot(2, 2, 3) ;
         trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', dev2, 'edgecolor', 'none')
@@ -246,6 +255,7 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
+        view([0,0])
         
         ax4 = subtightplot(2, 2, 4) ;
         trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', dev, 'edgecolor', 'none')
@@ -258,6 +268,7 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
+        view([0,0])
         
         set(gcf, 'color', 'w')
         export_fig(outfn, '-nocrop', '-r600')

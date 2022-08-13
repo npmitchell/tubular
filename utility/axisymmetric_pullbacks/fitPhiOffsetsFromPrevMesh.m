@@ -42,7 +42,8 @@ function [phi0_fit, phi0s] = fitPhiOffsetsFromPrevMesh(TF, TV2D, TV3D,...
 % save_phi0patch : bool
 %   save a patch colored by the phi0 motion deduced from the difference
 %   between previous and current DVhoop coordinates
-% smoothingMethod : str specifier
+% smoothingMethod : str specifier ('none' or 'savgol')
+%   how to smooth the computed phi0s (offsets in phi)
 % phiOpts : struct passed to phiOffsetsFromPrevMesh, with fields
 %   preview = preview ;
 %   avgpts = avgpts_pix ;
@@ -53,6 +54,10 @@ function [phi0_fit, phi0s] = fitPhiOffsetsFromPrevMesh(TF, TV2D, TV3D,...
 %       timepoint
 %   prev_avgpts = prev_avgpts_pix ; 
 %       average position of each hoop for previous timepoint
+%   smoothingWidth : odd integer, default=11, used if smoothingMethod ~= 'none'
+%       Kernel width for smoothing the resulting phi0 calculations along u
+%   smoothingOrder : int > 0, default=2, used if smoothingMethod == 'savgol'
+%       polynomial order for savgol interpolant of phi0(u) values
 % patchOpts : optional options struct
 %   preview   : bool (optional) visualize the progress of phi0
 %   patchImFn : str  (optional) save the progress of phi0 as texture 
@@ -85,9 +90,25 @@ function [phi0_fit, phi0s] = fitPhiOffsetsFromPrevMesh(TF, TV2D, TV3D,...
 
 try
     assert(strcmp(smoothingMethod, 'none') ||...
-        strcmp(smoothingMethod, 'savgol'))
+        strcmp(smoothingMethod, 'savgol') ||...
+        strcmp(smoothingMethod, 'movmean'))
 catch
-    error('smoothingMethod must be none or savgol')
+    error('smoothingMethod must be none, movmean or savgol')
+end
+
+if ~isempty(fieldnames(phiOpts))
+    if isfield(phiOpts, 'smoothingWidth')
+        smoothingWidth = phiOpts.smoothingWidth ;
+        phiOpts = rmfield(phiOpts, 'smoothingWidth') ;
+    else
+        smoothingWidth = 11 ;
+    end
+    if isfield(phiOpts, 'smoothingOrder')
+        smoothingOrder = phiOpts.smoothingOrder ;
+        phiOpts = rmfield(phiOpts, 'smoothingOrder') ;
+    else
+        smoothingOrder = 2 ;
+    end
 end
 
 % If a patchOpts struct is passed, use it to save patch image preview
@@ -145,12 +166,23 @@ disp('Minimizing phi0s...')
 % Convert phi0s to a smooth polynomial phi(u)
 if strcmp(smoothingMethod, 'savgol')
     % Smoothing parameters
-    framelen = 11 ;  % must be odd
-    polyorder = 2 ;
+    framelen = smoothingWidth ;  % must be odd
+    try
+        assert(mod(framelen, 2) == 1)
+    catch
+        error('phiOpts.smoothingWidth must be odd for smoothingMethod savgol')
+    end
+    polyorder = smoothingOrder ;
     % Low pass filter (Savitsky-Golay)
     % Note we ignore the variations in ds -->
     % (instead use du=constant) to do this fit
     phi0_fit = savgol(phi0s, polyorder, framelen)' ;
+elseif strcmp(smoothingMethod, 'movmean')
+    % Smoothing parameters
+    framelen = smoothingWidth ;  % window over which to smooth the result
+    % Note we ignore the variations in ds -->
+    % (instead use du=constant) to do this fit
+    phi0_fit = movmean(phi0s, framelen)' ;
 elseif strcmp(smoothingMethod, 'none')    
     phi0_fit = phi0s ;
 end
@@ -173,6 +205,7 @@ if save_fit
     xlabel('u')
     ylabel('\phi_0')
     title('Shift \phi(u)')
+    disp(['Saving fit of phi0 as image to: ' num2str(plotfn)])
     saveas(fig, plotfn)
     close all
 end

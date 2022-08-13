@@ -311,7 +311,12 @@ classdef TubULAR < handle
         end
         
         function t0 = t0set(tubi, t0)
-            % t0set(tubi, t0) Set time offset from file or manually 
+            % t0set(tubi, t0) Set time offset from file or manually. 
+            % If t0 is saved to disk, it should have a header like:
+            % # reference time for dataset
+            % 76
+            % <eof>
+            % and should be saved at tubi.fileName.t0
             if nargin < 2
                 if exist(tubi.fileName.t0, 'file')
                     % Note that fold_onset is in units of timepoints, not 
@@ -2345,7 +2350,73 @@ classdef TubULAR < handle
             % Make colorwheel
             
         end
-                               
+                             
+        
+        %% Tracking -- manual workflow
+        function tracks = manualTrackingAdd(QS, options)
+            % Add to current tracks on disk
+            trackOutfn = fullfile(QS.dir.tracking, 'manualTracks.mat') ;
+            tracks = [] ;
+            timePoints = QS.xp.fileMeta.timePoints ;
+            imDir = fullfile(QS.dir.im_sp_sm, 'endoderm') ;
+            imFileBase = QS.fullFileBase.im_sp_sm ;
+            tracks2Add = length(tracks)+1:length(tracks) + 10 ;
+                
+            close all
+            if nargin < 2
+                options = struct() ;
+            end
+            if isfield(options, 'trackOutfn')
+                trackOutfn = options.trackOutfn ;
+            end
+            if exist(trackOutfn, 'file')
+                load(trackOutfn, 'tracks')
+            end
+            if isfield(options, 'timePoints')
+                timePoints = options.timePoints ;
+            end
+            if isfield(options, 'imFileBase')
+                imFileBase = options.fileBase ;
+            end
+            if isfield(options, 'tracks2Add')
+                tracks2Add = options.tracks2Add ;
+            end
+            % Decide on tidx0
+            if isfield(options, 'tidx0')
+                tidx0 = options.tidx0 ;
+            elseif all(timePoints == QS.xp.fileMeta.timePoints)
+                tidx0 = QS.xp.tIdx(QS.t0set()) ;
+            else
+                tidx0 = 1 ;
+            end
+            tracks = manualTrack2D(tracks, imFileBase, timePoints, trackOutfn, tracks2Add, tidx0) ;
+        end
+        
+        function manualTrackingCorrect(options)
+            disp('Review tracking results: manualCorrectTracks2D')
+            %% Ensure all pairIDs are good tracks in muscle layer
+            subdir = 'muscle' ;
+            imDir = fullfile(QS.dir.im_sp_sm, subdir) ;
+            timePoints = 1:60 ;
+            fileBase = fullfile(imDir, QS.fileBase.im_sp_sm) ;
+            trackOutfn = fullfile(QS.dir.tracking, 'muscle_tracks.mat') ;
+            load(trackOutfn, 'tracks') ;
+            tracks2Correct = 1:length(tracks) ;
+            if all(timePoints == QS.xp.fileMeta.timePoints)
+                tidx = QS.xp.tidx(QS.t0set()) ;
+            else
+                tidx = 1 ;
+            end
+
+            [newTracks, newG] = manualCorrectTracks2D(tracks, fileBase, timePoints, trackOutfn, tracks2Correct) ;
+        end
+        
+        %% Visualize tracked segmentation
+        % for visualizing T1 transitions
+        visualizeDemoTracks(QS, Options)
+        visualizeTracking3D(QS, Options)
+        visualizeSegmentationPatch(QS, Options)
+        
         %% timepoint-specific coordinate transformations
         sf = interpolateOntoPullbackXY(tubi, XY, scalar_field, options)
                 

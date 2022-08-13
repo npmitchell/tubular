@@ -8,7 +8,7 @@ cd ../
 
 
 %% Add paths
-dataDir = '/path/to/single_coil/' ;
+dataDir = '/mnt/data/tubular_test/tube_centerlines/single_coil/' ;
 cd(origpath)
 addpath(origpath) ;
 addpath(genpath('utility'))
@@ -388,105 +388,105 @@ fmcline = fmcline{1}(:, 2:4) ;
 mesh_sma = mesh_sm ;
 mesh_sma.v = mesh_sm.v + 10 * mesh_sm.vn ;
 
-%% Plot result
-falph = 0.2 ;
-[colors, ~] = define_colors ;
-sky = colors(6, :) ;
-disp('plotting resulting mesh')
-clf
-trisurf(triangulation(mesh_sm.f, mesh_sma.v(:, [3,1,2])), 'edgecolor', 'none',...
-    'facecolor', sky, 'facealpha', falph)
-axis equal
-hold on;
-plot3(sz, sx, sy, 'k-', 'linewidth', 2)
-lighting gouraud
-material dull
-camlight 
-axis off
-set(gcf, 'color', 'white')
-export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_bwskel_10step.png'), '-nocrop', '-r600')
-
-% Plot result -- fmarching
-[colors, names] = define_colors ;
-sky = colors(6, :) ;
-disp('plotting resulting mesh')
-
-clf
-trisurf(triangulation(mesh.f, mesh.v(:, [3,1,2])), 'edgecolor', 'none',...
-    'facecolor', sky, 'facealpha', falph)
-axis equal
-hold on;
-% plot3(sz, sx, sy, '.-')
-plot3(fmcline(:, 3), fmcline(:, 1), fmcline(:, 2), 'k-', 'linewidth', 2)
-lighting gouraud
-material dull
-camlight 
-axis off
-set(gcf, 'color', 'white')
-export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_fastMarching.png'), '-nocrop', '-r600')
-
-% plot result -- DV hoops centerline
-clf
-trisurf(triangulation(mesh.f, mesh.v(:, [3,1,2])), 'edgecolor', 'none',...
-    'facecolor', sky, 'facealpha', falph)
-axis equal
-hold on;
-% plot3(sz, sx, sy, '.-')
-plot3(cline(:, 3), cline(:, 1), cline(:, 2), 'k-', 'linewidth', 2)
-lighting gouraud
-material dull
-camlight 
-axis off
-set(gcf, 'color', 'white')
-export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_avgptsDVhoop.png'), '-nocrop', '-r600')
-
-% Show associations with mesh vertices
-clf
-spcutMesh = tubi.getCurrentSPCutMesh() ;
-trisurf(triangulation(spcutMesh.f, spcutMesh.v(:, [3,1,2])), 'edgecolor', 'none',...
-    'facevertexcdata', spcutMesh.sphi(:, 1), 'facealpha', falph)
-axis equal
-hold on;
-% plot3(sz, sx, sy, '.-')
-cmap = viridis(length(cline)) ;
-for ii = 1:length(cline)
-    color = cmap(ii, :) ;
-    scatter3(cline(ii, 3), cline(ii, 1), cline(ii, 2), 10, color, 'filled', ...
-        'markeredgecolor', 'none')
-end
-lighting gouraud
-material dull
-camlight 
-axis off
-set(gcf, 'color', 'white')
-export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_avgptsDVhoop_associations.png'), '-nocrop', '-r600')
-
-% associations v2
-
-clf
-spcutMesh = tubi.getCurrentSPCutMesh() ;
-trisurf(triangulation(spcutMesh.f, spcutMesh.v(:, [3,1,2])), 'edgecolor', 'none',...
-     'facevertexcdata', spcutMesh.sphi(:, 1), 'facealpha', 0.0)
- 
-axis equal
-hold on;
-% plot3(sz, sx, sy, '.-')
-cmap = viridis(length(cline)) ;
-for ii = fliplr(1:3:length(cline))
-    color = cmap(ii, :) ;
-    for jj = 1:5:nV
-        xyz = spcutMesh.v(ii+(jj-1)*nV, :) ;
-        xx = xyz(1); yy = xyz(2); zz = xyz(3) ;
-        plot3([cline(ii, 3), zz], [cline(ii, 1), xx], [cline(ii, 2), yy], ...
-            '-', 'color', color)
-    end
-end
-lighting gouraud
-material dull
-camlight 
-axis off
-set(gcf, 'color', 'white')
-export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_avgptsDVhoop_associations2.png'), '-nocrop', '-r600')
+% %% Plot result
+% falph = 0.2 ;
+% [colors, ~] = define_colors ;
+% sky = colors(6, :) ;
+% disp('plotting resulting mesh')
+% clf
+% trisurf(triangulation(mesh_sm.f, mesh_sma.v(:, [3,1,2])), 'edgecolor', 'none',...
+%     'facecolor', sky, 'facealpha', falph)
+% axis equal
+% hold on;
+% plot3(sz, sx, sy, 'k-', 'linewidth', 2)
+% lighting gouraud
+% material dull
+% camlight 
+% axis off
+% set(gcf, 'color', 'white')
+% export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_bwskel_10step.png'), '-nocrop', '-r600')
+% 
+% % Plot result -- fmarching
+% [colors, names] = define_colors ;
+% sky = colors(6, :) ;
+% disp('plotting resulting mesh')
+% 
+% clf
+% trisurf(triangulation(mesh.f, mesh.v(:, [3,1,2])), 'edgecolor', 'none',...
+%     'facecolor', sky, 'facealpha', falph)
+% axis equal
+% hold on;
+% % plot3(sz, sx, sy, '.-')
+% plot3(fmcline(:, 3), fmcline(:, 1), fmcline(:, 2), 'k-', 'linewidth', 2)
+% lighting gouraud
+% material dull
+% camlight 
+% axis off
+% set(gcf, 'color', 'white')
+% export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_fastMarching.png'), '-nocrop', '-r600')
+% 
+% % plot result -- DV hoops centerline
+% clf
+% trisurf(triangulation(mesh.f, mesh.v(:, [3,1,2])), 'edgecolor', 'none',...
+%     'facecolor', sky, 'facealpha', falph)
+% axis equal
+% hold on;
+% % plot3(sz, sx, sy, '.-')
+% plot3(cline(:, 3), cline(:, 1), cline(:, 2), 'k-', 'linewidth', 2)
+% lighting gouraud
+% material dull
+% camlight 
+% axis off
+% set(gcf, 'color', 'white')
+% export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_avgptsDVhoop.png'), '-nocrop', '-r600')
+% 
+% % Show associations with mesh vertices
+% clf
+% spcutMesh = tubi.getCurrentSPCutMesh() ;
+% trisurf(triangulation(spcutMesh.f, spcutMesh.v(:, [3,1,2])), 'edgecolor', 'none',...
+%     'facevertexcdata', spcutMesh.sphi(:, 1), 'facealpha', falph)
+% axis equal
+% hold on;
+% % plot3(sz, sx, sy, '.-')
+% cmap = viridis(length(cline)) ;
+% for ii = 1:length(cline)
+%     color = cmap(ii, :) ;
+%     scatter3(cline(ii, 3), cline(ii, 1), cline(ii, 2), 10, color, 'filled', ...
+%         'markeredgecolor', 'none')
+% end
+% lighting gouraud
+% material dull
+% camlight 
+% axis off
+% set(gcf, 'color', 'white')
+% export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_avgptsDVhoop_associations.png'), '-nocrop', '-r600')
+% 
+% % associations v2
+% 
+% clf
+% spcutMesh = tubi.getCurrentSPCutMesh() ;
+% trisurf(triangulation(spcutMesh.f, spcutMesh.v(:, [3,1,2])), 'edgecolor', 'none',...
+%      'facevertexcdata', spcutMesh.sphi(:, 1), 'facealpha', 0.0)
+%  
+% axis equal
+% hold on;
+% % plot3(sz, sx, sy, '.-')
+% cmap = viridis(length(cline)) ;
+% for ii = fliplr(1:3:length(cline))
+%     color = cmap(ii, :) ;
+%     for jj = 1:5:nV
+%         xyz = spcutMesh.v(ii+(jj-1)*nV, :) ;
+%         xx = xyz(1); yy = xyz(2); zz = xyz(3) ;
+%         plot3([cline(ii, 3), zz], [cline(ii, 1), xx], [cline(ii, 2), yy], ...
+%             '-', 'color', color)
+%     end
+% end
+% lighting gouraud
+% material dull
+% camlight 
+% axis off
+% set(gcf, 'color', 'white')
+% export_fig(gcf, fullfile(outdir, 'mesh_and_skeleton_avgptsDVhoop_associations2.png'), '-nocrop', '-r600')
 
 
 %% PLOT ALL TEXTURED MESHES IN 3D (OPTIONAL: this is SLOW) ================
@@ -502,3 +502,5 @@ metadat.blackFigure = false ;
 
 % Plot on surface for all timepoints 
 tubi.plotSeriesOnSurfaceTexturePatch(metadat, Options)
+
+

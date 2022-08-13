@@ -727,7 +727,7 @@ if ~exist(ricciMeshFn, 'file') || overwrite
     %% Unwrap from annulus into rectangle and save in struct
     ricciMesh = struct() ;
     ricciMesh.annulus = struct('f', glueMesh.f, 'u', UU, 'v', glueMesh.v, ...
-        'nU', nU, 'nV', nV) ;
+        'nU', nU, 'nV', nV, 'pathPairs', [1:nU; (nV-1)*nU+1:nV*nU]') ;
     riccicutMesh = ricciMesh.annulus ;
     riccicutMesh.u = [rho, phi_recut] ;
     opts = struct('vmax', 2 * pi, 'ignoreRectangularConstraint', true) ;

@@ -434,7 +434,8 @@ if ~load_from_disk || overwrite
         prevA = apts(tidx0, :) * ssfactor ;
         prevP = ppts(tidx0, :) * ssfactor ;
         for tidx = tidxGreater
-            tubi.setTime(t0) ;
+            disp(['finding matching points in future timepoints > t0: t=' num2str(timePoints(tidx))])
+            tubi.setTime(timePoints(tidx)) ;
             mesh = tubi.loadCurrentRawMesh() ;
             [~,idxA] = min(...
                 (mesh.v(:,1) - prevA(1)).^2 + ...
@@ -693,22 +694,22 @@ if ~load_from_disk || overwrite
     try
         h5create(rawapdvname, '/apts', size(apts)) ;
     catch
-        disp('apts already exists as h5 file. Overwriting.')
+        disp(['apts already exists in h5 file. Overwriting: ' rawapdvname])
     end
     try
         h5create(rawapdvname, '/ppts', size(ppts)) ;
     catch
-        disp('ppts already exists as h5 file. Overwriting.')
+        disp(['ppts already exists in h5 file. Overwriting: ' rawapdvname])
     end
     try
         h5create(rawapdvname, '/apts_sm', size(apts_sm)) ;
     catch
-        disp('apts_sm already exists as h5 file. Overwriting.')
+        disp(['apts_sm already exists in h5 file. Overwriting: ' rawapdvname])
     end
     try
         h5create(rawapdvname, '/ppts_sm', size(ppts_sm)) ;
     catch
-        disp('ppts_sm already exists as h5 file. Overwriting.')
+        disp(['ppts_sm already exists in h5 file. Overwriting: ' rawapdvname])
     end
     h5write(rawapdvname, '/apts', apts) ;
     h5write(rawapdvname, '/ppts', ppts) ;
@@ -738,17 +739,20 @@ try
     % [xyzlim, ~, ~, ~] = tubi.getXYZLims() ;
     for tidx = 1:length(timePoints)
         tp = timePoints(tidx) ;
+        tubi.setTime(tp) ;
+        mesh = tubi.getCurrentRawMesh() ;
         % Plot the APDV points
         clf
-        plot3(apts_sm(tidx, 1), apts_sm(tidx, 2), apts_sm(tidx, 3), 'ro')
+        trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.2)
         hold on;
+        plot3(apts_sm(tidx, 1), apts_sm(tidx, 2), apts_sm(tidx, 3), 'ro')
         plot3(apts(tidx, 1), apts(tidx, 2), apts(tidx, 3), 'r.')
         plot3(ppts_sm(tidx, 1), ppts_sm(tidx, 2), ppts_sm(tidx, 3), 'b^')
         plot3(ppts(tidx, 1), ppts(tidx, 2), ppts(tidx, 3), 'b.')
         plot3(dpt(1, 1), dpt(1, 2), dpt(1, 3), 'cs')
         axis equal
         title(['t = ', num2str(tp)]) 
-        pause(0.01)
+        pause(0.1)
     end
 catch
     disp('Could not display aligned meshes -- does dpt exist on file?')

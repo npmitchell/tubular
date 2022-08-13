@@ -22,6 +22,8 @@ function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
 %       create pullbacks in uphi coords
 %   generate_rsm : bool (default=false)
 %       create pullbacks in uphi coords
+%   generate_pivPathlines : bool (default=false)
+%       create pullback images from piv pathlines
 %   PSize : int (default=5)
 %       how many interpolation points along each side of a patch
 %   EdgeColor : colorspec (default='none')
@@ -69,6 +71,7 @@ generate_uphi    = false ;  % generate a (u, phi) coord system pullback
 generate_spsm    = false ;  % generate an (s, phi) coord system smoothed mesh pullback
 generate_rsm     = false ;  % generate a relaxed (s, phi) coord system smoothed mesh pullback
 generate_ricci   = false ;  % generate a ricci-flowed coord system pullback
+generate_pivPline= false ;  % generate a piv-pathline-based coord system pullback
 % Other options
 save_as_stack    = false ;  % save data as stack for each timepoint, not MIP
 channels = [] ;             % default is to image all channels (empty list)
@@ -76,6 +79,7 @@ axisorder = [1 2 3 ];   % Note: we should NOT use QS.data.axisOrder here,
                         % since that is invoked upon loading IV instead of applying in post
 normal_shift = 0 ;          % how much to shift mesh along vertex normals before rendering
 preTextureLambda = 0 ;      % how much to smooth mesh before rendering
+t0Pathlines = tubi.t0set() ; % t0 reference time for piv-based pathlines
 
 % Overwrite imSize to match tubular attributes
 if isfield(pbOptions, 'imSize')
@@ -126,6 +130,10 @@ if nargin > 4
         generate_ricci = pbOptions.generate_ricci ;
         pbOptions = rmfield(pbOptions, 'generate_ricci') ;
     end
+    if isfield(pbOptions, 'generate_pivPathline')
+        generate_pivPline = pbOptions.generate_pivPathline ;
+        pbOptions = rmfield(pbOptions, 'generate_pivPathline') ;
+    end
     if isfield(pbOptions, 'channels')
         channels = pbOptions.channels ;
         pbOptions = rmfield(pbOptions, 'channels') ;
@@ -141,6 +149,10 @@ if nargin > 4
     if isfield(pbOptions, 'normal_shift')
         normal_shift = pbOptions.normal_shift ;
         pbOptions = rmfield(pbOptions, 'normal_shift') ;
+    end
+    if isfield(pbOptions, 't0Pathlines')
+        t0Pathlines = pbOptions.t0Pathlines ;
+        pbOptions = rmfield(pbOptions, 't0Pathlines') ;
     end
 end
 
@@ -211,6 +223,14 @@ if generate_ricci
     end
 end
 
+if generate_pivPline
+    if isfield(pbOptions, 'pivPathlineMesh')
+        pivPlineMesh = pbOptions.pivPathlineMesh ;
+    else
+        error('Load piv Pathline mesh here')
+    end
+end
+
 %% Unpack QS
 tt = tubi.currentTime ;
 a_fixed = tubi.a_fixed ;
@@ -235,6 +255,7 @@ imfn_up = sprintf( tubi.fullFileBase.im_up, tt) ;
 if tubi.dynamic
     imfn_spsm = sprintf( tubi.fullFileBase.im_sp_sm, tt) ;
     imfn_rsm = sprintf( tubi.fullFileBase.im_r_sm, tt) ;
+    imfn_pivPline = sprintf( tubi.fullFileBase.im_pivPathlines, t0Pathlines, tt) ;
 end
 imfn_ricci = sprintf( tubi.fullFileBase.im_ricci, tt) ;
 do_pb1 = ~exist(imfn_uv, 'file') && generate_uv ;
@@ -244,13 +265,15 @@ do_pb4 = ~exist(imfn_up, 'file') && generate_uphi ;
 if tubi.dynamic
     do_pb5 = ~exist(imfn_spsm, 'file') && generate_spsm ;
     do_pb6 = ~exist(imfn_rsm, 'file') && generate_rsm ;
+    do_pb10 = ~exist(imfn_pivPline, 'file') && generate_pivPline ;
 else
     do_pb5 = false ;
     do_pb6 = false ;
+    do_pb10 = false ;
 end
 do_pb9 = ~exist(imfn_ricci, 'file') && generate_ricci;
 
-do_pb = [do_pb1, do_pb2, do_pb3, do_pb4, do_pb5, do_pb6, do_pb9] ;
+do_pb = [do_pb1, do_pb2, do_pb3, do_pb4, do_pb5, do_pb6, do_pb9, do_pb10] ;
 do_pullbacks = (any(do_pb) || overwrite) ;
 
 if do_pullbacks
@@ -278,6 +301,9 @@ if do_pullbacks
         end
         if do_pb9
             disp(['Ricci PB will be generated: ', imfn_ricci])
+        end
+        if do_pb10
+            disp(['piv Pathline PB will be generated: ', imfn_pivPline])
         end
     end     
     
@@ -395,6 +421,17 @@ if (~exist(imfn_ricci, 'file') || overwrite) && generate_ricci
         pbOptions, axisorder, save_as_stack)
 else
     disp('Skipping Ricci pullback image generation ')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Save piv Pathline pullback image
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+if (~exist(imfn_pivPline, 'file') || overwrite) && generate_pivPline
+    disp(['Generating image for pivPathline coords: ' imfn_pivPline])
+    aux_generate_orbifold(pivPlineMesh, IV, imfn_pivPline, ...
+        pbOptions, axisorder, save_as_stack)
+else
+    disp('Skipping piv Pathline pullback image generation ')
 end
 
 

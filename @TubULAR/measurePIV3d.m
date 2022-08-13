@@ -173,10 +173,19 @@ else
         if strcmp(pivimCoords, 'sp_sme') || strcmp(pivimCoords, 'spsme') 
             im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
             im1 = imread(sprintf(tubi.fullFileBase.im_sp_sme, timePoints(ii+1))) ;
+            
             doubleCovered = true ;
         else
             error(['Unrecognized pivimCoords: ' pivimCoords])
         end
+            
+        if length(size(im0)) > 2
+            im0 = max(im0, [], 3) ;
+        end
+        if length(size(im1)) > 2
+            im1 = max(im1, [], 3) ;
+        end
+
         Xsz0 = size(im0, 2) ;
         Ysz0 = size(im0, 1) ;  
         Ysz1 = size(im1, 1) ;
@@ -837,6 +846,9 @@ else
             v0t2dsc = v0t2d ./ dilation * resolution ;
             xyf.x = x0 ; % (1,:)  ;
             xyf.y = y0 ; %  (:,1)' ;
+            if length(size(im)) > 2
+                im = max(im, [], 3) ;
+            end
             vectorFieldHeatPhaseOnImage(im, xyf, ...
                 v0t2dsc(:,1), v0t2dsc(:, 2), vtscale, options) ;
             
@@ -927,7 +939,7 @@ else
             alphaVal = 0.5 ;
             scale = 0.5 ;
             imRGB = cat(3, im0, im0, im0) ;  % convert to rgb for no cmap change
-            scalarFieldOnImage(imRGB, [x0(1, :)', y0(:, 1)], ...
+            scalarFieldOnImage(imRGB, [x0(:), y0(:)], ...
                 reshape(log10(piv3d{ii}.dilation), ...
                     [length(x0(1,:)), length(y0(:,1))]),...
                 alphaVal, scale,...

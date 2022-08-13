@@ -11,10 +11,33 @@ function sliceMeshEndcaps(tubi, opts, methodOpts)
 % tubi : TubULAR class instance
 %   class instance for which we cut off endcaps of mesh
 % opts : struct with optional fields
+%   adist_thres
+%   pdist_thres
+%   adist_thres2
+%   pdist_thres2
+%   aCapMethod
+%   pCapMethod
+%   aOffset
+%   pOffset
+%   aOffset2
+%   pOffset2
+%   aOffsetRate
+%   pOffsetRate
+%   aOffset2Rate
+%   pOffset2Rate
+%   aDistRate
+%   pDistRate
+%   tref
+%   custom_aidx
+%   custom_pidx
 % methodOpts : struct with optional fields
 %   tref : int (timestamp, not index)
 %       reference time stamp for dorsal definition, after and before which 
 %       we point match to find the "dorsal" boundary vertex on each endcap
+%   quickScan : bool
+%       first iterate through all points with large dt between frames to
+%       check that settings are good, then go back and compute each frame 
+%       in order
 %
 % Prerequisites
 % -------------
@@ -47,7 +70,7 @@ save_figs = true ;  % save images of cntrline, etc, along the way
 preview = false ;  % display intermediate results
 posterior_phi_subtractCOM = true ;  % For posterior pole determination 
                                     % of dorsal point, subtract the center
-                                    % of mass 
+                                    % of mass                              
 aCapMethod = 'ball' ;  % [ball,xvalue,yvalue,zvalue] method for determining vertices to remove on anterior
 pCapMethod = 'ball' ;  % [ball,xvalue,yvalue,zvalue] method for determining vertices to remove on posterior
 aOffset = [0, 0, 0] ;  % Offset in pixels in APDV coord sys (will be rotated to pixel space)
@@ -65,6 +88,10 @@ aDistRate = [0, Inf] ;  % [ramp,duration; ramp2,duration2; etc]
 pDistRate = [0, Inf] ; 
 custom_aidx = [];   % User supplied vertex IDs that will be removed to make the anterior cap
 custom_pidx = [];   % User supplied vertex IDs that will be removed to make the posterior cap
+quickScan = true ;  % first iterate through all points with large dt between frames to
+                    %       check that settings are good, then go back and compute each frame 
+                    %       in order
+
 
 if isfield(opts, 'adist_thres')
     adist_thres = opts.adist_thres ;
@@ -134,6 +161,12 @@ end
 if isfield(methodOpts, 'preview')
     preview = methodOpts.preview;
 end
+if isfield(methodOpts, 'timePoints')
+    timePoints = methodOpts.timePoints;
+end
+if isfield(methodOpts, 'quickScan')
+    quickScan = methodOpts.quickScan;
+end
 
 % Determine if valid custom input had been supplied
 useCustomPts = iscell(custom_aidx) && iscell(custom_pidx) &&...
@@ -181,7 +214,7 @@ trefIDx = tubi.xp.tIdx(tref) ;
 % every timepoint. Since the pointmatching is serial, each subsequent pass
 % recomputes meshes for previously done timepoints.
 % ONLY DO THIS IS WE ARE THEN GOING TO OVERWRITE THE QUICK SCAN.
-if (overwrite && ~useCustomPts)
+if (overwrite && ~useCustomPts && quickScan)
     if length(timePoints) > 49
         todo = trefIDx:50:length(timePoints); % first preview how slices will look
     else
@@ -349,7 +382,7 @@ for ii=todo
             elseif strcmpi(aCapMethod, 'cone')
                 % reference: https://stackoverflow.com/questions/12826117/how-can-i-detect-if-a-point-is-inside-a-cone-or-not-in-3d-space
                 apex = acomOff ;
-                % project vertices onto direction of cone (here is ap)s
+                % project vertices onto direction of cone (here is ap)
                 coneDir = -apDir ;
                 cone_dist = sum((vtx - apex) .* (coneDir .* ones(size(vtx))), 2) ;
                 orth_dist = vecnorm(vtx - apex - cone_dist * coneDir, 2, 2) ;

@@ -128,7 +128,7 @@ else
         end
         clearvars cl1 cl2 qq
     else
-        
+        disp('all centerlines pass quality checks')
     end
     
     % Plot the anomalous determination

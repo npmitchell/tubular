@@ -68,6 +68,7 @@ centerlineIsErratic = false ;
 prevcntrline = [] ;
 jitter_growth_rate = 10 ;  %linear growth rate
 nsegs_growth_rate = 1 ; % linear growth rate
+useMaxDeviationPtsForCorrection = true ;
 for i = 1:length(varargin)
     if isa(varargin{i},'double') 
         continue;
@@ -90,6 +91,10 @@ for i = 1:length(varargin)
     if ~isempty(regexp(varargin{i}, '^[Cc]enterline[Ii]s[Ee]rratic', ...
             'match'))
         centerlineIsErratic = varargin{i+1} ;
+    end
+    if ~isempty(regexp(varargin{i}, '^[Uu]se[Mm]ax[Dd]eviation[Pp]ts[Ff]or[Cc]orrection', ...
+            'match'))
+        useMaxDeviationPtsForCorrection = varargin{i+1} ;
     end
 end
 
@@ -134,6 +139,7 @@ end
 
 % Initialize the indices of the previous cutPath to use for nearest curve
 inds2use = [1, length(previousP)] ;
+inds2use0 = inds2use ;
     
 while twist_changed
     disp(['Twist out of range. Forcing nearest curve: Tw=' num2str(Tw) ', Twprev=' num2str(prevTw)])
@@ -170,19 +176,26 @@ while twist_changed
     % This makes sure that each iteration, we add only one landmark each
     % iteration, so that we don't identify a bunch of points clustered
     % near one errant segment of the path.
-    inds2find = max(1, min(max_nsegs4path, nsegs4path_kk-1)) - (length(inds2use)-2) ;
-    % point-match previous curve with current
-    dists = zeros(size(previousP,1), 1) ;
-    thisP = mesh.v(cutP, :) ;
-    for i = 1:size(previousP,1)
-        dists(i) = min(sqrt((thisP(:,1) - previousP(i,1)).^2 +...
-            (thisP(:,2) - previousP(i,2)).^2 + ...
-            (thisP(:,3) - previousP(i,3)).^2));
+    if useMaxDeviationPtsForCorrection
+        % Count how many points from the previous curve to sample
+        inds2find = max(1, min(max_nsegs4path, nsegs4path_kk-1)) - (length(inds2use)-2) ;
+        % point-match previous curve with current
+        dists = zeros(size(previousP,1), 1) ;
+        thisP = mesh.v(cutP, :) ;
+        for i = 1:size(previousP,1)
+            dists(i) = min(sqrt((thisP(:,1) - previousP(i,1)).^2 +...
+                (thisP(:,2) - previousP(i,2)).^2 + ...
+                (thisP(:,3) - previousP(i,3)).^2));
+        end
+        % Find maximum deviation indices and use these to define the sampling
+        % of the previous path
+        [~, maxdevID] = maxk(dists, inds2find) ;    
+        inds2use = sort(unique([inds2use, maxdevID'])) ;
+    else
+        inds2find = max(1, min(max_nsegs4path, nsegs4path_kk-1)) ;
+        tmp = randsample(size(previousP,1),inds2find) ;
+        inds2use = sort(unique([inds2use0, tmp(:)'])) ;
     end
-    % Find maximum deviation indices and use these to define the sampling
-    % of the previous path
-    [~, maxdevID] = maxk(dists, inds2find) ;    
-    inds2use = sort([inds2use, maxdevID']) ;
     disp(['jitter_amp = ', num2str(min(jitter_amp, max_jitter))])
     previousP_kk = previousP(inds2use, :);
     jitter = min(jitter_amp, max_jitter) * (rand(size(previousP_kk)) - 0.5);
@@ -205,6 +218,9 @@ while twist_changed
         plot3(previousP(:, 1), previousP(:, 2), previousP(:, 3), 'b--')
         if ~isempty(prevcntrline)
             plot3(prevcntrline(:, 1), prevcntrline(:, 2), prevcntrline(:, 3), '--')
+            legend({'surface', 'cutpath', 'handle points', 'centerline', 'previous path', 'prev centerline'}) 
+        else        
+            legend({'surface', 'cutpath', 'handle points', 'centerline', 'previous path'}) 
         end
 
         title(['update cutP sampling = ' num2str(length(previousP_kk))])
@@ -253,6 +269,9 @@ while twist_changed
             plot3(previousP(:, 1), previousP(:, 2), previousP(:, 3), 'b--')
             if ~isempty(prevcntrline)
                 plot3(prevcntrline(:, 1), prevcntrline(:, 2), prevcntrline(:, 3), '--')
+                legend({'surface', 'cutpath', 'handle points', 'centerline', 'previous path', 'prev centerline'}) 
+            else        
+                legend({'surface', 'cutpath', 'handle points', 'centerline', 'previous path'}) 
             end
             
             title(['sampling = ' num2str(length(previousP_kk))])

@@ -260,7 +260,7 @@ elseif any(size(xx)==1) && any(size(yy)==1)
     % Try reshaping speed to #xx x #yy
     ww = length(unique(xx)) ;
     hh = length(unique(yy)) ;
-    assert(ww < length(xx))
+    % assert(ww < length(xx))
     speed = reshape(speed, [ww hh]) ;
     gridded_data = true ;
     % Compute angle of the velocity vector

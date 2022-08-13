@@ -15,6 +15,8 @@ function fig = coordinateSystemDemo(tubi, options)
 %   interpreter : 'latex' or 'default'
 %       whether to use the latex interpreter for axes labels
 %   normLongitudinal : bool
+%   includeCenterline : bool 
+%   fillHoops : bool
 %
 % Returns
 % -------
@@ -36,8 +38,18 @@ function fig = coordinateSystemDemo(tubi, options)
     coordSys = 'sphi' ;
     interpreter = 'tex' ;
     normLongitudinal = true ;
+    includeCenterline = false ;
+    browncolor = [138, 64, 23] ./ 255 ;
+    subU = 1 ; % subsampling factor along U
+    subV = 1 ; % subsampling factor along V
+    fillHoops = false ;
+    axisOn = true ;
     
     % Unpack options
+    if nargin < 2
+        options = struct() ;
+    end
+    
     if isfield(options, 'exten')
         exten = options.exten ;
     end
@@ -49,6 +61,32 @@ function fig = coordinateSystemDemo(tubi, options)
     end
     if isfield(options, 'interpreter')
         interpreter = options.interpreter ;
+    end
+    if isfield(options, 'subU')
+        subU = options.subU ;
+    end
+    if isfield(options, 'subV')
+        subV = options.subV ;
+    end
+    if isfield(options, 'includeCenterline')
+        includeCenterline = options.includeCenterline ;
+    end
+    if isfield(options, 'fillHoops')
+        fillHoops = options.fillHoops ;
+    end
+    if isfield(options, 'axisOn')
+        axisOn = options.axisOn ;
+    end
+    
+    % add to exten
+    if (subU ~= 1 || subV ~=1) && strcmpi(style, 'curves')
+        exten = [sprintf('_%03dsU_%03dsV', subU, subV) exten] ;
+    end
+    if fillHoops && strcmpi(style, 'curves')
+        exten = ['_fillHoops' exten] ;
+    end
+    if includeCenterline
+        exten = ['_wcline' exten] ;
     end
     
     % Get mesh
@@ -73,6 +111,7 @@ function fig = coordinateSystemDemo(tubi, options)
     
     fig = figure('units', 'centimeters', 'position', [0, 0, 9, 12]) ;
         
+    [~,~,~,xyzlims] = tubi.getXYZLims() ;
     
     % plot the mesh    
     if strcmpi(style, 'curves')
@@ -90,34 +129,61 @@ function fig = coordinateSystemDemo(tubi, options)
         % AZIMUTH 3D
         subplot(2, 3, [1,2])
         hold off
-        for qq = 1:mesh.nU
+        for qq = 1:subU:mesh.nU
             plot3(xx(qq:nU:end), yy(qq:nU:end), zz(qq:nU:end), '-', ...
                 'color', colorsV(qq, :));
             hold on ;
+            if fillHoops
+                fill3(xx(qq:nU:end), yy(qq:nU:end), zz(qq:nU:end), ...
+                    colorsV(qq, :), 'facealpha', 0.1, 'edgecolor', 'none')
+            end
+        end
+        if includeCenterline
+            cline = mesh.avgpts ;
+            plot3(cline(:, 1), cline(:, 2), cline(:, 3), ...
+                '-', 'linewidth', 2, 'color', browncolor)
         end
         axis equal
+        xlim(xyzlims(1, :))
+        ylim(xyzlims(2, :))
+        zlim(xyzlims(3, :))
         xlabel([ 'ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         ylabel([ 'lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         zlabel([ 'dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
-        
+
+        if ~axisOn
+            axis off
+        end
+    
         % LONGITUDE 3D
         subplot(2, 3, [4,5])
         hold off
-        for qq = 1:(mesh.nV-1)
+        for qq = 1:subV:(mesh.nV-1)
             inds = (qq-1)*nU+1:qq*nU ;
             plot3(xx(inds), yy(inds), zz(inds), '-', ...
                 'color', colorsU(qq, :));
             hold on ;
         end
+        if includeCenterline
+            plot3(cline(:, 1), cline(:, 2), cline(:, 3), ...
+                '-', 'linewidth', 2, 'color', browncolor)
+        end
         axis equal
+        xlim(xyzlims(1, :))
+        ylim(xyzlims(2, :))
+        zlim(xyzlims(3, :))
         xlabel(['ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         ylabel(['lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         zlabel(['dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
 
+        if ~axisOn
+            axis off
+        end
+
         % LONGITUDE
         subplot(2, 3, 3)
         hold off
-        for qq = 1:mesh.nV  
+        for qq = 1:subU:mesh.nU  
             plot(uu(qq:nU:end), vv(qq:nU:end), '-', ...
                 'color', colorsV(qq, :));
             hold on ;
@@ -130,7 +196,7 @@ function fig = coordinateSystemDemo(tubi, options)
         % AZIMUTH
         subplot(2, 3, 6)
         hold off
-        for qq = 1:mesh.nV
+        for qq = 1:subV:mesh.nV
             inds = (qq-1)*nU+1:qq*nU ;
             plot(uu(inds), vv(inds), '-', ...
                 'color', colorsU(qq, :));
@@ -156,11 +222,18 @@ function fig = coordinateSystemDemo(tubi, options)
         h1.BackFaceLighting = 'unlit';
         colormap viridis
         axis equal
+    xlim(xyzlims(1, :))
+    ylim(xyzlims(2, :))
+    zlim(xyzlims(3, :))
         xlabel([ 'ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         ylabel([ 'lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         zlabel([ 'dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         grid off
 
+        if ~axisOn
+            axis off
+        end
+    
         % AZIMUTH 3D
         subplot(2, 3, [4,5])
         h2 = trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', ...
@@ -175,10 +248,16 @@ function fig = coordinateSystemDemo(tubi, options)
         h2.BackFaceLighting = 'unlit';
         colormap viridis
         axis equal
+    xlim(xyzlims(1, :))
+    ylim(xyzlims(2, :))
+    zlim(xyzlims(3, :))
         xlabel([ 'ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         ylabel([ 'lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         zlabel([ 'dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         grid off
+        if ~axisOn
+            axis off
+        end
 
         % LONGITUDE
         subplot(2, 3, 3)
@@ -206,6 +285,7 @@ function fig = coordinateSystemDemo(tubi, options)
     end
     
     labelAxes_util(coordSys, interpreter, tubi)
+    
     
     set(gcf, 'color', 'w')
     set(gcf, 'position', [0, 0, 9, 12])

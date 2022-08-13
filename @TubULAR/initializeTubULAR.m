@@ -403,6 +403,7 @@ imFolder_re_stack = fullfile([imFolderBase, '_sphi_relaxed'], ...
     'extended_stack') ;  
 imFolder_spe_stack = fullfile([imFolderBase, '_sphi'], ...
     'extended_stack') ;  
+imFolder_pivPathline = [imFolderBase, '_pivPathlines_%06dt0'] ;
 
 % time-averaged meshes
 if dynamic
@@ -503,6 +504,7 @@ if dynamic
     tubi.dir.im_r_sm = imFolder_rsm ;
     tubi.dir.im_r_sme = imFolder_rsme ;
     tubi.dir.im_r_sme_stack = imFolder_rsme_stack ;
+    tubi.dir.im_pivPathlines = imFolder_pivPathline ;
 end
 tubi.dir.im_ricci = imFolder_ricci ;
 tubi.dir.im_ricci_e = imFolder_ricci_e ;
@@ -576,7 +578,8 @@ tubi.fileBase.im_up = [tubi.fileBase.name, '_pbup.tif'] ;
 tubi.fullFileBase.im_up = fullfile(tubi.dir.im_up, tubi.fileBase.im_up) ;
 tubi.fileBase.im_ricci = [tubi.fileBase.name, '_ricci.tif'] ;
 tubi.fullFileBase.im_ricci = fullfile(tubi.dir.im_ricci, tubi.fileBase.im_ricci) ;
-
+tubi.fileBase.im_pivPathlines = [tubi.fileBase.name, '_pivPathlines.tif'] ;
+tubi.fullFileBase.im_pivPathlines = fullfile(tubi.dir.im_pivPathlines, tubi.fileBase.im_pivPathlines) ;
 
  %% Smoothed pullbacks (pb)
 if dynamic

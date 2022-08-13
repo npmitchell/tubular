@@ -194,7 +194,7 @@ if ~exist(refMeshFn, 'file') || overwrite
         opts.maxIter = maxIter ;
         [ricciMesh, ricciMu] = QS.generateRicciMeshTimePoint(t0, opts) ;
         refMesh.u_ricci = ricciMesh.rectangle.u ;
-        refMesh.mu = ricciMu.rectangle ;
+        refMesh.mu = ricciMu.mu_rectangle ;
     end
     refMesh.readme = 'mu is computed after Ricci flow generates refMesh.u_ricci' ;
     

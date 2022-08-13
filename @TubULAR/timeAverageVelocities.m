@@ -10,6 +10,8 @@ function timeAverageVelocities(tubi, options)
 % ----------
 % tubi : QuapSlap class instance
 % options : struct with fields 
+%   twidth : average over (t-twidth, t+twidth) timepoints
+%   XYkernel : float
 %   plotOptions : optional struct with fields
 %       vtscale : float
 %       vnscale : float
