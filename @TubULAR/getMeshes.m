@@ -90,6 +90,16 @@ if isfield(opts, 'maxIterRelaxMeshSpikes')
 else
     maxIterRelaxMeshSpikes = 100 ;
 end
+if isfield(opts, 'fileName')
+    fileBaseName = opts.fileName ;
+else
+    fileBaseName = tubi.fileBase.name ;
+end
+if isfield(opts, 'meshConstructionMethod')
+    meshConstructionMethod = opts.meshConstructionMethod ;
+else
+    meshConstructionMethod = 'marchingCubes' ;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Identify the surface using the loaded probabilities here
@@ -139,7 +149,12 @@ end
 
 for tidx = 1:length(tubi.xp.fileMeta.timePoints)
     tp = tubi.xp.fileMeta.timePoints(tidx) ;
-
+    try
+        previous_tp = tubi.xp.fileMeta.timePoints(tidx-1) ;
+    catch
+        previous_tp = tubi.xp.fileMeta.timePoints(tidx) - 1 ;
+    end
+    
     %% Define the mesh we seek
     outputLSfn = fullfile(mslsDir, sprintf([ofn_ls '%06d.' dtype], tp)) ;
     outputMesh = fullfile(mslsDir, sprintf(ofn_ply, tp)) ;
@@ -150,7 +165,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
     if ~exist(outputMesh, 'file') || overwrite
         %% load the exported data out of the ilastik prediction
         fileName = fullfile(dataDir, ...
-            [sprintf(opts.fileName, tp), '_Probabilities.h5']) ;
+            [sprintf(fileBaseName, tp), '_Probabilities.h5']) ;
         disp(['Reading h5 file: ' fileName])
         h5fileInfo = h5info(fileName);
         if strcmp(h5fileInfo.Datasets.Name,'exported_data')
@@ -164,36 +179,44 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
 
         % ilastik internally swaps axes. 1:x, 2:y, 3:z, 4:class
         % strategy: put into xyzc format, then pop last index
-        if strcmp(opts.ilastikaxisorder, 'xyzc')
+        if strcmp(ilastikaxisorder, 'xyzc')
             pred = file ;
-        elseif strcmp(opts.ilastikaxisorder, 'yxzc')
+        elseif strcmp(ilastikaxisorder, 'yxzc')
             % to convert yxzc to xyzc, put x=2 y=1 z=3 c=4
             pred = permute(file,[2,1,3,4]);
-        elseif strcmp(opts.ilastikaxisorder, 'zyxc')
+        elseif strcmp(ilastikaxisorder, 'zyxc')
             % to convert yxzc to xyzc, put x=3 y=2 z=1 c=4
             pred = permute(file,[3,2,1,4]);
-        elseif strcmp(opts.ilastikaxisorder, 'yzcx')
+        elseif strcmp(ilastikaxisorder, 'yzcx')
             % to convert yxzc to xyzc, put x=4 y=1 z=2 c=3
             pred = permute(file,[4,1,2,3]);
-        elseif strcmp(opts.ilastikaxisorder, 'cxyz')
+        elseif strcmp(ilastikaxisorder, 'cxyz')
             % to convert yxzc to xyzc, put x=2 y=3 z=4 c=1
             pred = permute(file,[2,3,4,1]);
-        elseif strcmp(opts.ilastikaxisorder, 'cyxz')
+        elseif strcmp(ilastikaxisorder, 'cyxz')
             % to convert yxzc to xyzc, put x=2 y=3 z=4 c=1
             pred = permute(file,[3,2,4,1]);
-        elseif strcmp(opts.ilastikaxisorder, 'czyx')
+        elseif strcmp(ilastikaxisorder, 'czyx')
             % to convert yxzc to xyzc, put x=1>4 y=2>3 z=3>2 c=4>1
             pred = permute(file,[4,3,2,1]);
-        elseif strcmp(opts.ilastikaxisorder, 'cyzx')
+        elseif strcmp(ilastikaxisorder, 'cyzx')
             % to convert cyzx to xyzc put x=1>4 y=2>2 z=3>3 c=4>1
             pred = permute(file,[4,2,3,1]);
-        elseif strcmp(opts.ilastikaxisorder, 'cxzy')
+        elseif strcmp(ilastikaxisorder, 'cxzy')
             % to convert cxzy to xyzc put x=1>2 y=2>4 z=3>3 c=4>1
             pred = permute(file,[2,4,3,1]);
         else
             error('Have not coded for this axisorder. Do so here')
         end
 
+        % Define the centerpoint of a guess sphere, or just the center for
+        % previewing.
+        if isempty(center_guess) || strcmpi(center_guess, 'none')
+            centers = size(pred) * 0.5 ;
+            centers = centers(1:3) ;
+        else
+            centers = str2num(center_guess) ;
+        end
 
         % Check if previous time point's level set exists to use as a seed
         % First look for supplied fn from detectOptions.
@@ -205,7 +228,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         if tidx > 1 || strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
             % User has NOT supplied fn from detectOptions
             init_ls_fn = [ofn_ls, ...
-                num2str(tp - 1, '%06d' ) '.' dtype] ;
+                num2str(previous_tp, '%06d' ) '.' dtype] ;
         end
 
         disp([ 'initial level set fn = ', init_ls_fn])
@@ -236,12 +259,6 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
             se0 = size(SE, 1) ;
             rad = ceil(se0*0.5) ;
             assert( all(size(SE) == se0)) ;
-            if isempty(center_guess)
-                centers = size(pred) * 0.5 ;
-                centers = centers(1:3) ;
-            else
-                centers = str2num(center_guess) ;
-            end
             dd = centers - rad ;
             xmin = max(1, dd(1)) ;
             ymin = max(1, dd(2)) ;
@@ -313,7 +330,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         % data_clipped(data_clipped < 0) = 0. ;
 
         disp(['niter is ', num2str(niter_ii)]);
-        BW = activecontour(data, init_ls, 2*niter_ii, 'Chan-Vese', ...
+        BW = activecontour(data, init_ls, niter_ii, 'Chan-Vese', ...
             'SmoothFactor', tension, 'ContractionBias', -pressure) ;
 
         % Post processing
@@ -345,8 +362,19 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 sgtitle('level set found...')
 
             end
-            % pause to draw the figure and show it in foreground
-            pause(1e-5)
+            pause(0.5)
+            
+            % Show each plane in stack
+            for zframe = 1:size(BW, 3) 
+                bwPage = squeeze(BW(:, :,zframe)) ;
+                datPage = squeeze(data(:,:,zframe)) ;
+                rgb = cat(3, bwPage, datPage, datPage) ;
+                imshow(rgb)
+                sgtitle(['level set found: z=' num2str(zframe)])
+                axis on
+                % pause to draw the figure and show it in foreground
+                pause(1e-5)
+            end
         end
 
         % Remove all but biggest component
@@ -390,7 +418,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         % Write mesh to disk
         plywrite(outputMesh, mesh.faces, mesh.vertices)
     else
-        disp(['output PLY already exists: ', ofn_ply])
+        disp(['output PLY already exists: ', outputMesh])
     end
 
     %% Clean up mesh file for this timepoint using MeshLab --------
@@ -446,7 +474,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 system( command );
             else
                 % Use the marching cubes mesh surface to smooth
-                command = ['meshlabserver -i ' infile ' -o ' outputMesh, ...
+                command = ['meshlabserver -i ' rawMesh ' -o ' outputMesh, ...
                     ' -s ' mlxprogram ' -om vn'];
                 % Either copy the command to the clipboard
                 clipboard('copy', command);
@@ -481,8 +509,14 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
 
             num_iter = 5;                
             protect_constraints = false;
-            [V, F] = remesh_smooth_iterate(V,F, smooth_with_matlab,... 
-                tar_length, num_iter, protect_constraints, enforceQuality, maxIterRelaxMeshSpikes) ;
+            smopts = struct() ;
+            smopts.lambda = smooth_with_matlab ; 
+            smopts.tar_length = tar_length ;
+            smopts.num_iter = num_iter ;
+            smopts.protect_constraints = protect_constraints ;
+            smopts.enforceQuality = enforceQuality ;
+            smopts.maxIterRelaxMeshSpikes = maxIterRelaxMeshSpikes ;
+            [V, F] = remesh_smooth_iterate(V,F, smopts) ;
 
             % newV = laplacian_smooth(mesh.v, mesh.f, 'cotan', [], smooth_with_matlab) ;
             disp('Compute normals...')
@@ -493,6 +527,6 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
             plywrite_with_normals(outputMesh, mesh.f, mesh.v, mesh.vn)
         end
     else
-        disp(['t=', num2str(timepoint) ': smoothed mesh file found...'])
+        disp(['t=', num2str(tp) ': smoothed mesh file found...'])
     end
 end

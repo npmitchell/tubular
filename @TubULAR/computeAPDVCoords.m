@@ -294,7 +294,7 @@ if redo_rot_calc || overwrite
             legend({'surface', 'dorsal pt for axess definition'}, ...
                 'Location', 'northwest')
             sgtitle('Dorsal point for APDV coordinates')
-            saveas(gcf, [tubi.fileName.dcom(1:end-3) 'png'])
+            saveas(gcf, [dptname(1:end-3) 'png'])
 
             % SAVE DCOM
             dlmwrite(dptname, dcom) ;

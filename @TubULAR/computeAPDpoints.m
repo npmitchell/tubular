@@ -741,6 +741,7 @@ try
         tp = timePoints(tidx) ;
         tubi.setTime(tp) ;
         mesh = tubi.getCurrentRawMesh() ;
+        mesh.v = mesh.v / tubi.ssfactor ; % tubi.xyz2APDV(mesh.v) ;
         % Plot the APDV points
         clf
         trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.2)

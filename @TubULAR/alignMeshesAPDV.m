@@ -558,7 +558,7 @@ for tidx = 1:length(timePoints)
         try
             [~,~,~] = apply_ambient_occlusion(tmp2, 'SoftLighting', true) ; % 'ColorMap', viridis) ;
         catch
-            debugMsg(1, 'Could not apply ambient occlusion \n')
+            disp('Could not apply ambient occlusion \n')
         end
         boxx = [xmin, xmin, xmin, xmin, xmax, xmax, xmax, xmax, xmin] ;
         boxy = [ymin, ymax, ymax, ymin, ymin, ymax, ymax, ymin, ymin] ;

@@ -1,5 +1,5 @@
 function [V,F] = remesh_smooth_iterate(V, F, options)
-% [V,F] = remesh_smooth_iterate(V,F, lambda, tar_length, num_iter, protect_constraints)
+% [V,F] = remesh_smooth_iterate(V,F, options)
 % Isotropically remesh the surface and smooth it.
 %
 % Parameters
