@@ -126,6 +126,7 @@ for tp = tp2do
     % Load current mesh +/- nTimePoints
     first = true ;
     tp2doFilter = tp-nTimePoints:tp+nTimePoints ;
+    tp2doFilter = intersect(tp2doFilter, QS.xp.fileMeta.timePoints) ;
     for tpsFilter = tp2doFilter
         tpj = min(max(tpsFilter, QS.xp.fileMeta.timePoints(1)), ...
             QS.xp.fileMeta.timePoints(end-1)) ;

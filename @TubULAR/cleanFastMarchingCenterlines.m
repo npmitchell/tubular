@@ -152,9 +152,20 @@ else
     save(cleanclinefn, 'cntrlines', 'cntrlines_rs') 
 
     % View the corrected centerlines
-    for qq = timePoints
-        first = tubi.xp.tIdx(max(min(timePoints), qq - 1)) ;
-        last = tubi.xp.tIdx(min(max(timePoints), qq + 1)) ;
+    for qid = 1:length(timePoints)
+        qq = timePoints(qid) ;
+        if qid > 1
+            prevqq = timePoints(qid-1) ;
+        else
+            prevqq = qq ;
+        end
+        if qid < length(timePoints)
+            nextqq = timePoints(qid+1) ;
+        else
+            nextqq = qq ;
+        end
+        first = tubi.xp.tIdx(max(min(timePoints), prevqq)) ;
+        last = tubi.xp.tIdx(min(max(timePoints), nextqq)) ;
         for kk = first:last
             cl = cntrlines{kk} ;
             plot3(cl(:, 1), cl(:, 2), cl(:, 3))
@@ -171,9 +182,20 @@ else
     pause(2)
 
     % View the corrected centerlines
-    for qq = timePoints
-        first = tubi.xp.tIdx(max(min(timePoints), qq - 1)) ;
-        last = tubi.xp.tIdx(min(max(timePoints), qq + 1)) ;
+    for qid = 1:length(timePoints)
+        qq = timePoints(qid) ;
+        if qid > 1
+            prevqq = timePoints(qid-1) ;
+        else
+            prevqq = qq ;
+        end
+        if qid < length(timePoints)
+            nextqq = timePoints(qid+1) ;
+        else
+            nextqq = qq ;
+        end
+        first = tubi.xp.tIdx(max(min(timePoints), prevqq)) ;
+        last = tubi.xp.tIdx(min(max(timePoints), nextqq)) ;
         for kk = first:last
             cl = cntrlines_rs{kk} ;
             plot3(cl(:, 2), cl(:, 3), cl(:, 4))

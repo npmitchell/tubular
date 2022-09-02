@@ -202,8 +202,16 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         % Compute short lagrangian pathlines (t-twidth, t+twidth)
         % Note that we clip the timepoints to compute at 1 and ntps.
         disp(['Computing pathlines around t=', num2str(tp)])
-        tp2do = (tp - twidth):(tp + twidth) ;
-        tp2do = min(max(timePoints(1), tp2do), timePoints(end-1)) ;
+        % allow for unequal timesteps
+        tidx = tubi.xp.tIdx(tp) ;
+        tidx2do = (tidx - twidth):(tidx+twidth) ;
+        tidx2do = min(max(1, tidx2do), length(timePoints)-1) ; 
+        tp2do = timePoints(tidx2do) ;
+        
+        % old code assumed spacing by increments of 1 in timesteps
+        % tp2do = (tp - twidth):(tp + twidth) ;
+        % tp2do = min(max(timePoints(1), tp2do), timePoints(end-1)) ;
+        
         popts.timePoints = tp2do ;
         
         % PIV pathlines

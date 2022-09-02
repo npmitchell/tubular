@@ -18,12 +18,14 @@ if t == timePoints(1)
     ad3D = cylmesh.v( adIDx, : );
     pd3D = cylmesh.v( pdIDx, : );
 else
+    currtidx = find(timePoints == t) ;
+    prevtp = timePoints(currtidx - 1) ;
     % Load previous mesh and previous adIDx, pdIDx
-    prevcylmeshfn = sprintf( cylinderMeshCleanBase, t -1 ) ;
+    prevcylmeshfn = sprintf( cylinderMeshCleanBase, prevtp ) ;
     prevmesh = read_ply_mod( prevcylmeshfn ); 
-    prevadIDx = h5read(outadIDxfn, ['/' sprintf('%06d', t-1) ]) ;
+    prevadIDx = h5read(outadIDxfn, ['/' sprintf('%06d', prevtp) ]) ;
     % read previous pdIDx with new indices
-    prevpdIDx = h5read(outpdIDxfn, ['/' sprintf('%06d', t-1) ]) ;
+    prevpdIDx = h5read(outpdIDxfn, ['/' sprintf('%06d', prevtp) ]) ;
     ad3D = prevmesh.v(prevadIDx, :) ;
     pd3D = prevmesh.v(prevpdIDx, :) ;
 end

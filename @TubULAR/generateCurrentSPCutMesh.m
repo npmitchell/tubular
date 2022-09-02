@@ -71,7 +71,7 @@ phi0_sign = tubi.flipy ;  % NOTE: our convention is that new phi = v - phi_0 but
                         % flipped cutMesh, we must add a minus sign so that phiv_kk
                         % becomes phi_kk = v + phi0. 
 smoothingWidth = 11 ;  % must be odd if smoothingMethod=='savgol', does not matter if smoothingMethod=='none'
-smoothingOder = 2 ;  % used if smoothingMethod=='savgol', polynomial order of filter
+smoothingOrder = 2 ;  % used if smoothingMethod=='savgol', polynomial order of filter
 
 %% Unpack options
 cutMesh = tubi.getCurrentCutMesh() ;

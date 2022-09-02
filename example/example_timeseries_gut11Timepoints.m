@@ -30,6 +30,7 @@ addpath(genpath('/mnt/data/code/gptoolbox'))
 addpath('../')
 addpath('../@TubULAR')
 addpath(genpath('../TexturePatch'))
+addpath(genpath('../RicciFlow_MATLAB')) 
 addpath(genpath('../DECLab'))
 addpath(genpath('../external'))
 
@@ -312,7 +313,7 @@ tubi.prepareIlastik() ;
 tubi.xp.detectOptions.preview = true ;
 tubi.getMeshes()
 
-%% Inspect the meshes
+% Inspect the meshes
 for tp = tubi.xp.fileMeta.timePoints
     clf;
     mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tp)) ;
@@ -322,7 +323,7 @@ for tp = tubi.xp.fileMeta.timePoints
     pause(0.1)
 end
 
-%% Obtain APDV coordinates of the surface. 
+% Obtain APDV coordinates of the surface. 
 % There are two options for obtaining these coordinates. 
 %   1. Automatically determine A and P by the extremal points of the
 %   surface mesh along the elongated axis of the mesh, and define DV as
@@ -355,25 +356,25 @@ end
 % apical surface training.
 % Anterior is at the junction of the midgut with the foregut.
 
-%% Define global orientation frame (for viewing in canonical frame)
+% Define global orientation frame (for viewing in canonical frame)
 % Compute APDV coordinate system
 alignAPDVOpts = struct() ;
 alignAPDVOpts.overwrite = false ;
 alignAPDVOpts.use_iLastik = true ;
 tubi.computeAPDVCoords(alignAPDVOpts) ;
 
-%% Select the endcaps for the centerline computation (A and P) and a point
+% Select the endcaps for the centerline computation (A and P) and a point
 % along which we will form a branch cut for mapping to the plane (D).
 apdvOpts = struct() ;
 apdvOpts.overwrite = false ;
 [apts_sm, ppts_sm] = tubi.computeAPDpoints(apdvOpts) ;
 
-%% Align the meshes in the APDV global frame & plot them
+% Align the meshes in the APDV global frame & plot them
 tubi.alignMeshesAPDV(alignAPDVOpts) ;
 
 disp('done')
 
-%% PLOT ALL TEXTURED MESHES IN 3D (OPTIONAL: this is SLOW) ================
+% PLOT ALL TEXTURED MESHES IN 3D (OPTIONAL: this is SLOW) ================
 % % Establish texture patch options
 % metadat = struct() ;
 % metadat.reorient_faces = false ;            % set to true if some mesh normals may be inverted (requires gptoolbox if true)
@@ -386,7 +387,7 @@ disp('done')
 % % Plot on surface for all timepoints 
 % tubi.plotSeriesOnSurfaceTexturePatch(metadat, Options)
 
-%% EXTRACT CENTERLINES
+% EXTRACT CENTERLINES
 % Note: these just need to be 'reasonable' centerlines for topological
 % checks on the orbifold cuts. Therefore, use as large a resolution ('res')
 % as possible that still forms a centerline passing through the mesh
@@ -406,15 +407,15 @@ cntrlineOpts.dilation = 0 ;              % how many voxels to dilate the segment
 tubi.generateFastMarchingCenterlines(cntrlineOpts)
 disp('done with centerlines')
 
-% Identify anomalies in centerline data
+%% Identify anomalies in centerline data
 idOptions.ssr_thres = 15 ;  % distance of sum squared residuals in um as threshold for removing spurious centerlines
 tubi.cleanFastMarchingCenterlines(idOptions) ;
 disp('done with cleaning up centerlines')
 
-% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
+%% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
 % Look for options on disk. If not saved, define options.
 if ~exist(tubi.fileName.endcapOptions, 'file')
-    endcapOpts = struct( 'adist_thres', 20, ...  % 20, distance threshold for cutting off anterior in pix
+    endcapOpts = struct( 'adist_thres', 16, ...  % 20, distance threshold for cutting off anterior in pix
                 'pdist_thres', 14, ...  % 15-20, distance threshold for cutting off posterior in pix
                 'tref', tubi.xp.fileMeta.timePoints(1)) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
     tubi.setEndcapOptions(endcapOpts) ;
@@ -431,7 +432,7 @@ methodOpts.save_figs = true ;   % save images of cutMeshes along the way
 methodOpts.preview = false  ;     % display intermediate results
 tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 
-% Clean Cylinder Meshes
+%% Clean Cylinder Meshes
 % This removes "ears" from the endcaps of the tubular meshes (cylindrical
 % meshes)
 cleanCylOptions = struct() ;
@@ -440,7 +441,7 @@ tubi.cleanCylMeshes(cleanCylOptions)
 disp('done cleaning cylinder meshes')
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ORBIFOLD -> begin populating tubi.dir.mesh/gridCoords_nUXXXX_nVXXXX/ 
+%% ORBIFOLD -> begin populating tubi.dir.mesh/gridCoords_nUXXXX_nVXXXX/ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 overwrite = false ;
 % Iterate Through Time Points to Create Pullbacks ========================
@@ -485,6 +486,7 @@ for tt = tubi.xp.fileMeta.timePoints
     % Compute the pullback if the cutMesh is ok
     if compute_pullback || ~exist(sprintf(tubi.fullFileBase.im_sp, tt), 'file')
         pbOptions = struct() ;
+        pbOptions.numLayers = [0 1] ; % how many onion layers over which to take MIP
         tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
     else
         disp('Skipping computation of pullback')
@@ -498,9 +500,8 @@ options = struct() ;
 options.coordSys = 'uv' ;
 tubi.coordinateSystemDemo(options)
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART 3: Further refinement of dynamic meshes
+%% PART 3: Further refinement of dynamic meshes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Smooth the sphi grid meshes in time ====================================
 options = struct() ;
@@ -527,7 +528,7 @@ for tt = tubi.xp.fileMeta.timePoints
     
     % Establish custom Options for MIP --> choose which pullbacks to use
     pbOptions = struct() ;
-    pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
+    pbOptions.numLayers = [0 5] ; % how many onion layers over which to take MIP
     pbOptions.generate_spsm = true ;
     pbOptions.generate_sp = false ;
     pbOptions.overwrite = false ;
@@ -535,7 +536,7 @@ for tt = tubi.xp.fileMeta.timePoints
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow
+%% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE ============================
 % Skip if already done
@@ -544,20 +545,20 @@ options.coordsys = 'spsm' ;
 tubi.doubleCoverPullbackImages(options)
 disp('done')
 
-% PERFORM PIV ON PULLBACK MIPS ===========================================
+%% PERFORM PIV ON PULLBACK MIPS ===========================================
 % % Compute PIV either with built-in phase correlation or in PIVLab
 options = struct() ;
 options.overwrite = true ;
 tubi.measurePIV2d(options) ;
 
-% Measure velocities =====================================================
+%% Measure velocities =====================================================
 disp('Making map from pixel to xyz to compute velocities in 3d for smoothed meshes...')
 options = struct() ;
 options.show_v3d_on_data = false ;
 tubi.measurePIV3d(options) ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Lagrangian dynamics
+%% Lagrangian dynamics
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Pullback pathline time averaging of velocities
 options = struct() ;
@@ -574,19 +575,19 @@ options.lambda = 0 ;
 options.lambda_mesh = 0 ; 
 tubi.helmholtzHodge(options) ;
 
-% Compressibility & kinematics for Lagrangian
+%% Compressibility & kinematics for Lagrangian
 options = struct() ;
 tubi.measureMetricKinematics(options)
 
-% Metric Kinematics Kymographs & Correlations -- Bandwidth Filtered
+%% Metric Kinematics Kymographs & Correlations -- Bandwidth Filtered
 options = struct() ;
 tubi.plotMetricKinematics(options)
 
-% Pullback pathlines connecting Lagrangian grids
+%% Pullback pathlines connecting Lagrangian grids
 options = struct() ;
 tubi.measurePullbackPathlines(options)
 
-% Query velocities along pathlines
+%% Query velocities along pathlines
 options = struct() ;
 tubi.measurePathlineVelocities(options)
 % plot the pathline velocities 
@@ -594,11 +595,11 @@ options = struct() ;
 options.gridTopology = 'triangulated' ;
 tubi.plotPathlineVelocities(options)
 
-% Measure Pathline Kinematics
+%% Measure Pathline Kinematics
 options = struct() ;
 tubi.measurePathlineMetricKinematics(options)
 
-% Plot Pathline Kinematics
+%% Plot Pathline Kinematics
 options = struct() ;
 tubi.plotPathlineMetricKinematics(options)
 
@@ -613,7 +614,7 @@ tubi.measureBeltramiCoefficient(options) ;
 options = struct() ;
 tubi.measureStrainRate(options) 
 
-% Plot time-averaged strain rates in 3d on mesh
+%% Plot time-averaged strain rates in 3d on mesh
 options = struct() ;
 tubi.plotStrainRate3DFiltered(options) 
 

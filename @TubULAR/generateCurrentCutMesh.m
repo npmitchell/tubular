@@ -82,6 +82,18 @@ ricciOptions.t0 = t0 ;
 
 % Unpack parameters
 tt = tubi.currentTime ;
+current_tidx = tubi.xp.tIdx(tt) ;
+
+% use previous timepoint for twist comparison if we are marching forward in time
+if tt > t0
+    previous_tidx = current_tidx - 1 ;
+    prevTP = tubi.xp.fileMeta.timePoints(previous_tidx) ;
+elseif tt < t0 
+    % use next timepoint for twist comparison if we are marching backward in time
+    previous_tidx = current_tidx + 1 ;
+    prevTP = tubi.xp.fileMeta.timePoints(previous_tidx) ;
+end
+
 cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tt) ;
 tubi.getCleanFastMarchingCenterlines() ;
 
@@ -233,12 +245,6 @@ else
         pdIDx = pInds(minId) ; 
     end
        
-    
-    if tt > t0
-        prevTP = tt - 1 ;
-    elseif tt < t0 
-        prevTP = tt + 1 ;
-    end
     % If a previous Twist is not held in RAM, compute it
     % if ~exist('prevTw', 'var')
     % Load previous mesh and previous cutP
@@ -269,7 +275,7 @@ else
     previousP = prevmesh.v(prevcutP, :) ;
 
     % Current centerline: chop off ss to make Nx3
-    cntrline = cleanCntrlines{tubi.xp.tIdx(tt)} ;
+    cntrline = cleanCntrlines{current_tidx} ;
     cntrline = cntrline(:, 2:4) ;
     
     % Check topology 
