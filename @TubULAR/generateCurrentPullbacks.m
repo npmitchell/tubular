@@ -1,7 +1,9 @@
 function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
     spcutMeshSm, pbOptions)
 %GENERATECURRENTPULLBACKS(QS, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
-%   Generate 2D images of tissue mapped from 3D
+%   Generate 2D images of tissue mapped from 3D. If save_as_stack is true,
+%   then we generate a 3D stack of 2D images along the normal direction of
+%   the surface.
 %
 % Parameters
 % ----------
@@ -22,7 +24,7 @@ function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
 %       create pullbacks in uphi coords
 %   generate_rsm : bool (default=false)
 %       create pullbacks in uphi coords
-%   generate_pivPathlines : bool (default=false)
+%   generate_pivPathline(s) : bool (default=false)
 %       create pullback images from piv pathlines
 %   PSize : int (default=5)
 %       how many interpolation points along each side of a patch
@@ -133,6 +135,9 @@ if nargin > 4
     if isfield(pbOptions, 'generate_pivPathline')
         generate_pivPline = pbOptions.generate_pivPathline ;
         pbOptions = rmfield(pbOptions, 'generate_pivPathline') ;
+    elseif isfield(pbOptions, 'generate_pivPathlines')
+        generate_pivPline = pbOptions.generate_pivPathlines ;
+        pbOptions = rmfield(pbOptions, 'generate_pivPathlines') ;
     end
     if isfield(pbOptions, 'channels')
         channels = pbOptions.channels ;
@@ -224,10 +229,29 @@ if generate_ricci
 end
 
 if generate_pivPline
+    % ensure the output dir exists
+    outDir_pivPline = sprintf(tubi.dir.im_pivPathlines, t0Pathlines) ;
+    if ~exist(outDir_pivPline, 'dir')
+        mkdir(outDir_pivPline)
+    end
     if isfield(pbOptions, 'pivPathlineMesh')
         pivPlineMesh = pbOptions.pivPathlineMesh ;
     else
-        error('Load piv Pathline mesh here')
+        tubi.getPullbackPathlines([], 'vertexpathlines3d') ;
+        v3d = tubi.pathlines.vertices3d ;
+        try
+            assert(~isempty(tubi.currentTime))
+        catch
+            disp('Must set currentTime before creating a pullback for the current time!')
+        end
+        xx = squeeze(v3d.vX(tubi.xp.tIdx(tubi.currentTime), :, :)) ;
+        yy = squeeze(v3d.vY(tubi.xp.tIdx(tubi.currentTime), :, :)) ;
+        zz = squeeze(v3d.vZ(tubi.xp.tIdx(tubi.currentTime), :, :)) ;
+        pivPlineMesh = struct() ;
+        pivPlineMesh.f = tubi.pathlines.refMesh.f ;
+        pivPlineMesh.v = cat(2, xx(:), yy(:), zz(:)) ;
+        pivPlineMesh.u = tubi.pathlines.refMesh.u ;
+        pivPlineMesh.pathPairs = tubi.pathlines.refMesh.pathPairs ;
     end
 end
 
@@ -417,7 +441,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 if (~exist(imfn_ricci, 'file') || overwrite) && generate_ricci
     disp(['Generating image for ricci coords: ' imfn_ricci])
-    aux_generate_orbifold(ricciMesh.rectangle, IV, imfn_ricci, ...
+    ar_num = max(ricciMesh.rectangle(:, 2)) - min(ricciMesh.rectangle(:, 2)) ;
+    ar_denom = max(ricciMesh.rectangle(:, 1)) - min(ricciMesh.rectangle(:, 1)) ;
+    ar = ar_num / ar_denom ;
+    aux_generate_orbifold(ricciMesh.rectangle, ar, IV, imfn_ricci, ...
         pbOptions, axisorder, save_as_stack)
 else
     disp('Skipping Ricci pullback image generation ')
@@ -428,7 +455,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 if (~exist(imfn_pivPline, 'file') || overwrite) && generate_pivPline
     disp(['Generating image for pivPathline coords: ' imfn_pivPline])
-    aux_generate_orbifold(pivPlineMesh, IV, imfn_pivPline, ...
+    aux_generate_orbifold(pivPlineMesh, a_fixed, IV, imfn_pivPline, ...
         pbOptions, axisorder, save_as_stack)
 else
     disp('Skipping piv Pathline pullback image generation ')

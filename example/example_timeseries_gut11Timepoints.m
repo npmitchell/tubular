@@ -40,7 +40,7 @@ cd(dataDir)
 %%
 if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     %% DEFINE NEW MASTER SETTINGS
-    if ~exist('./masterSettings.mat', 'file') || true
+    if ~exist('./masterSettings.mat', 'file') 
         % Metadata about the experiment
         stackResolution = 2*[.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
         nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
@@ -586,6 +586,25 @@ tubi.plotMetricKinematics(options)
 %% Pullback pathlines connecting Lagrangian grids
 options = struct() ;
 tubi.measurePullbackPathlines(options)
+
+%% Pullback pathline texturepatching (PIV pathline --> most stable image sequence) 
+disp('Create pullback using pullback pathline coords')
+for tt = tubi.xp.fileMeta.timePoints
+    disp(['PB Pathline texturepatch: NOW PROCESSING TIME POINT ', num2str(tt)]);
+    tidx = tubi.xp.tIdx(tt);
+    
+    % Load the data for the current time point ------------------------
+    tubi.setTime(tt) ;
+    
+    % Establish custom Options for MIP --> choose which pullbacks to use
+    pbOptions = struct() ;
+    pbOptions.numLayers = [0 5] ; % how many onion layers over which to take MIP
+    pbOptions.generate_spsm = false ;
+    pbOptions.generate_sp = false ;
+    pbOptions.overwrite = false ;
+    pbOptions.generate_pivPathline = true ;
+    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
+end
 
 %% Query velocities along pathlines
 options = struct() ;

@@ -25,13 +25,13 @@ dataDir = cd ;
 origpath = matlab.desktop.editor.getActiveFilename;
 cd(fileparts(origpath))
 addpath(fileparts(origpath))
-addpath(fullfile('utility', 'addpath_recurse'))
-addpath_recurse('utility')
-addpath_recurse('/mnt/data/code/gptoolbox')
-addpath('TexturePatch')
-addpath('DECLab')
-addpath(fullfile('utility','plotting'))
-addpath(fullfile('utility','plotting'))
+addpath(genpath('../'))
+addpath(genpath('../utility'))
+addpath(genpath('/mnt/data/code/gptoolbox'))
+addpath('../TexturePatch')
+addpath('../DECLab')
+addpath(fullfile('../utility','plotting'))
+addpath(fullfile('../utility','plotting'))
 % go back to the data
 cd(dataDir)
 
@@ -566,6 +566,28 @@ tubi.plotMetricKinematics(options)
 %% Pullback pathlines connecting Lagrangian grids
 options = struct() ;
 tubi.measurePullbackPathlines(options)
+
+%% Pullback pathline texturepatching (PIV pathline) ======================
+disp('Create pullback using pullback pathline coords')
+tidx0 = tubi.xp.tIdx(tubi.t0) ;
+tp2do = tubi.xp.fileMeta.timePoints(tidx0:10:end) ;
+tp2do = [tp2do, setdiff(tubi.xp.fileMeta.timePoints, tp2do)] ;
+for tt = tp2do
+    disp(['PB Pathline texturepatch: NOW PROCESSING TIME POINT ', num2str(tt)]);
+    tidx = tubi.xp.tIdx(tt);
+    
+    % Load the data for the current time point ------------------------
+    tubi.setTime(tt) ;
+    
+    % Establish custom Options for MIP --> choose which pullbacks to use
+    pbOptions = struct() ;
+    pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
+    pbOptions.generate_spsm = false ;
+    pbOptions.generate_sp = false ;
+    pbOptions.overwrite = false ;
+    pbOptions.generate_pivPathline = true ;
+    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
+end
 
 %% Query velocities along pathlines
 options = struct() ;

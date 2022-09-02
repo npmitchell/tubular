@@ -1,4 +1,4 @@
-function aux_generate_orbifold(cutMesh, a, IV, imfn, Options, axisorder, save_as_stack)
+function aux_generate_orbifold(cutMesh, ar, IV, imfn, Options, axisorder, save_as_stack)
 %AUX_GENERATE_ORBIFOLD(cutMesh, a, IV, imfn)
 % called by QuapSlap.generateCurrentPullbacks()
 %
@@ -6,7 +6,7 @@ function aux_generate_orbifold(cutMesh, a, IV, imfn, Options, axisorder, save_as
 % ----------
 % cutMesh : struct
 %   mesh with fields f (faces), u (2d vertices), and v (3d vertices)
-% a : float
+% ar : float
 %   aspect ratio of width/height of image pullback
 % IV : 
 %   3d intensity data
@@ -126,7 +126,7 @@ if ~isfield(Options, 'yLim')
     Options.yLim = [0 1];
 end
 
-Options.imSize = ceil( imsz .* [ 1 a ] ) ;
+Options.imSize = ceil( imsz .* [ 1 ar ] ) ;
 
 % profile on
 % Create texture image
