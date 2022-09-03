@@ -93,7 +93,7 @@ Let's walk through an example or two
 ------------------------------------
 The basic workflow of a pipeline is shown below:
 
-.. image:: images/figSI_tubular_examplePipeline.png
+.. image:: images/figSI_tubular_examplePipeline.jpg
 	:width: 891  
   
 Here are some full examples, starting with one of the midgut.
