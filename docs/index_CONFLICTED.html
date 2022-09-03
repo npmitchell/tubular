@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR just for surface visualization" href="example_usage_tubular_for_surface_visualization.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
-        <title>TubULAR 2022 documentation</title>
+        <title>Welcome to TubULAR’s documentation! - TubULAR 2022 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=935aa2abcc5c1da4283d1dc201fb1f0add16d23a" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=25ceb02ed1c46dc30f2321ff83e92799f69dfdb9" />
@@ -121,7 +121,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">TubULAR 2022 documentation</div></a>
+      <a href="index.html"><div class="brand">TubULAR 2022 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -141,7 +141,7 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
   <span class="sidebar-brand-text">TubULAR 2022 documentation</span>
@@ -216,6 +216,7 @@
         <article role="main">
           <section id="welcome-to-tubular-s-documentation">
 <h1>Welcome to TubULAR’s documentation!<a class="headerlink" href="#welcome-to-tubular-s-documentation" title="Permalink to this headline">#</a></h1>
+<p>Note: This site is under construction, with an estimated completion date of May 6, 2022. Certain steps of the workflow may still require dependencies.</p>
 <section id="what-is-it">
 <h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">#</a></h2>
 <p>TubULAR is a set of tools for working with 3D data of surfaces – potentially complex and dynamic – that can be described as tubes.
@@ -244,25 +245,22 @@ However, there is additional functionality included in the tutorials that use Im
 <p>We have tried our best to keep dependencies to an absolute minimum. One package that TubULAR will try to use if your surfaces are so “prickly” that they would cause potential issues is gptoolbox. This is a <em>MATLAB</em> package, but it has some mex files, which are <em>MATLAB</em>’s way of interfacing with custom <em>C++</em> code. If that sounds complicated, don’t worry – all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a <em>Terminal</em> window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR’s surface extraction parameters.</p>
 <p>First download <strong>gptoolbox</strong> inside <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code>.</p>
 <blockquote>
-<div><p>cd tubular/external/</p>
-<p>git clone <a class="reference external" href="https://github.com/alecjacobson/gptoolbox.git">https://github.com/alecjacobson/gptoolbox.git</a></p>
+<div><p>cd tubular/external/
+git clone <a class="reference external" href="https://github.com/alecjacobson/gptoolbox.git">https://github.com/alecjacobson/gptoolbox.git</a></p>
 </div></blockquote>
 <p>Now that you’ve downloaded gptoolbox, go into the mex folder and compile</p>
 <blockquote>
-<div><p>cd gptoolbox</p>
-<p>cd mex</p>
-<p>mkdir build</p>
-<p>cd build</p>
-<p>cmake ..</p>
-<p>make</p>
+<div><blockquote>
+<div><p>cd gptoolbox
+cd mex</p>
+</div></blockquote>
+<p>mkdir build
+cd build
+cmake ..
+make</p>
 </div></blockquote>
 <p>If you find trouble here, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.
 Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the components of <strong>TubULAR</strong> and walk through an example.</p>
-<p>TubULAR also uses CGAL, described in detail at <a class="reference external" href="https://www.cgal.org/">https://www.cgal.org/</a>. Installation instructions are at <a class="reference external" href="https://www.cgal.org/download.html">https://www.cgal.org/download.html</a>.</p>
-</section>
-<section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
-<p>This toolkit is written for MATLAB 2018 and above. The toolkit uses some external code included in the <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code> directory, but also you will need to compile gptoolbox for some functionality (see above).</p>
 </section>
 <section id="components">
 <h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">#</a></h2>
@@ -274,23 +272,10 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
 </section>
 <section id="let-s-walk-through-an-example-or-two">
 <h2>Let’s walk through an example or two<a class="headerlink" href="#let-s-walk-through-an-example-or-two" title="Permalink to this headline">#</a></h2>
-<p>The basic workflow of a pipeline is shown below:</p>
-<a class="reference internal image-reference" href="images/figSI_tubular_examplePipeline.png"><img alt="images/figSI_tubular_examplePipeline.png" src="images/figSI_tubular_examplePipeline.png" style="width: 891px;"/></a>
-<p>Here are some full examples, starting with one of the midgut.
-.. toctree:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">maxdepth</span><span class="p">:</span> <span class="mi">1</span>
-
-<span class="n">example_usage_tubular_gutSample</span>
-</pre></div>
-</div>
-<p>Among the neat things output from this pipeline is a series of pullback images in which the cells of the tissue barely move. Check out this overlay of three timepoints 30 minutes apart in cyan, magenta, and yellow pulled back into the material frame of reference below. Notice how the cells lay on top of each other (white colors).</p>
-<a class="reference internal image-reference" href="images/figSI_tubular_stablized_pullback_gut.jpg"><img alt="images/figSI_tubular_stablized_pullback_gut.jpg" src="images/figSI_tubular_stablized_pullback_gut.jpg" style="width: 891px;"/></a>
-<p>Here is another example with a synthetic dataset. Note that the file paths have to be changed at the top of the script to the place where you download the data.
-.. toctree:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">maxdepth</span><span class="p">:</span> <span class="mi">1</span>
-
-<span class="n">example_usage_tubular</span>
-</pre></div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
+</ul>
 </div>
 <div class="toctree-wrapper compound">
 <ul>
@@ -312,8 +297,8 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
 </ul>
 </div>
 </section>
-<section id="optional-packages-for-extra-functionality">
-<h2>Optional packages for extra functionality<a class="headerlink" href="#optional-packages-for-extra-functionality" title="Permalink to this headline">#</a></h2>
+<section id="optional-dependencies-for-extra-functionality">
+<h2>Optional dependencies for extra functionality<a class="headerlink" href="#optional-dependencies-for-extra-functionality" title="Permalink to this headline">#</a></h2>
 <p><strong>ImSAnE</strong></p>
 <p>ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. Users already familiar with the ImSAnE workflow can access all the power of TubULAR within ImSAnE. If you’ve never heard of this before, you can take a look at <a class="reference external" href="https://www.nature.com/articles/nmeth.3648">this paper</a> for more details, or you can just skip this section without worry. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
@@ -362,6 +347,13 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
 </ul>
 </div>
+<p><strong>Using TubULAR within ImSAnE with Morphsnakes</strong></p>
+<p>To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
+</ul>
+</div>
 </section>
 <section id="overview-of-contents">
 <h2>Overview of contents<a class="headerlink" href="#overview-of-contents" title="Permalink to this headline">#</a></h2>
@@ -402,15 +394,7 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="example_usage_tubular_for_surface_visualization.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Example for using TubULAR just for surface visualization</div>
-              </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
-            </a>
+          
           
         </div>
         <div class="bottom-of-page">
@@ -448,13 +432,12 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
 <li><a class="reference internal" href="#what-is-it">What is it?</a></li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#let-s-get-going">Let’s get going</a></li>
-<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li><a class="reference internal" href="#components">Components</a></li>
 <li><a class="reference internal" href="#let-s-walk-through-an-example-or-two">Let’s walk through an example or two</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#faq-common-debugging-issues">FAQ / Common Debugging Issues</a></li>
-<li><a class="reference internal" href="#optional-packages-for-extra-functionality">Optional packages for extra functionality</a></li>
+<li><a class="reference internal" href="#optional-dependencies-for-extra-functionality">Optional dependencies for extra functionality</a></li>
 <li><a class="reference internal" href="#example-usage-with-optional-dependencies">Example usage with optional dependencies</a><ul>
 </ul>
 </li>

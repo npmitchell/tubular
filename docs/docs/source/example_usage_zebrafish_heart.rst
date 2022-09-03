@@ -4,6 +4,12 @@ Example for using TubULAR: zebrafish heart dynamics
 Here is an example for processing the zebrafish heart as in Figures 4-5 of the publication's main text.
 Note that this pipeline runs essentially all optional features along the way and also highlights an alternative method for capturing the organ surfaces, which is described in the supplementary information of the publication.
 
+The analysis output of this pipeline is available here:
+Mitchell, Noah; Cislo, Dillon (2022): Analysis of beating zebrafish heart. figshare. Dataset. https://doi.org/10.6084/m9.figshare.20670105
+
+All example datasets and analysis output for this codebase are availble in the collection here:
+https://doi.org/10.6084/m9.figshare.c.6178351
+
 .. code-block:: matlab
 
 	%% TubULAR Analysis Pipeline: Zebrafish Heart (3D + time)

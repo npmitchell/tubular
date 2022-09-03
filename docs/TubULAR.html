@@ -153,9 +153,6 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_for_surface_visualization.html">Example for using TubULAR just for surface visualization</a></li>
 </ul>
 <ul>
@@ -2810,7 +2807,9 @@ timepoints’ cutpaths similar to each other.</p>
 <dt class="sig sig-object mat" id="@TubULAR.generateCurrentPullbacks">
 <span class="sig-prename descclassname"><span class="pre">@TubULAR.</span></span><span class="sig-name descname"><span class="pre">generateCurrentPullbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tubi</span></em>, <em class="sig-param"><span class="pre">cutMesh</span></em>, <em class="sig-param"><span class="pre">spcutMesh</span></em>, <em class="sig-param"><span class="pre">spcutMeshSm</span></em>, <em class="sig-param"><span class="pre">pbOptions</span></em><span class="sig-paren">)</span><a class="headerlink" href="#@TubULAR.generateCurrentPullbacks" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
-<dt>GENERATECURRENTPULLBACKS(QS, cutMesh, spcutMesh, spcutMeshSm, pbOptions)</dt><dd><p>Generate 2D images of tissue mapped from 3D</p>
+<dt>GENERATECURRENTPULLBACKS(QS, cutMesh, spcutMesh, spcutMeshSm, pbOptions)</dt><dd><p>Generate 2D images of tissue mapped from 3D. If save_as_stack is true,
+then we generate a 3D stack of 2D images along the normal direction of
+the surface.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
@@ -2833,7 +2832,7 @@ a conformal map.</p>
 </dd>
 <dt>generate_rsm<span class="classifier">bool (default=false)</span></dt><dd><p>create pullbacks in uphi coords</p>
 </dd>
-<dt>generate_pivPathlines<span class="classifier">bool (default=false)</span></dt><dd><p>create pullback images from piv pathlines</p>
+<dt>generate_pivPathline(s)<span class="classifier">bool (default=false)</span></dt><dd><p>create pullback images from piv pathlines</p>
 </dd>
 <dt>PSize<span class="classifier">int (default=5)</span></dt><dd><p>how many interpolation points along each side of a patch</p>
 </dd>

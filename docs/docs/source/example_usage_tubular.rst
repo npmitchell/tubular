@@ -2,8 +2,13 @@ Example for using TubULAR
 =========================
 
 Here is an example using a synthetic dataset available for download on FigShare: 
-Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/10.6084/m9.figshare.20484345.v1 
+Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/10.6084/m9.figshare.20484345
 
+
+All example datasets for this codebase are availble in the collection here:
+https://doi.org/10.6084/m9.figshare.c.6178351
+
+Note that the file paths have to be changed at the top of the script to the place where you download the data.
 
 .. code-block:: matlab
 
@@ -284,8 +289,8 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 	% as possible that still forms a centerline passing through the mesh
 	% surface, since the centerline computed here is just for constraining the 
 	% mapping to the plane.
-	cntrlineOpts.overwrite = true ;         % overwrite previous results
-	cntrlineOpts.overwrite_ims = true ;     % overwrite previous results
+	cntrlineOpts.overwrite = false ;         % overwrite previous results
+	cntrlineOpts.overwrite_ims = false ;     % overwrite previous results
 	cntrlineOpts.weight = 0.1;               % for speedup of centerline extraction. Larger is less precise
 	cntrlineOpts.exponent = 1.0 ;            % how heavily to scale distance transform for speed through voxel
 	cntrlineOpts.res = 1 ;                 % resolution of distance tranform grid in which to compute centerlines
@@ -321,8 +326,8 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 	end
 
 	methodOpts = struct() ;
-	methodOpts.overwrite = true ;
-	methodOpts.save_figs = true ;   % save images of cutMeshes along the way
+	methodOpts.overwrite = false ;
+	methodOpts.save_figs = false ;   % save images of cutMeshes along the way
 	methodOpts.preview = false  ;     % display intermediate results
 	% methodOpts.timePoints = 14 ;
 	tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
@@ -381,7 +386,7 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 	    % Compute the pullback if the cutMesh is ok
 	    if compute_pullback || ~exist(sprintf(tubi.fullFileBase.im_sp, tt), 'file') || true
 	        pbOptions = struct() ;
-	        pbOptions.overwrite = true ;
+	        pbOptions.overwrite = false ;
 	        tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 	    else
 	        disp('Skipping computation of pullback')
@@ -396,7 +401,7 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%% Smooth the sphi grid meshes in time ====================================
 	options = struct() ;
-	options.overwrite = true ;
+	options.overwrite = false ;
 	options.width = 0 ;  % width of kernel, in #timepoints, to use in smoothing meshes
 	tubi.smoothDynamicSPhiMeshes(options) ;
 
@@ -422,7 +427,7 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 	    pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
 	    pbOptions.generate_spsm = true ;
 	    pbOptions.generate_sp = false ;
-	    pbOptions.overwrite = true ;
+	    pbOptions.overwrite = false ;
 	    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 	end
 
@@ -544,8 +549,8 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 	%% PCA decomposition
 	pcaTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
 	% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-	options = struct('overwrite', true, ...
-	    'overwriteImages', true) ;
+	options = struct('overwrite', false, ...
+	    'overwriteImages', false) ;
 	options.pcaTypes = pcaTypes ;
 	% options.meshStyles = 'sphi' ;
 	tubi.spaceUnits = [char(181) 'm'] ;
@@ -556,8 +561,8 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/1
 
 	% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
 	lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-	options = struct('overwrite', true, ...
-	    'overwriteImages', true) ;
+	options = struct('overwrite', false, ...
+	    'overwriteImages', false) ;
 	options.lbsTypes = lbsTypes ;
 	% options.meshStyles = 'sphi' ;
 	tubi.spaceUnits = [char(181) 'm'] ;

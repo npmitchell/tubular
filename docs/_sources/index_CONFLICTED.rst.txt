@@ -7,6 +7,8 @@ Welcome to TubULAR's documentation!
 ===================================
 
 
+Note: This site is under construction, with an estimated completion date of May 6, 2022. Certain steps of the workflow may still require dependencies.
+
 What is it?
 -----------
 TubULAR is a set of tools for working with 3D data of surfaces -- potentially complex and dynamic -- that can be described as tubes.
@@ -45,32 +47,19 @@ We have tried our best to keep dependencies to an absolute minimum. One package 
 First download **gptoolbox** inside ``tubular/external/``.
 	
 	cd tubular/external/
-	
 	git clone https://github.com/alecjacobson/gptoolbox.git
 	
 Now that you've downloaded gptoolbox, go into the mex folder and compile 
 
 	cd gptoolbox
-	
 	cd mex
-    
-	mkdir build
-    
-	cd build
-    
-	cmake ..
-    
-	make 
+    mkdir build
+    cd build
+    cmake ..
+    make 
 
 If you find trouble here, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.  
 Now that you've downloaded TubULAR and built gptoolbox, let's look over the components of **TubULAR** and walk through an example.
-
-TubULAR also uses CGAL, described in detail at https://www.cgal.org/. Installation instructions are at https://www.cgal.org/download.html. 
-
-  
-Prerequisites
--------------
-This toolkit is written for MATLAB 2018 and above. The toolkit uses some external code included in the ``tubular/external/`` directory, but also you will need to compile gptoolbox for some functionality (see above). 
 
 
 Components
@@ -87,28 +76,11 @@ A typical **Tubular** pipeline uses several self-contained packages that we have
 .. image:: images/gut_figSI_morphsnakes_caax_sequence_v3.jpg
   :width: 891  
   
-
+  
   
 Let's walk through an example or two
 ------------------------------------
-The basic workflow of a pipeline is shown below:
 
-.. image:: images/figSI_tubular_examplePipeline.png
-	:width: 891  
-  
-Here are some full examples, starting with one of the midgut.
-.. toctree::
-  :maxdepth: 1
-
-  example_usage_tubular_gutSample
-  
-Among the neat things output from this pipeline is a series of pullback images in which the cells of the tissue barely move. Check out this overlay of three timepoints 30 minutes apart in cyan, magenta, and yellow pulled back into the material frame of reference below. Notice how the cells lay on top of each other (white colors).
-
-.. image:: images/figSI_tubular_stablized_pullback_gut.jpg
-  :width: 891
-  
-  
-Here is another example with a synthetic dataset. Note that the file paths have to be changed at the top of the script to the place where you download the data.
 .. toctree::
   :maxdepth: 1
 
@@ -136,8 +108,8 @@ FAQ / Common Debugging Issues
   faq_debugging
 
   
-Optional packages for extra functionality
------------------------------------------
+Optional dependencies for extra functionality
+---------------------------------------------
 **ImSAnE**
 
 ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. Users already familiar with the ImSAnE workflow can access all the power of TubULAR within ImSAnE. If you've never heard of this before, you can take a look at `this paper <https://www.nature.com/articles/nmeth.3648>`_ for more details, or you can just skip this section without worry. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE::
@@ -195,6 +167,16 @@ Conversely, to follow a TubULAR pipeline using an ImSaNE Experiment class instan
   :maxdepth: 1
 
   example_usage_tubular_with_imsane
+  
+
+**Using TubULAR within ImSAnE with Morphsnakes**
+
+To run ImSaNE using Morphsnakes for the detector and TubULAR for the fitter, follow this template. Note that at the moment this requires interfacing MATLAB with python, as Morphsnakes is written in python. Future work will implement morphsnakes in MATLAB.
+
+.. toctree::
+  :maxdepth: 1
+
+  example_usage_imsane_morphsnakes_tubular
   
   
    

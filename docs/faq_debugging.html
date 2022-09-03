@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR methods within ImSAnE" href="example_usage_imsane_with_tubular.html" /><link rel="prev" title="Example for using TubULAR: zebrafish heart dynamics" href="example_usage_zebrafish_heart.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
         <title>Common issues in TubULAR and suggestions - TubULAR 2022 documentation</title>
@@ -161,14 +161,14 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_zebrafish_heart.html">Example for using TubULAR: zebrafish heart dynamics</a></li>
 </ul>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Common issues in TubULAR and suggestions</a></li>
+</ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_with_tubular.html">Example for using TubULAR methods within ImSAnE</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_with_imsane.html">Example for using TubULAR after making an ImSAnE experiment instance</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_imsane_morphsnakes_tubular.html">Example for using TubULAR methods within ImSAnE, using morphsnakes for surface detection</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul>
@@ -228,6 +228,11 @@
 </ul>
 <p>&gt; Try toggling the swapZT parameter in the xp metadata, since the Z dimension is likely interpreted as time T.</p>
 <ul class="simple">
+<li><p>The surfaces aren’t coming out well.</p></li>
+</ul>
+<p>&gt; Try adjusting the tension and pressure values of the detectOptions. Typically setting these very nearly to zero is a good starting point.
+&gt; If that fails, check whether your initial guess for the level set is inside the surface you want to find. The initial guess could be a small sphere that is well within the surface you want to find. Subsequent timepoints are found by first using the previous timepoint’s output as an initial guess. To shrink the previous timepoint’s output before evolving it, adjust pre_pressure.</p>
+<ul class="simple">
 <li><p>Fast marching centerline extraction fails and/or the image output shows the path leaving the outside of the tubular surface.</p></li>
 </ul>
 <p>&gt; First erase the existing (bad) centerline files from disk (txt files) and try re-running with options.preview = true. If the visual output doesn’t tell you what’s wrong right away, try reducing the subsampling factor (<a href="#id1"><span class="problematic" id="id2">`</span></a>options.res’) by which the volume is reduced for fast marching. You may also/alternatively need to adjust options.normal_step in tubi.alignAPDVCoords(), which places the A and P points connected by the centerline a distance options.normal_step from the surface.</p>
@@ -242,8 +247,26 @@
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="example_usage_imsane_with_tubular.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Example for using TubULAR methods within ImSAnE</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="example_usage_zebrafish_heart.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Example for using TubULAR: zebrafish heart dynamics</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">

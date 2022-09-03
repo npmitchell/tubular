@@ -8,6 +8,10 @@ Common issues in TubULAR and suggestions
 - Data loads but each timepoint is loaded as multiple timestamps
 > Try toggling the swapZT parameter in the xp metadata, since the Z dimension is likely interpreted as time T.
 
+- The surfaces aren't coming out well.
+> Try adjusting the tension and pressure values of the detectOptions. Typically setting these very nearly to zero is a good starting point.
+> If that fails, check whether your initial guess for the level set is inside the surface you want to find. The initial guess could be a small sphere that is well within the surface you want to find. Subsequent timepoints are found by first using the previous timepoint's output as an initial guess. To shrink the previous timepoint's output before evolving it, adjust pre_pressure.
+
 - Fast marching centerline extraction fails and/or the image output shows the path leaving the outside of the tubular surface. 
 > First erase the existing (bad) centerline files from disk (txt files) and try re-running with options.preview = true. If the visual output doesn't tell you what's wrong right away, try reducing the subsampling factor (`options.res') by which the volume is reduced for fast marching. You may also/alternatively need to adjust options.normal_step in tubi.alignAPDVCoords(), which places the A and P points connected by the centerline a distance options.normal_step from the surface.
 
