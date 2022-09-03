@@ -10,8 +10,8 @@ Welcome to TubULAR's documentation!
 What is it?
 -----------
 TubULAR is a set of tools for working with 3D data of surfaces -- potentially complex and dynamic -- that can be described as tubes.
-Developing guts, neural tubes, and pumping hearts can all be treated as tubes, with potentially complex and dynamic shapes.
-With TubULAR, we can describe the tissue motion on the tube-like surface and quantify how it changes over time.
+Developing guts, neural tubes, and pumping hearts can all be treated as deforming tube-like surfaces. Mapping these surfaces to a fixed frame of reference allows us to follow the cells (or other objects) as they move in 3D with ease.
+With TubULAR, we can capture the tissue motion and quantify how it changes over time.
 
 .. image:: images/fig_tubular_overview_v3.jpg
    :width: 1200
@@ -104,18 +104,29 @@ Here are some full examples, starting with one of the midgut.
 
   example_usage_tubular_gutSample
   
-Among the neat things output from this pipeline is a series of pullback images in which the cells of the tissue barely move. Check out this overlay of three timepoints 30 minutes apart in cyan, magenta, and yellow pulled back into the material frame of reference below. Notice how the cells lay on top of each other (white colors).
+Among the neat things output from this pipeline is a series of pullback images in which the cells of the tissue barely move. Check out this overlay of three timepoints 30 minutes apart in cyan, magenta, and yellow pulled back into the material frame of reference below. Notice how the cells lay on top of each other (white colors). Even though the shape is changing dramatically in 3D, the map to the plane stabilizes tissue motion. These images would be in ``mesh_output/gridCoords_nU0100_nV0100/PullbackImages_010step_pivPathlines_000150t0/``.
 
 .. image:: images/figSI_tubular_stablized_pullback_gut.png
   :width: 891
   
-  
-Here is another example with a synthetic dataset. Note that the file paths have to be changed at the top of the script to the place where you download the data.
+Note that individual cells may still rearrange, but the mesoscale tissue motion is cancelled out, like in panels D-E of this image:
+
+.. image:: images/fig_tubular_gut_v5.jpg
+  :width: 891
+    
+Here is an example with a synthetic dataset. Note that the file paths have to be changed at the top of the script to the place where you download the data.
 
 .. toctree::
   :maxdepth: 1
 
   example_usage_tubular
+
+Note that even a synthetic dataset with a topological change in winding number can be successfully handled, with a bit of finessing in the parameters, as shown in this image:
+
+.. image:: images/fig_tubular_overview_v10_panelG.jpg
+  :width: 891
+  
+Here is a pipeline where we're just interested in surface visualization:
 
 .. toctree::
   :maxdepth: 1
