@@ -16,6 +16,7 @@ With TubULAR, we can describe the tissue motion on the tube-like surface and qua
 .. image:: images/fig_tubular_overview_v3.jpg
    :width: 1200
    
+You can check out the preprint here: https://www.biorxiv.org/content/10.1101/2022.04.19.488840
 
 Usage
 -----
@@ -97,6 +98,7 @@ The basic workflow of a pipeline is shown below:
 	:width: 891  
   
 Here are some full examples, starting with one of the midgut.
+
 .. toctree::
   :maxdepth: 1
 
@@ -104,11 +106,12 @@ Here are some full examples, starting with one of the midgut.
   
 Among the neat things output from this pipeline is a series of pullback images in which the cells of the tissue barely move. Check out this overlay of three timepoints 30 minutes apart in cyan, magenta, and yellow pulled back into the material frame of reference below. Notice how the cells lay on top of each other (white colors).
 
-.. image:: images/figSI_tubular_stablized_pullback_gut.jpg
+.. image:: images/figSI_tubular_stablized_pullback_gut.png
   :width: 891
   
   
 Here is another example with a synthetic dataset. Note that the file paths have to be changed at the top of the script to the place where you download the data.
+
 .. toctree::
   :maxdepth: 1
 
