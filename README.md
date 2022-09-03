@@ -6,7 +6,7 @@
 > Tube-like sUrface Lagrangian Analysis Resource (TubULAR): for analysis of in-plane and out-of-plane motions of 3D data with dynamic tube-like surfaces of tissues or interfaces.
 
 Cite as: 
-> Mitchell, N.P. & Cislo, D.J. "TubULAR: Tracking deformations of dynamic tissues and interfaces in 3D". bioRxiv 2022.04.19.488840 doi:10.1101/2022.04.19.488840
+> Mitchell, N.P. & Cislo, D.J. "TubULAR: Tracking in toto deformations of dynamic tissues via constrained maps". bioRxiv 2022.04.19.488840 doi:10.1101/2022.04.19.488840
 
 
 ## Overview
@@ -27,19 +27,38 @@ simply update your version and use integralDetector (or morphsnakesDetector) as 
 and tubularMeshWrapper as the fitterType. This yields ImSAnE-style embedding grids, surfaces of
 interest, etc.
 
+System Requirements
+-------------------
+This code is written in MATLAB and has been tested with MATLAB 2018-2021 on Linux Ubuntu 18.04. We expect no issues with Mac or Windows machines, but an installation of GPToolbox and of CGAL are required for full functionality. GPToolbox included along with the license in external/. 
+Please also note that upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories, will not be pulled automatically with TubULAR. Those repositories are available here: http://github.com/DillonCislo/DEC and https://github.com/npmitchell/TexturePatch. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch.
 
-Obtaining the surfaces:
------------------------
+Installation Guide
+------------------
+Installation instructions for GCAL and GPToolbox are found on the TubULAR documentation:
+[![Documentation](https://img.shields.io/badge/Documentation-Link-blue.svg)](https://npmitchell.github.io/tubular/)
+
+The TubULAR codebase itself should download within a few seconds on a "normal" desktop computer.
+
+Demos:
+------
+For demonstrations:
+ example/example_timeseries_gut11Timepoints.m  analyzes a midgut surface, using ImSAnE and morphsnakes to compute surfaces first.
+ example/example_zebrafish_heart.m  analyzes a zebrafish heart surface, using morphsnakes to compute surfaces first.
+ example/example_singlecoil.m  demonstrates functionality on a synthetic dataset
+ 
+The first demo has both raw data on FigShare: 
+and the expected output on FigShare: 
+The expected run time for the entire pipeline on a normal computer is a few hours, but many steps are optional. The surface texturepatching in 3D for the first example dataset is prohibitively slow, so it is commented out in the demo script.
+
+Obtaining surfaces:
+-------------------
 Since different tools will suit different needs, we allow surfaces to be obtained by whatever
-method you choose (see for ex, [1]). However, we also include two methods for computing 
-these surfaces based on active contour methods. 
+method you choose (see for ex, [1]). However, we include a default methods for computing 
+these surfaces based on active contour methods. We use build-in MATLAB methods for finding level set surfaces [2]. Note that in some of the data for the publication, we used a similar, but slightly more technical, morphological snakes package in python to find surfaces [3].
 
-In the first, we use build-in MATLAB methods for finding level set surfaces [2]. 
+Either method can be implemented within the ImSAnE environment [1] as a different detectorType, and TubULAR can utilize an ImSAnE class instance as an input. However, this is not required, since TubULAR also has a getMeshes() method.
 
-In the second, we use a published morphological snakes package in python to find surfaces [3].
-
-Either method can be implemented within the ImSAnE environment [1], and TubULAR can utilize an 
-ImSAnE class instance as an input. However, this is not required.
+If your surfaces aren't coming out well, try adjusting the tension and pressure values of the detectOptions. Typically setting these very nearly to zero is a good starting point.
 
 Surface visualization:
 ----------------------
@@ -89,13 +108,6 @@ The DEC package is a self-contained discrete exterior calculus toolkit included 
 used within TubULAR to compute the divergence and curl of the flow fields on the surface and 
 their respective potential fields. Documentation shows how to use DEC -- either with or 
 without a TubULAR object -- to compute Laplacians and other DEC metrics of tissue deformation.
-
-Demos:
-------
-For demonstrations:
- example_timeseries.m  analyzes a midgut surface, using ImSAnE and morphsnakes to compute surfaces first.
- example_timeseries_heart.m  analyzes a zebrafish heart surface, using morphsnakes to compute surfaces first.
- example_static_neuraltube.m demonstrates texture-patching a tubular surface for 3D visualization
 
 Full Documentation
 ------------------
