@@ -134,8 +134,15 @@ for tp = tp2do
     clearvars tmp
 
     % Define strain rate filename        
-    estrainFn = fullfile(strrep(sprintf( ...
-        QS.dir.strainRate.measurements, lambda, lambda_mesh, nmodes, zwidth), '.', 'p'), ...
+    l_lmesh = strrep(sprintf('lambda%0.03f_lmesh%0.3f_modes%02dw%02d', ...
+        lambda, lambda_mesh, nmodes, zwidth), '.', 'p') ;
+    
+    measurementDir = ...
+        fullfile(tubi.dir.uvCoord, 'strainRate', l_lmesh, 'measurements') ;
+    if ~exist(measurementDir, 'dir')
+        mkdir(measurementDir) ;
+    end
+    estrainFn = fullfile(measurementDir, ...
         sprintf('strainRate_%06d.mat', tp));
         
     % Compute the strain rate if not on disk
