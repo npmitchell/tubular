@@ -26,7 +26,7 @@ addpath(fileparts(origpath))
 addpath(genpath('../utility'))
 % Install gptoolbox and add path here (required for some functionality but
 % not strictly necessary)
-addpath(genpath('/mnt/data/code/gptoolbox'))
+addpath(genpath('../external/gptoolbox'))
 addpath('../')
 addpath('../@TubULAR')
 addpath(genpath('../TexturePatch'))
@@ -181,7 +181,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     %% SET DETECTION OPTIONS ==================================================
     % Load/define the surface detection parameters
     msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
-    if exist(msls_detOpts_fn, 'file') && ~overwrite
+    if exist(msls_detOpts_fn, 'file') 
         disp('loading detectOptions')
         load(msls_detOpts_fn, 'detectOptions')
     else

@@ -417,7 +417,7 @@ for tt = tubi.xp.fileMeta.timePoints
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow
+%% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE ============================
 % Skip if already done
