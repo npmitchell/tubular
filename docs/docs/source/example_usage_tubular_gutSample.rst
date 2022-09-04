@@ -1,5 +1,5 @@
-Example for using TubULAR 
-=========================
+Example for using TubULAR: midgut data
+======================================
 
 Here is an example using 20 minutes of Drosophila midgut develeopment, with the dataset available for download on FigShare: 
 Mitchell, Noah; Cislo, Dillon (2022): Example Timeseries -- Drosophila midgut, minimal data. figshare. Dataset. https://doi.org/10.6084/m9.figshare.20733091 

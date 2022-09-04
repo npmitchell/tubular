@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR" href="example_usage_tubular_gutSample.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR: midgut data" href="example_usage_tubular_gutSample.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
         <title>TubULAR 2022 documentation</title>
@@ -153,10 +153,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR: midgut data</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR: synthetic data</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_for_surface_visualization.html">Example for using TubULAR just for surface visualization</a></li>
@@ -239,7 +239,7 @@ However, there is additional functionality included in the tutorials that use Im
 <h2>Let’s get going<a class="headerlink" href="#let-s-get-going" title="Permalink to this headline">#</a></h2>
 <p>Download TubULAR in Mac or Linux, navigate in Terminal to a path where you’d like to place the code, then clone the repository:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">tubular</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">tubular</span>
 </pre></div>
 </div>
 <p>There is now a directory called tubular. Open up MATLAB and take a look at some example scripts to get familiar.</p>
@@ -247,14 +247,21 @@ However, there is additional functionality included in the tutorials that use Im
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span>
 </pre></div>
 </div>
-<p>So now your tubular is definitely up-to-date.</p>
+<p>So now your tubular is definitely up-to-date. There are two linked repositories that are not pulled with this line: upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories within TubULAR, were pulled only because we used the <code class="docutils literal notranslate"><span class="pre">--recursive</span></code> option before. These two repositories are available here: <a class="reference external" href="http://github.com/DillonCislo/DEC">http://github.com/DillonCislo/DEC</a> and <a class="reference external" href="https://github.com/npmitchell/TexturePatch">https://github.com/npmitchell/TexturePatch</a>. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch, so if you didn’t clone with <code class="docutils literal notranslate"><span class="pre">--recursive</span></code>, you can clone them from Github and make sure their contents sit in those directories. To update them, run:</p>
+<blockquote>
+<div><p>cd TexturePatch</p>
+<p>git pull</p>
+<p>cd ../DECLab</p>
+<p>git pull</p>
+</div></blockquote>
 <p>We have tried our best to keep dependencies to an absolute minimum. One package that TubULAR will try to use if your surfaces are so “prickly” that they would cause potential issues is gptoolbox. This is a <em>MATLAB</em> package, but it has some mex files, which are <em>MATLAB</em>’s way of interfacing with custom <em>C++</em> code. If that sounds complicated, don’t worry – all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a <em>Terminal</em> window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR’s surface extraction parameters.</p>
 <p>First download <strong>gptoolbox</strong> inside <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code>.</p>
 <blockquote>
 <div><p>cd tubular/external/</p>
 <p>git clone <a class="reference external" href="https://github.com/alecjacobson/gptoolbox.git">https://github.com/alecjacobson/gptoolbox.git</a></p>
 </div></blockquote>
-<p>Now that you’ve downloaded gptoolbox, go into the mex folder and compile</p>
+<p>Now that you’ve downloaded gptoolbox, check that you have CMake installed, since this does not come preinstalled on Mac OSX or Windows machines. To install CMake, follow the instructions here <a class="reference external" href="https://cmake.org/install/">https://cmake.org/install/</a>. Installation can take ~20 minutes.
+Then go into the mex folder and compile gptoolbox:</p>
 <blockquote>
 <div><p>cd gptoolbox</p>
 <p>cd mex</p>
@@ -263,9 +270,12 @@ However, there is additional functionality included in the tutorials that use Im
 <p>cmake ..</p>
 <p>make</p>
 </div></blockquote>
-<p>If you find trouble here, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.
-Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the components of <strong>TubULAR</strong> and walk through an example.</p>
+<p>If this runs into trouble, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.</p>
+<p>Ok, now we still have to compile the gptoolbox functions by running <code class="docutils literal notranslate"><span class="pre">compile_mex.m</span></code> in MATLAB, from the directory <code class="docutils literal notranslate"><span class="pre">gptoolbox/external/toolbox_fast_marching</span></code>.
+In other words, open MATLAB, then open the script in <code class="docutils literal notranslate"><span class="pre">tubular/external/gptoolbox/external/toolbox_fast_marching/compile_mex.m</span></code>. Change the current working directory to the parent directory of this file (which is <code class="docutils literal notranslate"><span class="pre">`tubular/external/gptoolbox/external/toolbox_fast_marching/''),</span> <span class="pre">then</span> <span class="pre">run</span> <span class="pre">the</span> <span class="pre">file.</span> <span class="pre">In</span> <span class="pre">our</span> <span class="pre">hands,</span> <span class="pre">this</span> <span class="pre">works</span> <span class="pre">on</span> <span class="pre">Linux</span> <span class="pre">and</span> <span class="pre">Mac</span> <span class="pre">operating</span> <span class="pre">systems,</span> <span class="pre">and</span> <span class="pre">we</span> <span class="pre">expect</span> <span class="pre">it</span> <span class="pre">should</span> <span class="pre">work</span> <span class="pre">on</span> <span class="pre">Windows</span> <span class="pre">as</span> <span class="pre">well.</span> <span class="pre">If</span> <span class="pre">these</span> <span class="pre">functions</span> <span class="pre">compile,</span> <span class="pre">then</span> <span class="pre">we're</span> <span class="pre">good</span> <span class="pre">to</span> <span class="pre">go</span> <span class="pre">with</span> <span class="pre">gptoolbox.</span> <span class="pre">If</span> <span class="pre">this</span> <span class="pre">compilation</span> <span class="pre">fails,</span> <span class="pre">you</span> <span class="pre">might</span> <span class="pre">get</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">when</span> <span class="pre">running</span> <span class="pre">a</span> <span class="pre">script</span> <span class="pre">like</span> <span class="pre">``Undefined</span> <span class="pre">function</span> <span class="pre">'perform_front_propagation_3d'</span> <span class="pre">for</span> <span class="pre">input</span> <span class="pre">arguments</span> <span class="pre">of</span> <span class="pre">type</span> <span class="pre">'double'.</span></code></p>
 <p>TubULAR also uses CGAL, described in detail at <a class="reference external" href="https://www.cgal.org/">https://www.cgal.org/</a>. Installation instructions are at <a class="reference external" href="https://www.cgal.org/download.html">https://www.cgal.org/download.html</a>.</p>
+<p>Making pullback projections will require the Optimization Toolbox, and we also use Curve Fitting Toolbox (for <code class="docutils literal notranslate"><span class="pre">smooth</span></code>) Statistics and Machine Learning Toolbox (or you can just rip the function <code class="docutils literal notranslate"><span class="pre">prctile</span></code> for this one), which you can install in MATLAB by clicking in the Home tab of the toolbar: <code class="docutils literal notranslate"><span class="pre">Add-Ons</span> <span class="pre">&gt;</span> <span class="pre">Get</span> <span class="pre">Add-Ons</span></code> and searching for the Toolbox name. If you don’t have access to these toolboxes, you can get functions that do the trick ‘a la carte’.</p>
+<p>Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the components of <strong>TubULAR</strong> and walk through an example.</p>
 </section>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
@@ -281,12 +291,12 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
 </section>
 <section id="let-s-walk-through-an-example-or-two">
 <h2>Let’s walk through an example or two<a class="headerlink" href="#let-s-walk-through-an-example-or-two" title="Permalink to this headline">#</a></h2>
-<p>The basic workflow of a pipeline is shown below:</p>
+<p>There are example scripts in the Tubular repository, in <code class="docutils literal notranslate"><span class="pre">tubular/example/</span></code>. The basic workflow of a typical pipeline is shown below:</p>
 <a class="reference internal image-reference" href="_images/figSI_tubular_examplePipeline.jpg"><img alt="_images/figSI_tubular_examplePipeline.jpg" src="_images/figSI_tubular_examplePipeline.jpg" style="width: 891px;"/></a>
-<p>Here are some full examples, starting with one of the midgut.</p>
+<p>Here are some full examples, starting with one of the midgut, which is in <code class="docutils literal notranslate"><span class="pre">tubular/example/example_timeseries_gut11Timespoints.m</span></code>, which uses data stored on FigShare. Here is a page with the details:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR: midgut data</a></li>
 </ul>
 </div>
 <p>Among the neat things output from this pipeline is a series of pullback images in which the cells of the tissue barely move. Check out this overlay of three timepoints 30 minutes apart in cyan, magenta, and yellow pulled back into the material frame of reference below. Notice how the cells lay on top of each other (white colors). Even though the shape is changing dramatically in 3D, the map to the plane stabilizes tissue motion. These images would be in <code class="docutils literal notranslate"><span class="pre">mesh_output/gridCoords_nU0100_nV0100/PullbackImages_010step_pivPathlines_000150t0/</span></code>.</p>
@@ -296,10 +306,10 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
 <p>Here is an example with a synthetic dataset. Note that the file paths have to be changed at the top of the script to the place where you download the data.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR: synthetic data</a></li>
 </ul>
 </div>
-<p>Note that even a synthetic dataset with a topological change in winding number can be successfully handled, with a bit of finessing in the parameters, as shown in this image:</p>
+<p>Note that even a synthetic dataset with a topological change in winding number can be successfully handled, as shown in this image:</p>
 <a class="reference internal image-reference" href="_images/fig_tubular_overview_v10_panelG.jpg"><img alt="_images/fig_tubular_overview_v10_panelG.jpg" src="_images/fig_tubular_overview_v10_panelG.jpg" style="width: 891px;"/></a>
 <p>Here is a pipeline where we’re just interested in surface visualization:</p>
 <div class="toctree-wrapper compound">
@@ -417,7 +427,7 @@ Now that you’ve downloaded TubULAR and built gptoolbox, let’s look over the 
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Example for using TubULAR</div>
+                <div class="title">Example for using TubULAR: midgut data</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>

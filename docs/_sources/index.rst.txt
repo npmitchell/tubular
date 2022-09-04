@@ -30,7 +30,7 @@ Download TubULAR in Mac or Linux, navigate in Terminal to a path where you'd lik
 
 
 	cd ~
-	git clone ssh://www.github.com/npmitchell/tubular
+	git clone --recursive ssh://www.github.com/npmitchell/tubular
 	
 There is now a directory called tubular. Open up MATLAB and take a look at some example scripts to get familiar.
     
@@ -39,7 +39,16 @@ Updates to the code are installed running the following command from the ``tubul
 
     git pull
 
-So now your tubular is definitely up-to-date. 
+So now your tubular is definitely up-to-date. There are two linked repositories that are not pulled with this line: upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories within TubULAR, were pulled only because we used the ``--recursive`` option before. These two repositories are available here: http://github.com/DillonCislo/DEC and https://github.com/npmitchell/TexturePatch. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch, so if you didn't clone with ``--recursive``, you can clone them from Github and make sure their contents sit in those directories. To update them, run:
+
+
+	cd TexturePatch
+	
+	git pull
+	
+	cd ../DECLab
+	
+	git pull
 
 We have tried our best to keep dependencies to an absolute minimum. One package that TubULAR will try to use if your surfaces are so "prickly" that they would cause potential issues is gptoolbox. This is a *MATLAB* package, but it has some mex files, which are *MATLAB*'s way of interfacing with custom *C++* code. If that sounds complicated, don't worry -- all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a *Terminal* window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR's surface extraction parameters.
 
@@ -49,7 +58,8 @@ First download **gptoolbox** inside ``tubular/external/``.
 	
 	git clone https://github.com/alecjacobson/gptoolbox.git
 	
-Now that you've downloaded gptoolbox, go into the mex folder and compile 
+Now that you've downloaded gptoolbox, check that you have CMake installed, since this does not come preinstalled on Mac OSX or Windows machines. To install CMake, follow the instructions here https://cmake.org/install/. Installation can take ~20 minutes.
+Then go into the mex folder and compile gptoolbox:
 
 	cd gptoolbox
 	
@@ -62,11 +72,17 @@ Now that you've downloaded gptoolbox, go into the mex folder and compile
 	cmake ..
     
 	make 
+	
+If this runs into trouble, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.  
 
-If you find trouble here, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.  
-Now that you've downloaded TubULAR and built gptoolbox, let's look over the components of **TubULAR** and walk through an example.
+Ok, now we still have to compile the gptoolbox functions by running ``compile_mex.m`` in MATLAB, from the directory ``gptoolbox/external/toolbox_fast_marching``. 
+In other words, open MATLAB, then open the script in ``tubular/external/gptoolbox/external/toolbox_fast_marching/compile_mex.m``. Change the current working directory to the parent directory of this file (which is ```tubular/external/gptoolbox/external/toolbox_fast_marching/''), then run the file. In our hands, this works on Linux and Mac operating systems, and we expect it should work on Windows as well. If these functions compile, then we're good to go with gptoolbox. If this compilation fails, you might get an error when running a script like ``Undefined function 'perform_front_propagation_3d' for input arguments of type 'double'.``
 
 TubULAR also uses CGAL, described in detail at https://www.cgal.org/. Installation instructions are at https://www.cgal.org/download.html. 
+
+Making pullback projections will require the Optimization Toolbox, and we also use Curve Fitting Toolbox (for ``smooth``) Statistics and Machine Learning Toolbox (or you can just rip the function ``prctile`` for this one), which you can install in MATLAB by clicking in the Home tab of the toolbar: ``Add-Ons > Get Add-Ons`` and searching for the Toolbox name. If you don't have access to these toolboxes, you can get functions that do the trick 'a la carte'.
+
+Now that you've downloaded TubULAR and built gptoolbox, let's look over the components of **TubULAR** and walk through an example.
 
   
 Prerequisites
@@ -92,12 +108,13 @@ A typical **Tubular** pipeline uses several self-contained packages that we have
   
 Let's walk through an example or two
 ------------------------------------
-The basic workflow of a pipeline is shown below:
+
+There are example scripts in the Tubular repository, in ``tubular/example/``. The basic workflow of a typical pipeline is shown below:
 
 .. image:: images/figSI_tubular_examplePipeline.jpg
 	:width: 891  
   
-Here are some full examples, starting with one of the midgut.
+Here are some full examples, starting with one of the midgut, which is in ``tubular/example/example_timeseries_gut11Timespoints.m``, which uses data stored on FigShare. Here is a page with the details:
 
 .. toctree::
   :maxdepth: 1
@@ -121,7 +138,7 @@ Here is an example with a synthetic dataset. Note that the file paths have to be
 
   example_usage_tubular
 
-Note that even a synthetic dataset with a topological change in winding number can be successfully handled, with a bit of finessing in the parameters, as shown in this image:
+Note that even a synthetic dataset with a topological change in winding number can be successfully handled, as shown in this image:
 
 .. image:: images/fig_tubular_overview_v10_panelG.jpg
   :width: 891

@@ -1,5 +1,5 @@
-Example for using TubULAR 
-=========================
+Example for using TubULAR: synthetic data
+=========================================
 
 Here is an example using a synthetic dataset available for download on FigShare: 
 Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. https://doi.org/10.6084/m9.figshare.20484345

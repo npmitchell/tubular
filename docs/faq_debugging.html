@@ -153,7 +153,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR: midgut data</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="example_usage_tubular.html">Example for using TubULAR: synthetic data</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_for_surface_visualization.html">Example for using TubULAR just for surface visualization</a></li>
@@ -235,11 +238,19 @@
 <ul class="simple">
 <li><p>Fast marching centerline extraction fails and/or the image output shows the path leaving the outside of the tubular surface.</p></li>
 </ul>
-<p>&gt; First erase the existing (bad) centerline files from disk (txt files) and try re-running with options.preview = true. If the visual output doesn’t tell you what’s wrong right away, try reducing the subsampling factor (<a href="#id1"><span class="problematic" id="id2">`</span></a>options.res’) by which the volume is reduced for fast marching. You may also/alternatively need to adjust options.normal_step in tubi.alignAPDVCoords(), which places the A and P points connected by the centerline a distance options.normal_step from the surface.</p>
+<p>&gt; First erase the existing (bad) centerline files from disk (txt files) and try re-running with options.preview = true. If the visual output doesn’t tell you what’s wrong right away, try reducing the subsampling factor (<code class="docutils literal notranslate"><span class="pre">options.res</span></code>) by which the volume is reduced for fast marching. You may also/alternatively need to adjust options.normal_step in tubi.alignAPDVCoords(), which places the A and P points connected by the centerline a distance options.normal_step from the surface.</p>
 <ul class="simple">
 <li><p>Fast marching centerline extraction takes too long to calculate.</p></li>
 </ul>
-<p>&gt; Increase the subsampling factor (<a href="#id3"><span class="problematic" id="id4">`</span></a>options.res’). These crude fast-marching centerlines will be superceded by centerlines computed from the conformal mapping to the plane later anyway, so there is no point wasting too much time on them. Their only purpose is to topologically constrain the conformal map minimizing Dirichlet energy (creaing uv/sphi coordinates), so as long as they are curves that live inside the mesh and span the system, they should work fine.</p>
+<p>&gt; Increase the subsampling factor (<code class="docutils literal notranslate"><span class="pre">options.res</span></code>). These crude fast-marching centerlines will be superceded by centerlines computed from the conformal mapping to the plane later anyway, so there is no point wasting too much time on them. Their only purpose is to topologically constrain the conformal map minimizing Dirichlet energy (creaing uv/sphi coordinates), so as long as they are curves that live inside the mesh and span the system, they should work fine.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Undefined</span> <span class="pre">function</span> <span class="pre">'smooth'</span> <span class="pre">for</span> <span class="pre">input</span> <span class="pre">arguments</span> <span class="pre">of</span> <span class="pre">type</span> <span class="pre">'double'</span></code></p></li>
+</ul>
+<p>&gt; Install Curve Fitting Toolbox or obtain a working version of the <code class="docutils literal notranslate"><span class="pre">smooth</span></code> function.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Undefined</span> <span class="pre">function</span> <span class="pre">'perform_front_propagation_3d'</span> <span class="pre">for</span> <span class="pre">input</span> <span class="pre">arguments</span> <span class="pre">of</span> <span class="pre">type</span> <span class="pre">'double'.</span></code></p></li>
+</ul>
+<p>&gt; This is a function that is inside gptoolbox, in the external folder. Make sure you run GPToolbox’s external/toolbox_fast_marching/compile_mex.m successfully, run with MATLAB from within the parent directory (ie the current working directory should be something like <code class="docutils literal notranslate"><span class="pre">tubular/external/gptoolbox/external/toolbox_fast_marching/</span></code>).</p>
 </section>
 
         </article>
