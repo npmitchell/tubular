@@ -18,15 +18,19 @@ With TubULAR, we can capture the tissue motion and quantify how it changes over 
    
 You can check out the preprint here: https://www.biorxiv.org/content/10.1101/2022.04.19.488840
 
-Data for tutorials is available here: https://doi.org/10.6084/m9.figshare.c.6178351
+Data for tutorials are available here: https://doi.org/10.6084/m9.figshare.c.6178351
 
 The GitHub repository is here: https://github.com/npmitchell/tubular
 
 Usage
 -----
 
-TubULAR is self-contained MATLAB code, so no additional dependencies are strictly necessary. 
-However, there is additional functionality included in the tutorials that use ImSAnE environments and Morphological Snakes level set surface detection methods. 
+TubULAR is written in MATLAB. There are example scripts in the Tubular repository, in ``tubular/example/`` (see the GitHub page here: https://github.com/npmitchell/tubular). The basic workflow of a typical pipeline is shown below:
+
+.. image:: images/figSI_tubular_examplePipeline.jpg
+	:width: 891  
+  
+
 
 Let's get going
 ---------------
@@ -115,12 +119,7 @@ A typical **Tubular** pipeline uses several self-contained packages that we have
 Let's walk through an example or two
 ------------------------------------
 
-There are example scripts in the Tubular repository, in ``tubular/example/``. The basic workflow of a typical pipeline is shown below:
-
-.. image:: images/figSI_tubular_examplePipeline.jpg
-	:width: 891  
-  
-Here are some full examples, starting with one of the midgut, which is in ``tubular/example/example_timeseries_gut11Timespoints.m``, which uses data stored on FigShare. Here is a page with the details:
+Here are some full examples, starting with one of the midgut, which is in ``tubular/example/example_timeseries_gut11Timespoints.m``. This script uses data stored on FigShare. Here is a page with the details:
 
 .. toctree::
   :maxdepth: 1

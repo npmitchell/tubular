@@ -9,6 +9,8 @@ https://doi.org/10.6084/m9.figshare.c.6178351
 
 Note that the file paths have to be changed at the top of the script to the place where you download the data.
 
+The default script below runs through just three timepoints. If you want to run more timepoints, adjust ``masterSettings.timePoints`` below. 
+
 .. code-block:: matlab
 
 	%% EXAMPLE MASTER PIPELINE FOR TIME SERIES DATA (3D + time)
