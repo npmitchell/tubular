@@ -416,18 +416,12 @@ disp('done with cleaning up centerlines')
 
 %% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
 % Look for options on disk. If not saved, define options.
-if ~exist(tubi.fileName.endcapOptions, 'file') 
-    endcapOpts = struct( 'adist_thres', 20, ...  % 20, distance threshold for cutting off anterior in pix
-                'pdist_thres', 33, ...  % 15-20, distance threshold for cutting off posterior in pix
-                'tref', tubi.xp.fileMeta.timePoints(1)) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
-    tubi.setEndcapOptions(endcapOpts) ;
-    % Save the options to disk
-    tubi.saveEndcapOptions() ;
-else
-    % load endcapOpts
-    tubi.loadEndcapOptions() ;
-    endcapOpts = tubi.endcapOptions ;
-end
+endcapOpts = struct( 'adist_thres', 20, ...  % distance threshold for cutting off anterior in pix
+            'pdist_thres', 37, ...  % 15-33, distance threshold for cutting off posterior in pix
+            'tref', tubi.xp.fileMeta.timePoints(1)) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
+tubi.setEndcapOptions(endcapOpts) ;
+% Save the options to disk
+tubi.saveEndcapOptions() ;
 
 methodOpts.overwrite = true ;
 methodOpts.save_figs = true ;   % save images of cutMeshes along the way
@@ -587,6 +581,7 @@ tubi.plotMetricKinematics(options)
 
 %% Pullback pathlines connecting Lagrangian grids
 options = struct() ;
+options.overwrite = true ;
 tubi.measurePullbackPathlines(options)
 
 %% Pullback pathline texturepatching (PIV pathline --> most stable image sequence) 
@@ -620,7 +615,7 @@ tubi.plotPathlineVelocities(options)
 options = struct() ;
 tubi.measurePathlineMetricKinematics(options)
 
-%% Plot Pathline Kinematics
+% Plot Pathline Kinematics
 options = struct() ;
 tubi.plotPathlineMetricKinematics(options)
 
@@ -635,7 +630,7 @@ tubi.measureBeltramiCoefficient(options) ;
 options = struct() ;
 tubi.measureStrainRate(options) 
 
-%% Plot time-averaged strain rates in 3d on mesh
+% Plot time-averaged strain rates in 3d on mesh
 options = struct() ;
 tubi.plotStrainRate3DFiltered(options) 
 
@@ -681,7 +676,7 @@ options.pcaTypes = pcaTypes ;
 tubi.spaceUnits = [char(181) 'm'] ;
 tubi.getPCAoverTime(options)
 
-%% Laplace-Beltrami Spectral (LBS) decomposition
+% Laplace-Beltrami Spectral (LBS) decomposition
 close all; clc;
 
 % lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
