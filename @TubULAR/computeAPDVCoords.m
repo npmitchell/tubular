@@ -239,10 +239,10 @@ if redo_rot_calc || overwrite
             else
                 disp('Computing dorsal COM for the first time')
             end
-            cont = input('APD COMS not on disk -- Compute them? [N/y]', 's') ;
-            if ~contains(lower(cont), 'y')
-                error('exiting to stop APD COM computation')
-            end
+            % cont = input('APD COMS not on disk -- Compute them? [N/y]', 's') ;
+            % if ~contains(lower(cont), 'y')
+            %     error('exiting to stop APD COM computation')
+            % end
 
             search4com = true ;
             % start with a threshold == dorsal_thres, iteratively lower if

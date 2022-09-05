@@ -73,6 +73,7 @@ function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
 timePoints = tubi.xp.fileMeta.timePoints ;
 apdvoutdir = tubi.dir.cntrline ;
 meshDir = tubi.dir.mesh ;
+swapAP = false ;
 % axorder = tubi.data.axisOrder ; % NOTE: axisorder for texture_axis_order
                                 % invoked upon loading IV into tubi.currentData.IV
 ilastikOutputAxisOrder = tubi.data.ilastikOutputAxisOrder ;
@@ -123,6 +124,11 @@ if ((~use_iLastik) && (~useCustomPts))
     else
         autoAP = false ; % instead by default, click on the A and P points at t=t0
     end
+end
+if isfield(opts, 'swapAP')
+    swapAP = opts.swapAP ;
+elseif isfield(opts, 'flipAP')
+    swapAP = opts.flipAP ;
 end
 
 % Default options
@@ -400,15 +406,30 @@ if ~load_from_disk || overwrite
         % and that they are not parallel. Otherwise use Descartes formula:
         % ax + by + cz + d = 0, where n = [a, b, c] is a vector normal to the plane
         
-        % anterior point -- near along the elongated axis
-        xval = min(mesh.v(:, xIndex)) ;
-        ptInPlaneA = [0,0,0] ;
-        ptInPlaneA(xIndex) = xval ;
+        if ~swapAP
+            % anterior point -- near along the elongated axis
+            xval = min(mesh.v(:, xIndex)) ;
+            % Store this near/far info 
+            ptInPlaneA = [0,0,0] ;
+            ptInPlaneA(xIndex) = xval ;
+            
+            % posterior point -- far along the elongated axis
+            xval = max(mesh.v(:, xIndex)) ;
+            ptInPlaneP = [0,0,0] ;
+            ptInPlaneP(xIndex) = xval ;
+        else
+            % anterior point -- near along the elongated axis
+            xval = max(mesh.v(:, xIndex)) ;
+            ptInPlaneA = [0,0,0] ;
+            ptInPlaneA(xIndex) = xval ;
+            
+            % posterior point -- far along the elongated axis
+            xval = min(mesh.v(:, xIndex)) ;
+            ptInPlaneP = [0,0,0] ;
+            ptInPlaneP(xIndex) = xval ;
+            
+        end
         
-        % posterior point -- far along the elongated axis
-        xval = max(mesh.v(:, xIndex)) ;
-        ptInPlaneP = [0,0,0] ;
-        ptInPlaneP(xIndex) = xval ;
         
         normalToPlane = [0,0,0] ;
         normalToPlane(xIndex) = 1 ; 
@@ -588,6 +609,9 @@ if ~load_from_disk || overwrite
         hold on;
         plot3(pclick(1), pclick(2), pclick(3), 'rs') ;
         legend({'surface', 'anterior', 'posterior'})
+        disp('Anterior and Posterior endcap points have been successfully selected, closing figure in 3 seconds...')
+        pause(3) ;
+        close all
         
         % Assignment for t0
         t0 = tubi.t0set() ;

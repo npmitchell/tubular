@@ -719,12 +719,14 @@ classdef TubULAR < handle
                     if adjustlow == 0
                         vlo = double(min(IVii(:))) ;
                     else
-                        vlo = double(prctile( IVii(:) , adjustlow(ii) )) ;
+                        % vlo = double(prctile( double(IVii(:)) , adjustlow(ii) )) ;
+                        vlo = double(prctile( (IVii(:)) , adjustlow(ii) )) ;
                     end
                     if adjusthigh == 100
                         vhi = double(max(IVii(:))) ;
                     else
-                        vhi = double(prctile( IVii(:) , adjusthigh(ii))) ;
+                        % vhi = double(prctile( double(IVii(:)) , adjusthigh(ii))) ;
+                        vhi = double(prctile( (IVii(:)) , adjusthigh(ii))) ;
                     end
                     disp(['  raw --> ', num2str(vlo), ', ', num2str(vhi), ...
                         ' for ', num2str(adjustlow(ii)), '/', num2str(adjusthigh(ii))])

@@ -13,7 +13,7 @@ clear; close all; clc;
 
 %% Download gut data (downsampled 2x, 11 timepoints) from figShare TubULAR project
 % Replace this path with wherever you put your downloaded data:
-gutDataDir = '/mnt/data/tubular_test/fly_midgut_11TimepointsDownsampled' ;
+gutDataDir = '/mnt/data/tubular_test/fly_midgut_11TimepointsDownsampled_dataOnly2' ;
 
 cd(gutDataDir)
 zwidth =1 ;
@@ -45,7 +45,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
         stackResolution = 2*[.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
         nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
         channelsUsed = 1 ;          % which channels are used for analysis
-        timePoints = 150:2:170;       % timepoints to include in the analysis
+        timePoints = 150:2:154;       % timepoints to include in the analysis
         ssfactor = 2 ;              % subsampling factor
         flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
         timeInterval = 1 ;          % physical interval between timepoints
@@ -199,7 +199,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
         imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
 
         % Name the output mesh directory --------------------------------------
-        mslsDir = [fullfile(projectDir, 'msls_output') filesep];
+        mslsDir = [fullfile(projectDir, 'tubular_output') filesep];
 
         % Surface detection parameters ----------------------------------------
         detectOptions = struct( 'channel', 1, ...
@@ -356,23 +356,25 @@ end
 % apical surface training.
 % Anterior is at the junction of the midgut with the foregut.
 
-% Define global orientation frame (for viewing in canonical frame)
+%% Define global orientation frame (for viewing in canonical frame)
 % Compute APDV coordinate system
 alignAPDVOpts = struct() ;
 alignAPDVOpts.overwrite = false ;
 alignAPDVOpts.use_iLastik = true ;
 tubi.computeAPDVCoords(alignAPDVOpts) ;
 
-% Select the endcaps for the centerline computation (A and P) and a point
+%% Select the endcaps for the centerline computation (A and P) and a point
 % along which we will form a branch cut for mapping to the plane (D).
 apdvOpts = struct() ;
-apdvOpts.overwrite = false ;
+apdvOpts.overwrite = true ;
+apdvOpts.swapAP = true ;
+apdvOpts.autoAP = true ; % find the AP points automatically
 [apts_sm, ppts_sm] = tubi.computeAPDpoints(apdvOpts) ;
 
 % Align the meshes in the APDV global frame & plot them
 tubi.alignMeshesAPDV(alignAPDVOpts) ;
 
-disp('done')
+disp('done with APDV coordinates and AP point selection for centerline')
 
 % PLOT ALL TEXTURED MESHES IN 3D (OPTIONAL: this is SLOW) ================
 % % Establish texture patch options
@@ -387,13 +389,13 @@ disp('done')
 % % Plot on surface for all timepoints 
 % tubi.plotSeriesOnSurfaceTexturePatch(metadat, Options)
 
-% EXTRACT CENTERLINES
+%% EXTRACT CENTERLINES
 % Note: these just need to be 'reasonable' centerlines for topological
 % checks on the orbifold cuts. Therefore, use as large a resolution ('res')
 % as possible that still forms a centerline passing through the mesh
 % surface, since the centerline computed here is just for constraining the 
 % mapping to the plane.
-cntrlineOpts.overwrite = false ;         % overwrite previous results
+cntrlineOpts.overwrite = true ;         % overwrite previous results
 cntrlineOpts.overwrite_ims = false ;     % overwrite previous results
 cntrlineOpts.weight = 0.1;               % for speedup of centerline extraction. Larger is less precise
 cntrlineOpts.exponent = 1.0 ;            % how heavily to scale distance transform for speed through voxel
@@ -414,9 +416,9 @@ disp('done with cleaning up centerlines')
 
 %% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
 % Look for options on disk. If not saved, define options.
-if ~exist(tubi.fileName.endcapOptions, 'file')
-    endcapOpts = struct( 'adist_thres', 16, ...  % 20, distance threshold for cutting off anterior in pix
-                'pdist_thres', 14, ...  % 15-20, distance threshold for cutting off posterior in pix
+if ~exist(tubi.fileName.endcapOptions, 'file') 
+    endcapOpts = struct( 'adist_thres', 20, ...  % 20, distance threshold for cutting off anterior in pix
+                'pdist_thres', 33, ...  % 15-20, distance threshold for cutting off posterior in pix
                 'tref', tubi.xp.fileMeta.timePoints(1)) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
     tubi.setEndcapOptions(endcapOpts) ;
     % Save the options to disk
@@ -432,11 +434,11 @@ methodOpts.save_figs = true ;   % save images of cutMeshes along the way
 methodOpts.preview = false  ;     % display intermediate results
 tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 
-%% Clean Cylinder Meshes
+%% Clean Cylinder Meshes -- this is slow for large meshes
 % This removes "ears" from the endcaps of the tubular meshes (cylindrical
 % meshes)
 cleanCylOptions = struct() ;
-cleanCylOptions.overwrite = false ;
+cleanCylOptions.overwrite = true ;
 tubi.cleanCylMeshes(cleanCylOptions)
 disp('done cleaning cylinder meshes')
     

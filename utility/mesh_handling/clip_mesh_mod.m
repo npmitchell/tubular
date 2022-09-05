@@ -13,7 +13,7 @@ function [newFace, newFaceIdx, newVertex, newVertexIdx] = clip_mesh_mod(face, ve
 %   newVertex:    Coordinates of clipped triangulation points
 %   newVertexIdx: Indices of new vertices in old triangulation
 % 
-% By Dillon Cislo
+% By Dillon Cislo & NPMitchell
 
 % Make certain that face is a (nf x 3) array
 if size(face,1)<size(face,2)
@@ -30,29 +30,46 @@ f = face;
 v = vertex;
 
 while( num_lone_points ~= 0 )
+    fprintf('.')
     
-    % Iterate through the vertices to find the number of lone points
-    num_lone_points = 0;
-    for i = 1:size(v,1)
-        % The number of faces of which vertex i is a member
-        vf = sum( any( f == i, 2 ) );
-        if vf == 1
-            num_lone_points = num_lone_points + 1;
+    % NPM edited this: first just try to use MATLAB's triangulation object
+    % since this is much faster. If it fails, do the slow version
+    
+    try
+
+        % MATLAB version:
+        TR = triangulation(f, v) ;
+        Vatt = vertexAttachments(TR) ;
+        nFa = cellfun(@numel,Vatt,'UniformOutput',false) ;
+        lone_points = find(cell2mat(nFa) == 1) ;
+        num_lone_points = length(lone_points) ;
+        
+    catch
+        % Iterate through the vertices to find the number of lone points
+        num_lone_points = 0;
+        for i = 1:size(v,1)
+            % The number of faces of which vertex i is a member
+            vf = sum( any( f == i, 2 ) );
+            if vf == 1
+                num_lone_points = num_lone_points + 1;
+            end
+        end
+
+        % Iterate through the vertices again to extract the IDs of the lone
+        % points
+        lone_points = zeros(num_lone_points,1);
+        num_lone_points = 0;
+        for i = 1:size(v,1)
+            % The number of faces of which vertex i is a member
+            vf = sum( any( f == i, 2 ) );
+            if vf == 1
+                num_lone_points = num_lone_points + 1;
+                lone_points(num_lone_points) = i;
+            end
         end
     end
     
-    % Iterate through the vertices again to extract the IDs of the lone
-    % points
-    lone_points = zeros(num_lone_points,1);
-    num_lone_points = 0;
-    for i = 1:size(v,1)
-        % The number of faces of which vertex i is a member
-        vf = sum( any( f == i, 2 ) );
-        if vf == 1
-            num_lone_points = num_lone_points + 1;
-            lone_points(num_lone_points) = i;
-        end
-    end
+    fprintf('.')
     
     % Remove the lone vertices at the specified index values
     newVertex = v;
