@@ -26,7 +26,7 @@ Note that the file paths have to be changed at the top of the script to the plac
 
 	%% Download gut data (downsampled 2x, 11 timepoints) from figShare TubULAR project
 	% Replace this path with wherever you put your downloaded data:
-	gutDataDir = '/mnt/data/tubular_test/fly_midgut_11TimepointsDownsampled' ;
+	gutDataDir = '/mnt/data/tubular_test/fly_midgut_11TimepointsDownsampled_dataOnly2' ;
 
 	cd(gutDataDir)
 	zwidth =1 ;
@@ -39,7 +39,7 @@ Note that the file paths have to be changed at the top of the script to the plac
 	addpath(genpath('../utility'))
 	% Install gptoolbox and add path here (required for some functionality but
 	% not strictly necessary)
-	addpath(genpath('/mnt/data/code/gptoolbox'))
+	addpath(genpath('../external/gptoolbox'))
 	addpath('../')
 	addpath('../@TubULAR')
 	addpath(genpath('../TexturePatch'))
@@ -58,7 +58,7 @@ Note that the file paths have to be changed at the top of the script to the plac
 	        stackResolution = 2*[.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
 	        nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
 	        channelsUsed = 1 ;          % which channels are used for analysis
-	        timePoints = 150:2:170;       % timepoints to include in the analysis
+	        timePoints = 150:2:154;       % timepoints to include in the analysis
 	        ssfactor = 2 ;              % subsampling factor
 	        flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
 	        timeInterval = 1 ;          % physical interval between timepoints
@@ -194,7 +194,7 @@ Note that the file paths have to be changed at the top of the script to the plac
 	    %% SET DETECTION OPTIONS ==================================================
 	    % Load/define the surface detection parameters
 	    msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
-	    if exist(msls_detOpts_fn, 'file') && ~overwrite
+	    if exist(msls_detOpts_fn, 'file') 
 	        disp('loading detectOptions')
 	        load(msls_detOpts_fn, 'detectOptions')
 	    else
@@ -212,7 +212,7 @@ Note that the file paths have to be changed at the top of the script to the plac
 	        imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
 
 	        % Name the output mesh directory --------------------------------------
-	        mslsDir = [fullfile(projectDir, 'msls_output') filesep];
+	        mslsDir = [fullfile(projectDir, 'tubular_output') filesep];
 
 	        % Surface detection parameters ----------------------------------------
 	        detectOptions = struct( 'channel', 1, ...
@@ -369,23 +369,25 @@ Note that the file paths have to be changed at the top of the script to the plac
 	% apical surface training.
 	% Anterior is at the junction of the midgut with the foregut.
 
-	% Define global orientation frame (for viewing in canonical frame)
+	%% Define global orientation frame (for viewing in canonical frame)
 	% Compute APDV coordinate system
 	alignAPDVOpts = struct() ;
 	alignAPDVOpts.overwrite = false ;
 	alignAPDVOpts.use_iLastik = true ;
 	tubi.computeAPDVCoords(alignAPDVOpts) ;
 
-	% Select the endcaps for the centerline computation (A and P) and a point
+	%% Select the endcaps for the centerline computation (A and P) and a point
 	% along which we will form a branch cut for mapping to the plane (D).
 	apdvOpts = struct() ;
-	apdvOpts.overwrite = false ;
+	apdvOpts.overwrite = true ;
+	apdvOpts.swapAP = true ;
+	apdvOpts.autoAP = true ; % find the AP points automatically
 	[apts_sm, ppts_sm] = tubi.computeAPDpoints(apdvOpts) ;
 
 	% Align the meshes in the APDV global frame & plot them
 	tubi.alignMeshesAPDV(alignAPDVOpts) ;
 
-	disp('done')
+	disp('done with APDV coordinates and AP point selection for centerline')
 
 	% PLOT ALL TEXTURED MESHES IN 3D (OPTIONAL: this is SLOW) ================
 	% % Establish texture patch options
@@ -400,13 +402,13 @@ Note that the file paths have to be changed at the top of the script to the plac
 	% % Plot on surface for all timepoints 
 	% tubi.plotSeriesOnSurfaceTexturePatch(metadat, Options)
 
-	% EXTRACT CENTERLINES
+	%% EXTRACT CENTERLINES
 	% Note: these just need to be 'reasonable' centerlines for topological
 	% checks on the orbifold cuts. Therefore, use as large a resolution ('res')
 	% as possible that still forms a centerline passing through the mesh
 	% surface, since the centerline computed here is just for constraining the 
 	% mapping to the plane.
-	cntrlineOpts.overwrite = false ;         % overwrite previous results
+	cntrlineOpts.overwrite = true ;         % overwrite previous results
 	cntrlineOpts.overwrite_ims = false ;     % overwrite previous results
 	cntrlineOpts.weight = 0.1;               % for speedup of centerline extraction. Larger is less precise
 	cntrlineOpts.exponent = 1.0 ;            % how heavily to scale distance transform for speed through voxel
@@ -427,9 +429,9 @@ Note that the file paths have to be changed at the top of the script to the plac
 
 	%% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
 	% Look for options on disk. If not saved, define options.
-	if ~exist(tubi.fileName.endcapOptions, 'file')
-	    endcapOpts = struct( 'adist_thres', 16, ...  % 20, distance threshold for cutting off anterior in pix
-	                'pdist_thres', 14, ...  % 15-20, distance threshold for cutting off posterior in pix
+	if ~exist(tubi.fileName.endcapOptions, 'file') 
+	    endcapOpts = struct( 'adist_thres', 20, ...  % 20, distance threshold for cutting off anterior in pix
+	                'pdist_thres', 33, ...  % 15-20, distance threshold for cutting off posterior in pix
 	                'tref', tubi.xp.fileMeta.timePoints(1)) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
 	    tubi.setEndcapOptions(endcapOpts) ;
 	    % Save the options to disk
@@ -445,11 +447,11 @@ Note that the file paths have to be changed at the top of the script to the plac
 	methodOpts.preview = false  ;     % display intermediate results
 	tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 
-	%% Clean Cylinder Meshes
+	%% Clean Cylinder Meshes -- this is slow for large meshes
 	% This removes "ears" from the endcaps of the tubular meshes (cylindrical
 	% meshes)
 	cleanCylOptions = struct() ;
-	cleanCylOptions.overwrite = false ;
+	cleanCylOptions.overwrite = true ;
 	tubi.cleanCylMeshes(cleanCylOptions)
 	disp('done cleaning cylinder meshes')
     
@@ -561,6 +563,7 @@ Note that the file paths have to be changed at the top of the script to the plac
 	%% PERFORM PIV ON PULLBACK MIPS ===========================================
 	% % Compute PIV either with built-in phase correlation or in PIVLab
 	options = struct() ;
+	options.overwrite = true ;
 	tubi.measurePIV2d(options) ;
 
 	%% Measure velocities =====================================================
@@ -684,8 +687,8 @@ Note that the file paths have to be changed at the top of the script to the plac
 	% PCA decomposition
 	pcaTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
 	% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-	options = struct('overwrite', false, ...
-	    'overwriteImages', false) ;
+	options = struct('overwrite', true, ...
+	    'overwriteImages', true) ;
 	options.pcaTypes = pcaTypes ;
 	% options.meshStyles = 'sphi' ;
 	tubi.spaceUnits = [char(181) 'm'] ;
@@ -696,12 +699,13 @@ Note that the file paths have to be changed at the top of the script to the plac
 
 	% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
 	lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-	options = struct('overwrite', false, ...
-	    'overwriteImages', false) ;
+	options = struct('overwrite', true, ...
+	    'overwriteImages', true) ;
 	options.lbsTypes = lbsTypes ;
 	% options.meshStyles = 'sphi' ;
 	tubi.spaceUnits = [char(181) 'm'] ;
 	tubi.getLBSoverTime(options)
+
 
 
 

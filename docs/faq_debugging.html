@@ -223,6 +223,10 @@
           <section id="common-issues-in-tubular-and-suggestions">
 <h1>Common issues in TubULAR and suggestions<a class="headerlink" href="#common-issues-in-tubular-and-suggestions" title="Permalink to this headline">#</a></h1>
 <ul class="simple">
+<li><p>Almost every method of TubULAR has an <code class="docutils literal notranslate"><span class="pre">overwrite</span></code> option (which is false be default for any given method), and most have a <code class="docutils literal notranslate"><span class="pre">preview</span></code> option, defined in an optional struct that can be passed to the method. If you overwrite something upstream of other calculations, there are potential scenarios where this could lead to issues. For example, if you change the endpoints which are used to cut off the endcaps of the mesh but don’t rerun <code class="docutils literal notranslate"><span class="pre">tubi.alignMeshesAPDV()</span></code>, then the aligned meshes will not reflect your changes.</p></li>
+</ul>
+<p>&gt; Set <code class="docutils literal notranslate"><span class="pre">options.overwrite=true</span></code> and pass <code class="docutils literal notranslate"><span class="pre">options</span></code> to any relevant method that is downstream of what you overwrote.</p>
+<ul class="simple">
 <li><p>Data loads but only one slice is present</p></li>
 </ul>
 <p>&gt; Try toggling the swapZT parameter in the xp metadata.</p>
@@ -235,6 +239,10 @@
 </ul>
 <p>&gt; Try adjusting the tension and pressure values of the detectOptions. Typically setting these very nearly to zero is a good starting point.
 &gt; If that fails, check whether your initial guess for the level set is inside the surface you want to find. The initial guess could be a small sphere that is well within the surface you want to find. Subsequent timepoints are found by first using the previous timepoint’s output as an initial guess. To shrink the previous timepoint’s output before evolving it, adjust pre_pressure.</p>
+<ul class="simple">
+<li><p>Cutting off the endcaps fails for a particular timepoint.</p></li>
+</ul>
+<p>&gt; This usually means something wrong with the mesh itself. You can inspect that mesh in MeshLab to look for issues. If nothing appears unusual, consider remaking the mesh for that one timepoint, maybe with the tiniest adjustment of parameters or a little more iLastik training just to make sure you get a slightly different mesh. You can also redo the endcap removal with slightly larger or slightly smaller distance thresholds to the endcap vertices. If all else fails, try a different way of identifying which part of the mesh to cut off. The default method is to cut off the largest contiguous mesh patch that is within a threshold distance from the endcap vertex.</p>
 <ul class="simple">
 <li><p>Fast marching centerline extraction fails and/or the image output shows the path leaving the outside of the tubular surface.</p></li>
 </ul>

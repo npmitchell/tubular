@@ -18,6 +18,10 @@ With TubULAR, we can capture the tissue motion and quantify how it changes over 
    
 You can check out the preprint here: https://www.biorxiv.org/content/10.1101/2022.04.19.488840
 
+Data for tutorials is available here: https://doi.org/10.6084/m9.figshare.c.6178351
+
+The GitHub repository is here: https://github.com/npmitchell/tubular
+
 Usage
 -----
 
@@ -50,7 +54,7 @@ So now your tubular is definitely up-to-date. There are two linked repositories 
 	
 	git pull
 
-We have tried our best to keep dependencies to an absolute minimum. One package that TubULAR will try to use if your surfaces are so "prickly" that they would cause potential issues is gptoolbox. This is a *MATLAB* package, but it has some mex files, which are *MATLAB*'s way of interfacing with custom *C++* code. If that sounds complicated, don't worry -- all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a *Terminal* window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR's surface extraction parameters.
+We have tried to keep dependencies to a minimum. One package that TubULAR will try to use if your surfaces are so "prickly" that they would cause potential issues is gptoolbox. This is a *MATLAB* package, but it has some mex files, which are *MATLAB*'s way of interfacing with custom *C++* code. If that sounds complicated, don't worry -- all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a *Terminal* window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR's surface extraction parameters.
 
 First download **gptoolbox** inside ``tubular/external/``.
 	
@@ -80,9 +84,11 @@ In other words, open MATLAB, then open the script in ``tubular/external/gptoolbo
 
 TubULAR also uses CGAL, described in detail at https://www.cgal.org/. Installation instructions are at https://www.cgal.org/download.html. 
 
-Making pullback projections will require the Optimization Toolbox, and we also use Curve Fitting Toolbox (for ``smooth``) Statistics and Machine Learning Toolbox (or you can just rip the function ``prctile`` for this one), which you can install in MATLAB by clicking in the Home tab of the toolbar: ``Add-Ons > Get Add-Ons`` and searching for the Toolbox name. If you don't have access to these toolboxes, you can get functions that do the trick 'a la carte'.
+Making pullback projections will require the Optimization Toolbox, and we also use Curve Fitting Toolbox (for ``smooth``), Statistics and Machine Learning Toolbox (or you can just rip the function ``prctile`` for this one), and the Image Processing Toolbox. You can install these in MATLAB by clicking in the Home tab of the toolbar: ``Add-Ons > Get Add-Ons`` and searching for the Toolbox name. If you don't have access to these toolboxes, you can get functions that do the trick 'a la carte'.
 
-Now that you've downloaded TubULAR and built gptoolbox, let's look over the components of **TubULAR** and walk through an example.
+TubULAR uses "under-the-hood" PIVLab commands for refinement of the stabilized coordinates after the smoothed (s,phi) coordinates are defined. To install PIVLab, click the APPS tab in MATLAB (next to PLOTS and EDITOR tabs), click 'Get More Apps' and search for PIVLab.
+
+Now that you've downloaded TubULAR and gathered the dependencies, let's look over the components of **TubULAR** and walk through an example.
 
   
 Prerequisites
