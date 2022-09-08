@@ -1,5 +1,5 @@
-function measureStrainRate(QS, options)
-%measureStrainRate(QS, options)
+function measureStrainRate(tubi, options)
+%measureStrainRate(tubi, options)
 %   Compute epsilon = 1/2 (\nabla_i v_j + \nabla_j v_i) - vN b_{ij} 
 %   The result on faces is smoothed insofar as the velocities are smoothed
 %   with options.lambda and the mesh (governing b_{ij}) is smoothed with
@@ -33,10 +33,10 @@ function measureStrainRate(QS, options)
 % NPMitchell 2020
 
 %% Default options
-lambda = QS.smoothing.lambda ;
-lambda_mesh = QS.smoothing.lambda_mesh ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 overwrite = false ;
 overwriteImages = false ;
 preview = true ;
@@ -106,25 +106,25 @@ end
 % V(:, 1) = V(:, 1) - midx ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nU = QS.nU ;
-nV = QS.nV ;
+nU = tubi.nU ;
+nV = tubi.nV ;
 
 % Load vertex-based velocity measurements
-QS.getVelocityAverage('vv', 'vf')
-vertex_vels = QS.velocityAverage.vv ;
-face_vels = QS.velocityAverage.vf ;
+tubi.getVelocityAverage('vv', 'vf')
+vertex_vels = tubi.velocityAverage.vv ;
+face_vels = tubi.velocityAverage.vf ;
 
 % Pre-assign timepoints with velocities
-tpts = QS.xp.fileMeta.timePoints(1:end-1) ;
+tpts = tubi.xp.fileMeta.timePoints(1:end-1) ;
 tp2do = [tpts(1:10:end), setdiff(tpts, tpts(1:10:end))] ;
 
 % Build metric from mesh
 for tp = tp2do
     disp(['t = ' num2str(tp)])
-    tidx = QS.xp.tIdx(tp) ;
+    tidx = tubi.xp.tIdx(tp) ;
 
     % Load current mesh
-    tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
+    tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
     mesh = tmp.spcutMeshSmRSC ;
     
     % DEBUG
@@ -202,7 +202,7 @@ for tp = tp2do
         % end
         
         %% Convert to 2D mesh
-        mesh.nU = QS.nU ;
+        mesh.nU = tubi.nU ;
         cutMesh = cutRectilinearCylMesh(mesh) ;
         
         % Compute the strain rate tensor
@@ -336,7 +336,7 @@ for tp = tp2do
         
         % Average along DV -- ignore last redudant row at nV
         [dev_ap, theta_ap] = ...
-            QS.dvAverageNematic(dev_vtx(:, 1:nV-1), theta_vtx(:, 1:nV-1)) ;
+            tubi.dvAverageNematic(dev_vtx(:, 1:nV-1), theta_vtx(:, 1:nV-1)) ;
         tre_ap = mean(tre_vtx(:, 1:nV-1), 2) ;
         
         % quarter bounds
@@ -351,22 +351,22 @@ for tp = tp2do
         
         % left quarter
         [dev_l, theta_l] = ...
-            QS.dvAverageNematic(dev_vtx(:, left), theta_vtx(:, left)) ;
+            tubi.dvAverageNematic(dev_vtx(:, left), theta_vtx(:, left)) ;
         tre_l = mean(tre_vtx(:, left), 2) ;
         
         % right quarter
         [dev_r, theta_r] = ...
-            QS.dvAverageNematic(dev_vtx(:, right), theta_vtx(:, right)) ;
+            tubi.dvAverageNematic(dev_vtx(:, right), theta_vtx(:, right)) ;
         tre_r = mean(tre_vtx(:, right), 2) ;
         
         % dorsal quarter
         [dev_d, theta_d] = ...
-            QS.dvAverageNematic(dev_vtx(:, dorsal), theta_vtx(:, dorsal)) ;
+            tubi.dvAverageNematic(dev_vtx(:, dorsal), theta_vtx(:, dorsal)) ;
         tre_d = mean(tre_vtx(:, dorsal), 2) ;
         
         % ventral quarter
         [dev_v, theta_v] = ...
-            QS.dvAverageNematic(dev_vtx(:, ventral), theta_vtx(:, ventral)) ;
+            tubi.dvAverageNematic(dev_vtx(:, ventral), theta_vtx(:, ventral)) ;
         tre_v = mean(tre_vtx(:, ventral), 2) ;
         
         % save the metric strain
@@ -423,7 +423,7 @@ for tp = tp2do
         %     sprintf('strainRate_check_%06d.png', tp)));
     else
         % Convert to 2D mesh
-        mesh.nU = QS.nU ;
+        mesh.nU = tubi.nU ;
         cutMesh = cutRectilinearCylMesh(mesh) ;
     end        
     
@@ -436,7 +436,7 @@ for tp = tp2do
     options.nmodes = nmodes ;
     options.zwidth = zwidth ;
     options.debug = debug ;
-    QS.plotStrainRateTimePoint(tp, options)
+    tubi.plotStrainRateTimePoint(tp, options)
 end
 disp('done with measuring strain rates')
 
