@@ -119,10 +119,26 @@ end
 t0 = tubi.t0set() ;
 tubi.getXYZLims ;
 xyzlim = tubi.plotting.xyzlim_um ;
-% Output directory
-egImDir = strrep(sprintf( ...
-    tubi.dir.strainRate.smoothing, lambda, lambda_mesh, ...
-    nmodes, zwidth), '.', 'p') ;
+
+
+%% Output directory
+
+    % Define strain rate filename        
+    
+    estrainFn = fullfile(measurementDir, ...
+        sprintf('strainRate_%06d.mat', tp));
+    
+% build tubi.dir.strainRate.smoothing anew to allow for periods in the name
+l_lmesh = strrep(sprintf('lambda%0.03f_lmesh%0.3f_modes%02dw%02d', ...
+    lambda, lambda_mesh, nmodes, zwidth), '.', 'p') ;
+
+measurementDir = ...
+    fullfile(tubi.dir.uvCoord, 'strainRate', l_lmesh, 'measurements') ;
+if ~exist(measurementDir, 'dir')
+    mkdir(measurementDir) ;
+end
+
+egImDir = measurementDir ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 
