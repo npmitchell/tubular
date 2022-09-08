@@ -347,8 +347,13 @@ fn = fullfile(egImDir, 'strainRate2d', ...
         sprintf(['compare_' tubi.fileBase.spcutMeshSm '.png'], tp));
 if (~exist(fn, 'file') || overwrite) && plot_comparison
     % Load gdot trace from kinematics
-    fn_gdot = sprintf(tubi.fullFileBase.metricKinematics.gdot, tp) ;
-    load([strrep(fn_gdot, '.', 'p'), '.mat'], 'gdot')
+    fn_gdot = fullfile(tubi.dir.metricKinematics.root, l_lmesh, ...
+        'measurements', sprintf('gdot_vertices_%06d.mat', tp)) ;
+    load(fn_gdot, 'gdot')
+    
+    % This doesn't work if there are dots on the path
+    %fn_gdot = sprintf(tubi.fullFileBase.metricKinematics.gdot, tp) ;
+    %load([strrep(fn_gdot, '.', 'p'), '.mat'], 'gdot')
 
     % Panel 1
     subplot(1, 2, 1)
