@@ -9,7 +9,7 @@ function measureStrainRate(tubi, options)
 %   
 % Parameters
 % ----------
-% QS : QuapSlap class object instance
+% tubi : TubULAR class object instance
 % options : struct with fields
 %   lambda : float
 %   lambda_mesh : float
