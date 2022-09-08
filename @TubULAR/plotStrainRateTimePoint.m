@@ -123,22 +123,21 @@ xyzlim = tubi.plotting.xyzlim_um ;
 
 %% Output directory
 
-    % Define strain rate filename        
-    
-    estrainFn = fullfile(measurementDir, ...
-        sprintf('strainRate_%06d.mat', tp));
-    
 % build tubi.dir.strainRate.smoothing anew to allow for periods in the name
 l_lmesh = strrep(sprintf('lambda%0.03f_lmesh%0.3f_modes%02dw%02d', ...
     lambda, lambda_mesh, nmodes, zwidth), '.', 'p') ;
 
+egImDir = ...
+    fullfile(tubi.dir.uvCoord, 'strainRate', l_lmesh) ;
 measurementDir = ...
     fullfile(tubi.dir.uvCoord, 'strainRate', l_lmesh, 'measurements') ;
+if ~exist(egImDir, 'dir')
+    mkdir(egImDir) ;
+end
 if ~exist(measurementDir, 'dir')
     mkdir(measurementDir) ;
 end
 
-egImDir = measurementDir ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 
@@ -155,9 +154,7 @@ end
 % Define metric strain filename        
 if ~isfield(options, 'tre') || ~isfield(options, 'dev') || ...
         ~isfield(options, 'theta')
-    estrainFn = fullfile(strrep(sprintf(tubi.dir.strainRate.measurements, ...
-        lambda, lambda_mesh), '.', 'p'), ...
-        sprintf(tubi.fileBase.strainRate, tp)) ;
+    estrainFn = fullfile(measurementDir, sprintf(tubi.fileBase.strainRate, tp)) ;
     disp(['Loading strainrate results from disk: ' estrainFn])
     load(estrainFn, 'strainrate', 'tre_vtx', 'dev_vtx', 'theta_vtx')
     tre = reshape(tre_vtx(:, 1:end-1), [size(tre_vtx, 1) * (size(tre_vtx,2)-1), 1]) ; 
