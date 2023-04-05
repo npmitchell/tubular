@@ -13,17 +13,24 @@ function ig = momentOfInertia3D(pts)
 %
 %
 % NPMitchell 2020
+% DJC 2023
 
-com = mean(pts) ;
-% Compute moment of inertia
-ig = [0.0,0.0,0.0;
-      0.0,0.0,0.0;
-      0.0,0.0,0.0];
-for ii = 1:size(pts, 1)
-    x = pts(ii, 1) - com(1) ;
-    y = pts(ii, 2) - com(2) ;
-    z = pts(ii, 3) - com(3) ;
-    ig = ig + [ (y^2 + z^2),    -x*y,         -x*z; ...
-             -y*x,             (x^2 + z^2), -y*z; ...
-             -x*z,            -y*z,          (y^2 + x^2)];
+validateattributes(pts, {'numeric'}, {'2d', 'ncols', 3, 'finite', 'real'});
+
+% Translate point cloud so that the center of mass lies at the origin
+com = mean(pts, 1);
+pts = pts - repmat(com, size(pts,1), 1);
+
+X = pts(:,1); Y = pts(:,2); Z = pts(:,3);
+X2 = X.^2; Y2 = Y.^2; Z2 = Z.^2;
+
+MOI11 = sum(Y2 + Z2); MOI12 = -sum(X .* Y); MOI13 = -sum(X .* Z);
+MOI22 = sum(X2 + Z2); MOI23 = -sum(Y .* Z);
+MOI33 = sum(Y2 + X2);
+
+% Assemble moment of inertia
+ig = [ MOI11, MOI12, MOI13;
+       MOI12, MOI22, MOI23;
+       MOI13, MOI23, MOI33 ];
+
 end
