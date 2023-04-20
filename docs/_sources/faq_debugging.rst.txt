@@ -27,4 +27,29 @@ Common issues in TubULAR and suggestions
 > Install Curve Fitting Toolbox or obtain a working version of the ``smooth`` function.
 
 - ``Undefined function 'perform_front_propagation_3d' for input arguments of type 'double'.``
-> This is a function that is inside gptoolbox, in the external folder. Make sure you run GPToolbox's external/toolbox_fast_marching/compile_mex.m successfully, run with MATLAB from within the parent directory (ie the current working directory should be something like ``tubular/external/gptoolbox/external/toolbox_fast_marching/``).  
+> This is a function that is inside gptoolbox, in the external folder. Make sure you run gptoolbox's external/toolbox_fast_marching/compile_mex.m successfully, run with MATLAB from within the parent directory (ie the current working directory should be something like ``tubular/external/gptoolbox/external/toolbox_fast_marching/``).  
+
+- ``Could NOT find Matlab`` error while compiling gptoolbox
+> As described on the gptoolbox `mex troubleshooting page <https://github.com/alecjacobson/gptoolbox/tree/master/mex>`_, cmake requires a hardcoded version mapping between MATLAB's numerical versions (e.g. 9.5) and their named versions (e.g. 2018b). Unfortunately this mapping goes stale a couple of times a year when new MATLAB versions are released. If you find that cmake can't figure out your MATLAB version, and you have a fairly recent version of MATLAB, it's likely that you need to update the mapping. To do so, update the ``MATLAB_VERSIONS_MAPPING`` variable in ``tubular/external/gptoolbox/mex/cmake/FindMATLAB.cmake`` and add your version number. You can check your MATLAB version using the ``version`` command. If you still run into an error like
+
+.. code-block:: console
+
+        CMake Error at ... (message):
+        Could NOT find Matlab (missing: Matlab_INCLUDE_DIRS Matlab_MEX_LIBRARY
+        Matlab_MEX_EXTENSION Matlab_ROOT_DIR MEX_COMPILER MX_LIBRARY ENG_LIBRARY)
+        (found version "NOTFOUND")
+
+Then you might consider hardcoding your local MATLAB directory into the cmake instructions. Navigate to the file ``tubular/external/gptoolbox/mex/CMakeLists.txt`` and add the modify the appropriate section to read
+
+.. code-block:: bash
+
+        # Find matlab
+        if(MATLAB_PROXY)
+          set(Matlab_ROOT_DIR "${GPTOOLBOX_MEX_ROOT}/external/matlab")
+          gptoolbox_download_matlab()
+        endif()
+
+        set(Matlab_ROOT_DIR "your/local/MATLAB/R?????")
+        find_package(Matlab REQUIRED COMPONENTS MEX_COMPILER MX_LIBRARY ENG_LIBRARY)
+
+where you should replace ``your/local/MATLAB/R?????`` with the correct path to your local MATLAB directory.
