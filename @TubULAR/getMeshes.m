@@ -1,19 +1,28 @@
-function getMeshes(tubi, overwrite)
+function getMeshes(tubi, overwrite, method)
 % Obtain mesh surfaces of volumetric data (like ImSAnE's surface
-% detection methods), here using integralDetector methods for
-% activecontouring
+% detection methods), here using level sets activecontours, akin to 
+% ImSAnE's integralDetector method. 
 %
 % Parameters
 % ----------
-% tubi : 
+% tubi : current TubULAR instance
 % overwrite : bool
 %   overwrite previous meshes on disk
+% method : str
+%   'threshold' or 'activecontour'
+%
+% Note that tubi.xp.detectOptions is unpacked to set parameters for finding
+% meshes, including:
 %   preview : bool
 %   tension : 
-%   prepressure
+%   prepressure :
 %   maxIterRelaxMeshSpikes : int >=0 (default=1000)
 %       maximum number of iterations to relax spikes in the mesh
-%
+%   smooth_with_matlab : int or float
+%       if positive, uses matlab to smooth mesh with this parameter as the
+%       diffusion coefficient. Otherwise, if zero, performs no smoothing.
+%       Otherwise, if negative, uses MeshLab to smooth the mesh, using the
+%       specified mlxprogram in tubi.xp.detectOptions.mlxprogram
 %
 % Returns
 % -------
@@ -27,6 +36,10 @@ function getMeshes(tubi, overwrite)
 %
 %
 % NPMitchell 2022
+
+if nargin < 3
+    method = 'activecontour';
+end
 
 if nargin < 2
     overwrite = false ;
@@ -100,6 +113,11 @@ if isfield(opts, 'meshConstructionMethod')
 else
     meshConstructionMethod = 'marchingCubes' ;
 end
+if isfield(opts, 'chooseSeedCenterEveryTimepoint')
+    chooseSeedCenterEveryTimepoint = opts.chooseSeedCenterEveryTimepoint ;
+else
+    chooseSeedCenterEveryTimepoint = false ;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Identify the surface using the loaded probabilities here
@@ -107,7 +125,11 @@ end
 ssfactor = opts.ssfactor ;
 niter = opts.niter ;
 niter0 = opts.niter0 ;
-mslsDir = opts.mslsDir ;
+try
+    meshDir = opts.mslsDir ;
+catch
+    meshDir = opts.meshDir ;
+end
 exit_thres = opts.exit_thres ;
 ofn_ply = opts.ofn_ply ;
 ofn_ls = opts.ofn_ls ;
@@ -115,7 +137,6 @@ channel = opts.channel ;
 % tpstamp = fileMeta.timePoints(first_tp);
 timepoint = opts.timepoint ;
 ofn_smoothply = opts.ofn_smoothply ;
-mlxprogram = opts.mlxprogram;
 init_ls_fn = opts.init_ls_fn ;
 % Run MS on a series of timepoints in a parent directory
 try
@@ -128,15 +149,26 @@ end
 radius_guess = opts.radius_guess ;
 center_guess = opts.center_guess ;
 plot_mesh3d = opts.plot_mesh3d ;
-dtype = opts.dtype ; 
+dtype = 'mat' ; % opts.dtype ; 
 mask = opts.mask ;
 use_pointcloud = opts.mesh_from_pointcloud ;
 ilastikaxisorder = opts.ilastikaxisorder ;
 smooth_with_matlab = opts.smooth_with_matlab ;
 
+try
+    mlxprogram = opts.mlxprogram;
+catch
+    if smooth_with_matlab < 0
+        if ~isfield(ops, 'mlxprogram')
+            error(['Since smooth_with_matlab < 0, you must specify an ', ...
+                'mlxprogram (filename of a .mlx script) that specifies', ...
+                'a meshLab program to run on the mesh'])
+        end
+    end
+end
 % Create the output dir if it doesn't exist
-if ~exist(mslsDir, 'dir')
-    mkdir(mslsDir)
+if ~exist(meshDir, 'dir')
+    mkdir(meshDir)
 end
 
 if ~contains(ofn_ply, '%') || ~contains(ofn_ply, 'd')
@@ -155,14 +187,17 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         previous_tp = tubi.xp.fileMeta.timePoints(tidx) - 1 ;
     end
     
-    %% Define the mesh we seek
-    outputLSfn = fullfile(mslsDir, sprintf([ofn_ls '%06d.' dtype], tp)) ;
-    outputMesh = fullfile(mslsDir, sprintf(ofn_ply, tp)) ;
-
+    %% Define the mesh we seek & check if it exists already on disk
+    outputLSfn = fullfile(meshDir, sprintf([ofn_ls '%06d.' dtype], tp)) ;
+    outputMesh = fullfile(meshDir, sprintf(ofn_ply, tp)) ;
+    outputSmoothMesh = fullfile(meshDir, sprintf(ofn_smoothply, tp));
+    
     disp(['does outputMesh exist: ', num2str(exist(outputMesh, 'file'))])
     disp(outputMesh)
-    % error('here')
-    if ~exist(outputMesh, 'file') || overwrite
+    disp(['does outputSmoothMesh exist: ', num2str(exist(outputSmoothMesh, 'file'))])
+    disp(outputSmoothMesh)
+    
+    if (~exist(outputSmoothMesh, 'file') && ~exist(outputMesh, 'file')) || overwrite
         %% load the exported data out of the ilastik prediction
         fileName = fullfile(dataDir, ...
             [sprintf(fileBaseName, tp), '_Probabilities.h5']) ;
@@ -208,172 +243,222 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         else
             error('Have not coded for this axisorder. Do so here')
         end
-
-        % Define the centerpoint of a guess sphere, or just the center for
-        % previewing.
-        if isempty(center_guess) || strcmpi(center_guess, 'none')
-            centers = size(pred) * 0.5 ;
-            centers = centers(1:3) ;
-        else
-            centers = str2num(center_guess) ;
-        end
-
-        % Check if previous time point's level set exists to use as a seed
-        % First look for supplied fn from detectOptions.
-        % If not supplied (ie init_ls_fn is none or empty string, then
-        % seek previous timepoint output from MS algorithm.
-
-        disp(['init_ls_fn = ', init_ls_fn])
-        disp(['ofn_ls = ', ofn_ls])
-        if tidx > 1 || strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
-            % User has NOT supplied fn from detectOptions
-            init_ls_fn = [ofn_ls, ...
-                num2str(previous_tp, '%06d' ) '.' dtype] ;
-        end
-
-        disp([ 'initial level set fn = ', init_ls_fn])
-        if exist(init_ls_fn, 'file') || exist([init_ls_fn '.mat'], 'file') 
-            % It does exist, and the given name is the RELATIVE path.    
-            % Use it as a seed (initial level set) 
-            disp('running using initial level set')
-            init_ls = load(init_ls_fn, 'BW') ;
-            init_ls = init_ls.BW ;
-            niter_ii = niter ;
-        elseif exist(fullfile(mslsDir, init_ls_fn), 'file') || ...
-                exist(fullfile(mslsDir,[init_ls_fn '.mat']), 'file') 
-            % It does exist, and given name is the relative path
-            % without the extension. 
-            % Use it as a seed (initial level set)
-            disp('running using initial level set')
-            init_ls = load(fullfile(mslsDir, init_ls_fn), 'BW') ;
-            init_ls = init_ls.BW ;
-            niter_ii = niter ; 
-        else
-            % The guess for the initial levelset does NOT exist, so use
-            % a sphere for the guess.
-            disp(['Using default sphere of radius ' num2str(radius_guess) ...
-                ' for init_ls -- no such file on disk: ' fullfile(mslsDir, [ init_ls_fn '.h5'])])
-            init_ls = zeros(size(squeeze(pred(:, :, :, opts.foreGroundChannel)))) ;
-            SE = strel("sphere", radius_guess) ;
-            SE = SE.Neighborhood ;
-            se0 = size(SE, 1) ;
-            rad = ceil(se0*0.5) ;
-            assert( all(size(SE) == se0)) ;
-            dd = centers - rad ;
-            xmin = max(1, dd(1)) ;
-            ymin = max(1, dd(2)) ;
-            zmin = max(1, dd(3)) ;
-            % xmax = min(size(init_ls, 1), dd(1)+se0);
-            % ymax = min(size(init_ls, 2), dd(2)+se0) ;
-            % zmax = min(size(init_ls, 3), dd(3)+se0) ;
-
-            % distance from edge of data volume to edge of strel:
-            sz0 = size(init_ls) ;
-
-            % check if SE is entirely contained within init_ls
-            if all(dd > 0)
-                % minima are within the boundary
-                init_ls(xmin:xmin+se0-1, ymin:ymin+se0-1, ...
-                    zmin:zmin+se0-1) = SE ;
-                init_ls = init_ls(1:sz0(1), 1:sz0(2), 1:sz0(3)) ;
-            elseif all(dd + se0 < 0)
-                % the maxima are all contained within the volume
-                init_ls(xmin:xmin+se0+dd(1)-1, ...
-                    ymin:ymin+se0+dd(2)-1, ...
-                    zmin:zmin+se0+dd(3)-1) = ...
-                    SE(-dd(1):se0, -dd(2):se0, -dd(3):se0) ;
-                init_ls = init_ls(1:sz0(1), 1:sz0(2), 1:sz0(3)) ;
-            else
-                % the maxima are all contained within the volume
-                chopx = dd(1) < 0 ;
-                chopy = dd(2) < 0 ;
-                chopz = dd(3) < 0 ;
-                init_ls(xmin:xmin+se0+(dd(1)*chopx)-1, ...
-                    ymin:ymin+se0+dd(2)*chopy-1, ...
-                    zmin:zmin+se0+dd(3)*chopz-1) = ...
-                        SE(-dd(1)*chopx+1:se0, ...
-                        -dd(2)*chopy+1:se0, ...
-                        -dd(3)*chopz+1:se0) ;
-                init_ls = init_ls(1:sz0(1), 1:sz0(2), 1:sz0(3)) ;
-            end
-
-            try
-                assert(any(init_ls(:)))
-            catch
-                error('The initial guess is outside the data volume')
-            end
-
-            niter_ii = niter0 ;
-        end
-
-        % Flip axis order LR of output mesh to return to MATLAB
-        % orientation? NO, not helpful to do "-permute_mesh 'zyx'"
-        % since already did morphsnakesaxisorder = fliplr() earlier
-        % command = [command ' -adjust_for_MATLAB_indexing'] ;
-
-
-        %% Extract contour/isosurface of levelset
-
-        % Pre-processing
-        if pre_pressure < 0
-            disp('eroding input LS by post_pressure...')
-            SE = strel('sphere', abs(pre_pressure)) ;
-            init_ls = imerode(init_ls, SE) ;
-        elseif pre_pressure > 0                
-            disp('dilating input LS by post_pressure...')
-            SE = strel('sphere', abs(pre_pressure)) ;
-            init_ls = imdilate(init_ls, SE) ;
-        end
-
-        data = pred(:, :, :, opts.foreGroundChannel) ;
-        % data_clipped = data - 0.1 ;
-        % data_clipped(data_clipped < 0) = 0. ;
-
-        disp(['niter is ', num2str(niter_ii)]);
-        BW = activecontour(data, init_ls, niter_ii, 'Chan-Vese', ...
-            'SmoothFactor', tension, 'ContractionBias', -pressure) ;
-
-        % Post processing
-        if post_pressure < 0
-            disp('eroding result by post_pressure...')
-            SE = strel('sphere', abs(post_pressure)) ;
-            BW = imerode(BW, SE) ;
-        elseif post_pressure > 0          
-            disp('dilating result by post_pressure...')      
-            SE = strel('sphere', abs(post_pressure)) ;
-            BW = imdilate(BW, SE) ;
-        end
-
-        % preview current results
-        if preview
-            clf
-            if centers(3) < size(BW, 3) && centers(3) > 0.5 
-                bwPage = squeeze(BW(:, :,round(centers(3)))) ;
-                datPage = squeeze(data(:,:,round(centers(3)))) ;
-                rgb = cat(3, bwPage, datPage, datPage) ;
-                imshow(rgb)
-                sgtitle('level set found...')
-            else
-                zframe = round(size(BW, 3) * 0.5) ;
-                bwPage = squeeze(BW(:, :,zframe)) ;
-                datPage = squeeze(data(:,:,zframe)) ;
-                rgb = cat(3, bwPage, datPage, datPage) ;
-                imshow(rgb)
-                sgtitle('level set found...')
-
-            end
-            pause(0.5)
+        
+        % Extract a binary volume based on the chosen method
+        if strcmpi(method, 'threshold')
             
-            % Show each plane in stack
-            for zframe = 1:size(BW, 3) 
-                bwPage = squeeze(BW(:, :,zframe)) ;
-                datPage = squeeze(data(:,:,zframe)) ;
-                rgb = cat(3, bwPage, datPage, datPage) ;
-                imshow(rgb)
-                sgtitle(['level set found: z=' num2str(zframe)])
-                axis on
-                % pause to draw the figure and show it in foreground
-                pause(1e-5)
+            data = pred(:, :, :, opts.foreGroundChannel) ;
+            BW = data > graythresh(data) ;
+            
+        elseif strcmpi(method, 'activecontour')
+
+            % Define the centerpoint of a guess sphere, or just the center for
+            % previewing.
+            if isempty(center_guess) || strcmpi(center_guess, 'none') || ...
+                    strcmpi(center_guess, '')
+                centers = size(pred) * 0.5 ;
+                centers = centers(1:3) ;
+            elseif strcmpi(center_guess, 'click') || strcmpi(center_guess, 'select')
+                if tidx == 1 || chooseSeedCenterEveryTimepoint
+                    msg = 'Flip to desired frame to select a center pt using <\^v>, then press Enter' ;
+                    framez = flipThroughStackFindLayer(pred, msg);
+                    msg = 'Click on the desired point as a seed for the level set' ;
+                    disp(msg)
+                    title(msg)
+                    xy = drawpoint ;
+                    centers = [xy.Position(2), xy.Position(1), framez];
+                end
+            else
+                centers = str2num(center_guess) ;
+            end
+
+            % Check if previous time point's level set exists to use as a seed
+            % First look for supplied fn from detectOptions.
+            % If not supplied (ie init_ls_fn is none or empty string, then
+            % seek previous timepoint output from MS algorithm.
+
+            disp(['init_ls_fn = ', init_ls_fn])
+            disp(['ofn_ls = ', ofn_ls])
+            if tidx > 1 || strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
+                % User has NOT supplied fn from detectOptions
+                init_ls_fn = [ofn_ls, ...
+                    num2str(previous_tp, '%06d' ) '.' dtype] ;
+            end
+
+            disp([ 'initial level set fn = ', init_ls_fn])
+            if exist(init_ls_fn, 'file') || exist([init_ls_fn '.mat'], 'file') 
+                % It does exist, and the given name is the RELATIVE path.    
+                % Use it as a seed (initial level set) 
+                disp('running using initial level set')
+                init_ls = load(init_ls_fn, 'BW') ;
+                init_ls = init_ls.BW ;
+                niter_ii = niter ;
+            elseif exist(fullfile(meshDir, init_ls_fn), 'file') || ...
+                    exist(fullfile(meshDir,[init_ls_fn '.mat']), 'file') 
+                % It does exist, and given name is the relative path
+                % without the extension. 
+                % Use it as a seed (initial level set)
+                disp('running using initial level set')
+                init_ls = load(fullfile(meshDir, init_ls_fn), 'BW') ;
+                init_ls = init_ls.BW ;
+                niter_ii = niter ; 
+            else
+                % The guess for the initial levelset does NOT exist, so use
+                % a sphere for the guess.
+                disp(['Using default sphere of radius ' num2str(radius_guess) ...
+                    ' for init_ls -- no such file on disk: ' fullfile(meshDir, [ init_ls_fn '.h5'])])
+                init_ls = zeros(size(squeeze(pred(:, :, :, opts.foreGroundChannel)))) ;
+                SE = strel("sphere", radius_guess) ;
+                SE = SE.Neighborhood ;
+                se0 = size(SE, 1) ;
+                rad = ceil(se0*0.5) ;
+                assert( all(size(SE) == se0)) ;
+                dd = centers - rad ;
+                xmin = max(1, dd(1)) ;
+                ymin = max(1, dd(2)) ;
+                zmin = max(1, dd(3)) ;
+                % xmax = min(size(init_ls, 1), dd(1)+se0);
+                % ymax = min(size(init_ls, 2), dd(2)+se0) ;
+                % zmax = min(size(init_ls, 3), dd(3)+se0) ;
+
+                % distance from edge of data volume to edge of strel:
+                sz0 = size(init_ls) ;
+
+                % check if SE is entirely contained within init_ls
+                if all(dd > 0)
+                    % minima are within the boundary
+                    init_ls(xmin:xmin+se0-1, ymin:ymin+se0-1, ...
+                        zmin:zmin+se0-1) = SE ;
+                    init_ls = init_ls(1:sz0(1), 1:sz0(2), 1:sz0(3)) ;
+                elseif all(dd + se0 < 0)
+                    % the maxima are all contained within the volume
+                    init_ls(xmin:xmin+se0+dd(1)-1, ...
+                        ymin:ymin+se0+dd(2)-1, ...
+                        zmin:zmin+se0+dd(3)-1) = ...
+                        SE(-dd(1):se0, -dd(2):se0, -dd(3):se0) ;
+                    init_ls = init_ls(1:sz0(1), 1:sz0(2), 1:sz0(3)) ;
+                else
+                    % the maxima are all contained within the volume
+                    chopx = dd(1) < 0 ;
+                    chopy = dd(2) < 0 ;
+                    chopz = dd(3) < 0 ;
+                    init_ls(xmin:xmin+se0+(dd(1)*chopx)-1, ...
+                        ymin:ymin+se0+dd(2)*chopy-1, ...
+                        zmin:zmin+se0+dd(3)*chopz-1) = ...
+                            SE(-dd(1)*chopx+1:se0, ...
+                            -dd(2)*chopy+1:se0, ...
+                            -dd(3)*chopz+1:se0) ;
+                    init_ls = init_ls(1:sz0(1), 1:sz0(2), 1:sz0(3)) ;
+                end
+
+                try
+                    assert(any(init_ls(:)))
+                catch
+                    error('The initial guess is outside the data volume')
+                end
+
+                niter_ii = niter0 ;
+            end
+
+            % Flip axis order LR of output mesh to return to MATLAB
+            % orientation? NO, not helpful to do "-permute_mesh 'zyx'"
+            % since already did morphsnakesaxisorder = fliplr() earlier
+            % command = [command ' -adjust_for_MATLAB_indexing'] ;
+
+
+            %% Extract contour/isosurface of levelset
+
+            % Pre-processing
+            if pre_pressure < 0
+                disp('eroding input LS by pre_pressure...')
+                SE = strel('sphere', abs(pre_pressure)) ;
+                init_ls = imerode(init_ls, SE) ;
+            elseif pre_pressure > 0                
+                disp('dilating input LS by pre_pressure...')
+                SE = strel('sphere', abs(pre_pressure)) ;
+                init_ls = imdilate(init_ls, SE) ;
+            end
+
+            data = pred(:, :, :, opts.foreGroundChannel) ;
+            % data_clipped = data - 0.1 ;
+            % data_clipped(data_clipped < 0) = 0. ;
+
+            % visualize result
+            if preview
+                clf
+                isosurface(data) ;
+                hold on;
+                isosurface(init_ls, ones(size(init_ls))) ;
+                daspect([1,1,1])
+                % ylim([70, 105])
+                % xlim([60,110])
+                % view([60,80,45])
+                % set(gcf, 'color', 'w')
+                % export_fig( './initial_guess_300_v2.png', '-r300')
+                waitfor(gcf)
+            end
+
+            disp(['niter is ', num2str(niter_ii)]);
+            BW = activecontour(data, init_ls, niter_ii, 'Chan-Vese', ...
+                'SmoothFactor', tension, 'ContractionBias', -pressure) ;
+
+            % visualize result
+            if preview
+                clf
+                isosurface(BW) ;
+                hold on;
+                isosurface(data, ones(size(init_ls))) ;
+                daspect([1,1,1])
+                % ylim([70, 115])
+                % xlim([60,110])
+                % view([60,80,45])
+                % set(gcf, 'color', 'w')
+                % export_fig( './final_guess_300_full.png', '-r300')
+                waitfor(gcf)
+            end
+
+            % Post processing
+            if post_pressure < 0
+                disp('eroding result by post_pressure...')
+                SE = strel('sphere', abs(post_pressure)) ;
+                BW = imerode(BW, SE) ;
+            elseif post_pressure > 0          
+                disp('dilating result by post_pressure...')      
+                SE = strel('sphere', abs(post_pressure)) ;
+                BW = imdilate(BW, SE) ;
+            end
+
+            % preview current results
+            if preview
+                clf
+                if centers(3) < size(BW, 3) && centers(3) > 0.5 
+                    bwPage = squeeze(BW(:, :,round(centers(3)))) ;
+                    datPage = squeeze(data(:,:,round(centers(3)))) ;
+                    rgb = cat(3, bwPage, datPage, datPage) ;
+                    imshow(rgb)
+                    sgtitle('level set found...')
+                else
+                    zframe = round(size(BW, 3) * 0.5) ;
+                    bwPage = squeeze(BW(:, :,zframe)) ;
+                    datPage = squeeze(data(:,:,zframe)) ;
+                    rgb = cat(3, bwPage, datPage, datPage) ;
+                    imshow(rgb)
+                    sgtitle('level set found...')
+
+                end
+                pause(0.5)
+
+                % Show each plane in stack
+                for zframe = 1:size(BW, 3) 
+                    bwPage = squeeze(BW(:, :,zframe)) ;
+                    datPage = squeeze(data(:,:,zframe)) ;
+                    rgb = cat(3, bwPage, datPage, datPage) ;
+                    imshow(rgb)
+                    sgtitle(['level set found: z=' num2str(zframe)])
+                    axis on
+                    % pause to draw the figure and show it in foreground
+                    pause(1e-5)
+                end
             end
         end
 
@@ -405,7 +490,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 error('Implement advancing front from example here')
                 
             case 'PoissonSurface'
-                error('Implement poisson surface from example here')
+                error('Implement poisson surface from zebrafish heart example here')
                 
         end
         
@@ -426,7 +511,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
     % Here use the boundary mesh from marching cubes to make a
     % smooth mesh
     rawMesh = outputMesh ; 
-    outputMesh = fullfile(mslsDir, sprintf(ofn_smoothply, tp));
+    outputMesh = fullfile(meshDir, sprintf(ofn_smoothply, tp));
 
     disp(['outputMesh = ', outputMesh])
     %bad = so_bad

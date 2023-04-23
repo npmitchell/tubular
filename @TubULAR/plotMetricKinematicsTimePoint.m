@@ -151,7 +151,9 @@ colors2d = {H2vn2d, divv2d, gdot2d} ;
 colors3d = {H2vn3d, divv3d, gdot3d} ;
 set(gcf, 'visible', 'off') ;
 % colormap bwr
-colormap(twilight_shifted_mod(256))
+% colormap(twilight_shifted_mod(256))
+colormap(brewermap(256, '*RdBu'));
+
 % Check if files already exist
 fn2 = fullfile(dimDirs{1}, sprintf('incompr_%1dd_%06d.png', 2, tp)) ;
 fn3 = fullfile(dimDirs{2}, sprintf('incompr_%1dd_%06d.png', 3, tp)) ;

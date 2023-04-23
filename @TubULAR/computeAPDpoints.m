@@ -13,11 +13,11 @@ function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
 %   (4) Directly supplying a custom set of anterior and posterior points
 %       for each time point
 % 
-%         Posterior pt for centerline
+%         Posterior (distal) pt for centerline
 %        _x_         Dorsal pt
 %       /  /     ___x_
 %      /  /    /      \    
-%     /  /____/        \   Anterior pt for both centerline and for defining APDV axes
+%     /  /____/        \   Anterior (proximal) pt for both centerline and for defining APDV axes
 %    |  x P for APDV    | x
 %     \________________/
 %    (ventral here, unlabeled)
@@ -776,6 +776,7 @@ try
         plot3(ppts(tidx, 1), ppts(tidx, 2), ppts(tidx, 3), 'b.')
         plot3(dpt(1, 1), dpt(1, 2), dpt(1, 3), 'cs')
         axis equal
+        legend({'surface', 'A', 'A smoothed', 'P', 'P smoothed', 'D'}) 
         title(['t = ', num2str(tp)]) 
         pause(0.1)
     end

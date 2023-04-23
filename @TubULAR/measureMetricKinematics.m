@@ -49,6 +49,8 @@ climit_H = climit * 2 ;
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
 averagingStyle = 'Lagrangian' ;
+% Zero out divv values near the boundary
+mask_divvEdges = false ;
 
 %% Unpack options & assign defaults
 if nargin < 2
@@ -98,6 +100,9 @@ if isfield(options, 'samplingResolution')
 end
 if isfield(options, 'averagingStyle')
     averagingStyle = options.averagingStyle ;
+end
+if isfield(options, 'mask_divvEdges')
+    mask_divvEdges = options.mask_divvEdges ; 
 end
 
 %% Determine sampling Resolution from input -- either nUxnV or (2*nU-1)x(2*nV-1)
@@ -287,12 +292,27 @@ for tp = tp2do
             end
         end
         
+            
         % Smooth divergence(v) [divv]
+        divv3d = dec_tp.divs.raw ;
+        
+        % Zero out divergence signal on boundaries if desired
+        if mask_divvEdges
+            for col = 1:mask_divvEdges
+                divv3d(col:nU:end) = 0 ;
+                divv3d(nU-col+1:nU:end) = 0 ;
+                
+                % Check
+                % plot(divv3d);
+                % hold on;
+                % plot(1:nU:length(divv3d), divv3d(1:nU:end), 'o') ;
+                % plot(1:nU:length(divv3d), divv3d(nU-col+1:nU:end), 'o')
+            end
+        end
+        
         if lambda > 0
             divv3d = laplacian_smooth(mesh.v, mesh.f, 'cotan', [],...
-                                    lambda, 'implicit', dec_tp.divs.raw) ;
-        else
-            divv3d = dec_tp.divs.raw ;
+                                    lambda, 'implicit', divv3d) ;
         end
         
         % veln = divv / (2H) ; 

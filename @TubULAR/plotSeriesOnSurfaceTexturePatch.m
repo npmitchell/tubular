@@ -127,6 +127,12 @@ directory_extension = '' ;
 timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Unpack Options
+if nargin < 2
+    options = struct() ;
+end
+if nargin < 3
+    TexturePatchOptions = struct() ;
+end
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
 end
@@ -185,6 +191,8 @@ if isfield(options, 'normal_shift')
 end
 if isfield(options, 'timePoints')
     timePoints = options.timePoints ;
+elseif isfield(options, 'timepoints')
+    timePoints = options.timepoints ;
 end
 if isfield(options, 'plot_time_points')
     plot_time_points = options.plot_time_points;
@@ -269,8 +277,11 @@ reorient_faces = metadat.reorient_faces ;
 % Save it
 save(metafn, 'metadat', 'Options')
 
-texture_axis_order = options.texture_axis_order ;
-
+if isfield(options, 'texture_axis_order')
+    texture_axis_order = options.texture_axis_order ;
+else
+    texture_axis_order = tubi.data.axisOrder ;
+end
 %% Name output directories
 figdDir = fullfile(figoutdir, ['dorsal' directory_extension]) ;
 figvDir = fullfile(figoutdir, ['ventral' directory_extension]) ;

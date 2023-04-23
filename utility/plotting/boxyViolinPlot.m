@@ -1,12 +1,20 @@
 function boxyViolinPlot(xvals, yvals, boxWidths, ...
     boxHeights, style, faceColors, edgeColors, lineWidths)
+% Plot a violin plot with bars instead of interpolated density estimates.
+% This is great for discrete data, like histograms of counts (integers) or
+% other discretely-valued data.
+% The result looks a bit like a cutout Christmas tree for a linearly 
+% decreasing distribution.
 %
 % Parameters
 % ----------
 % xvals : length(N) numeric
 %   x positions of each violin box
 % yvals : length(N) numeric (default = [1])
-%   y positions of each violin box
+%   y positions of each violin box. Note that these are the MIDDLE value
+%   for each box if style=='center', and the box extends both upward and
+%   downward in y for that style. For style=='lower', this is the LOWER
+%   bound of the box.
 % boxWidths : N x 1 numeric or 1x1 numeric (default = diff(xvals) or 1)
 %   width of each box in the plot
 % boxHeights : N x 1 numeric or 1x1 numeric (default = diff(yvals) or 1)
@@ -14,11 +22,22 @@ function boxyViolinPlot(xvals, yvals, boxWidths, ...
 % style : string specifier ('left', 'center', default ='center')
 %   if left, uses bottom left for (xvals, yvals)
 %   if center, interprets (xvals, yvals) as center of box
-% FaceColors
-%   
-% EdgeColors
-%   
-% LineWidths
+% FaceColors : colorspec (default = 'none')
+%   color to fill in the boxes
+% EdgeColors : colorspec (default = 'k')
+%   Edgecolors for lines around each box
+% LineWidths : float (default = 1)
+%   widths of lines around each box
+%
+% Example Usage: 
+% --------------
+% yy = normrnd(5,4, 1000, 1) ;
+% [counts, edges] = histcounts(yy, 100)
+% midpts = (edges(1:end-1) + edges(2:end)) / 2 ;
+% counts = counts ./ max(counts) ;
+% xx = zeros(size(counts)) ;
+% boxyViolinPlot(xx, midpts, counts ) ; hold on;
+% boxyViolinPlot(xx+1, edges(1:end-1), counts, 'left', 'r', 'none')
 %
 % NPMitchell 2021
 

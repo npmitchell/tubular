@@ -14,9 +14,7 @@
 % (4) How to apply the DEC to analyze flow on the shape-shifting surface
 %
 % TODO:
-%   - WE REALLY NEED THE EXPERIMENT METADATA (time interval, space units
-%   etc.)
-%   - Your axis order choices are crap
+%   - Axis order choices are confusing
 %   - Should probably just make a new MeshLab script that would deprecate
 %   the mesh simplification step post surface detection
 
@@ -275,6 +273,7 @@ else
     detectOptions.smooth_with_matlab = 0.01;
     detectOptions.pythonVersion = '' ;
     
+    save(msls_detOpts_fn, 'detectOptions');
 end
 
 xp.setDetectOptions( detectOptions );
@@ -923,7 +922,7 @@ tubOpts.adjustlow = 1.00;       % Floor for intensity adjustment
 tubOpts.adjusthigh = 99.9;      % ceil for intensity adjustment (clip)
 tubOpts.phiMethod = 'curved3d';	% Method for following surface in surface-Lagrangian mapping [(s,phi) coordinates]
 tubOpts.lambda_mesh = 0;        % Smoothing applied to the mesh before DEC measurements
-tubOpts.lambda = 0;             % Smoothing applied to computed values on the surface
+tubOpts.lambda = 0.02;             % Smoothing applied to computed values on the surface
 tubOpts.lambda_err = 0;         % Additional smoothing parameter, optional
 
 disp('defining TubULAR class instance (tubi= tubular instance)')
@@ -1361,13 +1360,20 @@ options.lambda = 0 ;
 options.lambda_mesh = 0 ; 
 tubi.helmholtzHodge(options) ;
 
-% Compressibility & kinematics for Lagrangian
+%% Compressibility & kinematics for Lagrangian
 options = struct() ;
+options.nmodes = 5 ;
+options.zwidth = 3 ;
+options.mask_divvEdges = 2 ;
 tubi.measureMetricKinematics(options)
 
 %% Metric Kinematics Kymographs & Correlations -- Bandwidth Filtered
 options = struct() ;
 options.overwrite = false ;
+options.nmodes = 5 ;
+options.zwidth = 3 ;
+options.mask_divvEdges = 2 ;
+
 tubi.plotMetricKinematics(options)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1387,7 +1393,7 @@ options.gridTopology = 'triangulated' ;
 options.overwrite = true ;
 tubi.plotPathlineVelocities(options)
 
-% Measure Pathline Kinematics
+%% Measure Pathline Kinematics
 options = struct() ;
 options.overwrite = true ;
 tubi.measurePathlineMetricKinematics(options)
@@ -1447,15 +1453,19 @@ tubi.plotPathlineStrain(options)
 %% Perform PCA
 options = struct() ;
 options.overwrite = true ;
+options.overwriteImages = true ;
 options.convert_to_period = true ;
 options.T = 11 ;
 options.NmodesToView = 3 ;
 options.nTimePoints2RmEnds = 3 ;
 options.drawArrowsInPCA3D = true ;
 options.drawArrowsInPCAPlane = true ;
-options.meshChoice = 'sphi' ;
+options.meshChoice = 'sphi' ; % 'Lagrangian' ;
 options.pcaTypes = {'v3d'} ;
+options.displacement_scale = 1000 ;
 options.plotArrowsOnModes = true ;
 options.nArrows = 150 ;
+options.xyzLimBuffer = 100 ;
+options.displayTypes = {'displacement'};
 tubi.getPCAoverTime(options) ;
 

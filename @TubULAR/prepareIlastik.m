@@ -101,7 +101,7 @@ function prepareIlastik(tubi)
                 disp(['done outputting downsampled data h5: tp=' num2str(tt) ' for surface detection'])
 
             else
-                disp(['h5 ' num2str(tt) ' was already output, skipping...'])
+                disp(['h5 for timepoint ' num2str(tt) ' was already output, skipping...'])
             end
         end    
     else

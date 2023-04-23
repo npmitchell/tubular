@@ -38,6 +38,10 @@ function sliceMeshEndcaps(tubi, opts, methodOpts)
 %       first iterate through all points with large dt between frames to
 %       check that settings are good, then go back and compute each frame 
 %       in order
+%   overwrite
+%   save_figs
+%   preview
+%   timePoints
 %
 % Prerequisites
 % -------------
@@ -71,8 +75,8 @@ preview = false ;  % display intermediate results
 posterior_phi_subtractCOM = true ;  % For posterior pole determination 
                                     % of dorsal point, subtract the center
                                     % of mass                              
-aCapMethod = 'ball' ;  % [ball,xvalue,yvalue,zvalue] method for determining vertices to remove on anterior
-pCapMethod = 'ball' ;  % [ball,xvalue,yvalue,zvalue] method for determining vertices to remove on posterior
+aCapMethod = 'geodesic' ;  % [geodesic,ball,xvalue,yvalue,zvalue] method for determining vertices to remove on anterior, could be 'geodisic', 'ball', 'cone', 'yvalue', etc
+pCapMethod = 'geodesic' ;  % [geodesic,ball,xvalue,yvalue,zvalue] method for determining vertices to remove on posterior
 aOffset = [0, 0, 0] ;  % Offset in pixels in APDV coord sys (will be rotated to pixel space)
 pOffset = [0, 0, 0] ; 
 aOffset2 = [0, 0, 0] ;  % Offset in pixels in APDV coord sys (will be rotated to pixel space)
@@ -343,6 +347,8 @@ for ii=todo
                 error('Code for more than three ramp rates here')
             end
             
+            % Adjust parameters based on "rates", which ramp endcap
+            % parameters based on which timepoint is under consideration.
             if abs(aDistRate(1)) > 0 || numel(aDistRate) > 2
                 if numel(aDistRate) > 2
                     % second column is duration of ramp rate
@@ -376,7 +382,20 @@ for ii=todo
             else
                 adist0 = adist_thres ;
             end
-            if strcmpi(aCapMethod, 'ball')
+            
+            % Now remove the endcap
+            disp(['Removing first/anterior endcap using method: ' aCapMethod])
+            if strcmpi(aCapMethod, 'geodesic')    
+                % Options for the marching
+                [~, nearestID_a] = min(vecnorm(vtx - acomOff, 2, 2)) ;
+                startpts = nearestID_a ;
+                fmoptions = struct() ;
+                fmoptions.end_points = [];   
+
+                %   output is the distance function to the set of starting points.
+                [adist_g] = perform_fast_marching_mesh(vtx', fv.f, startpts, fmoptions) ;
+                pts_to_remove = find(adist_g < adist0) ;
+            elseif strcmpi(aCapMethod, 'ball')
                 adist2 = sum((vtx - acomOff) .^ 2, 2);
                 pts_to_remove = find(adist2 < adist0^2) ;
             elseif strcmpi(aCapMethod, 'cone')
@@ -429,24 +448,36 @@ for ii=todo
             end
             
             % Make sure that we are removing a connected component
-            % form a mesh from the piece(s) to be removed
-            allpts = 1:size(vtx,1) ;
-            all_but_acut = setdiff(allpts', pts_to_remove) ;
-            [ acutfaces, acutvtx, ~] = remove_vertex_from_mesh( fv.f, fv.v, all_but_acut ) ;
-            [ ~, ~, connected_indices, npieces ] = ...
-                remove_isolated_mesh_components( acutfaces, acutvtx ) ;
-            if any(npieces > 1)
-                disp('Ensuring that only a single component is removed')
-                pts_to_remove = pts_to_remove(connected_indices) ;
+            if numel(pts_to_remove) > 2
+                % Form a mesh from the piece(s) to be removed
+                allpts = 1:size(vtx,1) ;
+                all_but_acut = setdiff(allpts', pts_to_remove) ;
+                [ acutfaces, acutvtx, ~] = remove_vertex_from_mesh( fv.f, fv.v, all_but_acut ) ;
+                [ ~, ~, connected_indices, npieces ] = ...
+                    remove_isolated_mesh_components( acutfaces, acutvtx ) ;
+                if any(npieces > 1)
+                    disp('Ensuring that only a single component is removed')
+                    pts_to_remove = pts_to_remove(connected_indices) ;
+                end
+
+                % Check removed vertices
+                % clf; trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none'); hold on; scatter3(fv.v(pts_to_remove, 1), fv.v(pts_to_remove, 2), fv.v(pts_to_remove, 3), 100)
+
+                % Check removed component
+                %trimesh(acutfaces, acutvtx(:, 1), acutvtx(:, 2), acutvtx(:, 3), npieces)
+
+                % Could use Face-based connected component check:
+                % Remove all faces... etc. Decided not to implement this
+            else
+                disp('Fewer than three vertices are being removed for anterior/proximal component. We assume this will be a connected component')
             end
-            
-            % Check removed component
-            %trimesh(acutfaces, acutvtx(:, 1), acutvtx(:, 2), acutvtx(:, 3), npieces)
             
             % Remove it
             [faces, vtx, keep_acut] = remove_vertex_from_mesh(fv.f, fv.v, pts_to_remove ) ;
             vn = fv.vn(keep_acut, :) ;
-            disp(['Removed ' num2str(length(pts_to_remove)) ' vertices with acut'])
+            nfaces_removed = size(fv.f, 1) - size(faces, 1) ;
+            disp(['Removed ' num2str(length(pts_to_remove)) ' vertices and ' num2str(nfaces_removed) ' faces with acut'])
+            clear nfaces_removed
             
             % CHECK that the output is correct topology
             % MATLAB-style triangulation
@@ -480,20 +511,34 @@ for ii=todo
             % end
             
             %% Remove the posterior part as well
+            
             % Measure distance to the posterior
-            if strcmpi(pCapMethod, 'ball')
-                pdist2 = sum((vtx - ppt) .^ 2, 2);
+            % Offset the posterior center of mass by the offset rate x time
+            pOff = pOffXYZ + pOffRateXYZ * (tt - timePoints(1)) ;
+            pcomOff = ppt + pOff ;
+            disp(['Removing second/posterior endcap using method: ' aCapMethod])
+            
+            if strcmpi(pCapMethod, 'geodesic')    
+                % Options for the marching
+                fmoptions = struct() ;
+                fmoptions.end_points = [];   
+                
+                [~, nearestID_p] = min(vecnorm(vtx - pcomOff, 2, 2)) ;
+
+                %   output is the distance function to the set of starting points.
+                pdist_g = perform_fast_marching_mesh(vtx, faces, nearestID_p, fmoptions);
+                pdist2 = pdist_g.^2 ;
+            elseif strcmpi(pCapMethod, 'ball')
+                pdist2 = sum((vtx - pcomOff) .^ 2, 2);
             elseif strcmpi(pCapMethod, 'xvalue')
-                pdist2 = (vtx(:, 1) - ppt(1)).^2 ;
+                pdist2 = (vtx(:, 1) - pcomOff(1)).^2 ;
             elseif strcmpi(pCapMethod, 'yvalue')
-                pdist2 = (vtx(:, 2) - ppt(2)).^2 ;
+                pdist2 = (vtx(:, 2) - pcomOff(2)).^2 ;
             elseif strcmpi(pCapMethod, 'zvalue')
-                pdist2 = (vtx(:, 3) - ppt(3)).^2 ;
+                pdist2 = (vtx(:, 3) - pcomOff(3)).^2 ;
             end
             
             % STRATEGY 1: within distance of pcom
-            pOff = pOffXYZ + pOffRateXYZ * (tt - timePoints(1)) ;
-            pcomOff = ppt + pOff ;
             pdist_thres_ii = pdist_thres ;
             pcut_done = false ;
             while ~pcut_done

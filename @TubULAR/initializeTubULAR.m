@@ -579,7 +579,9 @@ tubi.fullFileBase.im_up = fullfile(tubi.dir.im_up, tubi.fileBase.im_up) ;
 tubi.fileBase.im_ricci = [tubi.fileBase.name, '_ricci.tif'] ;
 tubi.fullFileBase.im_ricci = fullfile(tubi.dir.im_ricci, tubi.fileBase.im_ricci) ;
 tubi.fileBase.im_pivPathlines = [tubi.fileBase.name, '_pivPathlines.tif'] ;
-tubi.fullFileBase.im_pivPathlines = fullfile(tubi.dir.im_pivPathlines, tubi.fileBase.im_pivPathlines) ;
+if dynamic
+    tubi.fullFileBase.im_pivPathlines = fullfile(tubi.dir.im_pivPathlines, tubi.fileBase.im_pivPathlines) ;
+end
 
  %% Smoothed pullbacks (pb)
 if dynamic

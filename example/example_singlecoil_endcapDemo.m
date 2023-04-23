@@ -1,41 +1,44 @@
-% See gut_matlab/figure_tubular_generate_synthetic_dataset.m and
-% gut_matlab/figure_tubular_generate_synthetic_dataset3.m for creation
-% of the synthetic datasets. 
-
-close all 
+%% Example pipeline for surface parameterization (including centerline extraction)
+% on a single timepoint.
 clear all
+close all
+clc
+
+% First navigate to the location where this script resides:
+origpath = matlab.desktop.editor.getActiveFilename;
+cd(fileparts(origpath))
+cd ../
+origpath = pwd ;
+
 
 %% Add paths
-dataDir = '/mnt/data/tubular_test/single_coil_dynamic/' ;  % This is the path where the example dataset is downloaded
-origpath = '../../' ; % This should be the path to tubular, like /mnt/data/code/tubular/
-cd(origpath)
+dataDir = '/mnt/data/tubular_test/endcaps_demo_tube/single_coil_mediumEndcaps/' ;
+% dataDir = '/mnt/data/tubular_test/endcaps_demo_tube/single_coil_smallEndcaps/' ;
 addpath(origpath) ;
-addpath(fullfile('utility', 'addpath_recurse'))
-addpath_recurse('utility')
-% Here we do use gptoolbox code: add to the MATLAB path here the location
-% of your gptoolbox copy:
-addpath_recurse('/mnt/data/code/gptoolbox')
+addpath(genpath('utility'))
+addpath(genpath('external'))
 addpath('TexturePatch')
 addpath('DECLab')
 addpath('RicciFlow_MATLAB')
-addpath(fullfile('utility','plotting'))
-addpath(fullfile('utility','plotting'))
 % go back to the data
-cd(dataDir)
 
 
 %%
 outdir = dataDir ;
-overwrite = false ;
+if ~exist(outdir, 'dir')
+    mkdir(outdir) ;
+end
+cd(dataDir)
 
+%% Define metadata
 if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     %% DEFINE NEW MASTER SETTINGS
-    if ~exist('./masterSettings.mat', 'file') || overwrite
+    if ~exist('./masterSettings.mat', 'file')
         % Metadata about the experiment
         stackResolution = [1, 1, 1] ;  % resolution in spaceUnits per pixel
         nChannels = 1 ;             % how many channels is the data (ex 2 for GFP + RFP)
         channelsUsed = 1 ;          % which channels are used for analysis
-        timePoints = 1:25;       % timepoints to include in the analysis
+        timePoints = 0;       % timepoints to include in the analysis
         ssfactor = 4 ;              % subsampling factor
         flipy = false ;             % whether the data is stored inverted relative to real position in lab frame
         timeInterval = 1 ;          % physical interval between timepoints
@@ -221,7 +224,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     opts.spaceUnits = spaceUnits ;  % Units of space in LaTeX, for ex '$mu$m' for micron
     opts.nU = nU ;                  % How many points along the longitudinal axis to sample surface
     opts.nV = nV ;                  % How many points along the circumferential axis to sample surface
-    opts.normalShift = 0 ;         % Additional dilation acting on surface for texture mapping
+    opts.normalShift = 10 ;         % Additional dilation acting on surface for texture mapping
     opts.a_fixed = 1.0 ;            % Fixed aspect ratio of pullback images. Setting to 1.0 is most conformal mapping option.
     opts.adjustlow = 1.00 ;         % floor for intensity adjustment
     opts.adjusthigh = 99.9 ;        % ceil for intensity adjustment (clip)
@@ -259,11 +262,11 @@ tubi.computeAPDVCoords(alignAPDVOpts) ;
 % along which we will form a branch cut for mapping to the plane (D).
 apdvOpts = struct() ;
 apdvOpts.overwrite = false ;
-apdvOpts.autoAP = true ;
+apdvOpts.autoAP = false ;
 [apts_sm, ppts_sm] = tubi.computeAPDpoints(apdvOpts) ;
 
-% Align the meshes in the APDV global frame & plot them
-alignAPDVOpts.overwrite = false ;
+%% Align the meshes in the APDV global frame & plot them
+alignAPDVOpts.overwrite = true ;
 alignAPDVOpts.forceEndpointsInside = true ;
 alignAPDVOpts.normal_step = 2 ;
 tubi.alignMeshesAPDV(alignAPDVOpts) ;
@@ -277,7 +280,7 @@ disp('done')
 % surface, since the centerline computed here is just for constraining the 
 % mapping to the plane.
 cntrlineOpts.overwrite = true ;         % overwrite previous results
-cntrlineOpts.overwrite_ims = true ;     % overwrite previous results
+cntrlineOpts.overwrite_ims = false ;     % overwrite previous results
 cntrlineOpts.weight = 0.1;               % for speedup of centerline extraction. Larger is less precise
 cntrlineOpts.exponent = 1.0 ;            % how heavily to scale distance transform for speed through voxel
 cntrlineOpts.res = 1 ;                 % resolution of distance tranform grid in which to compute centerlines
@@ -297,10 +300,30 @@ tubi.cleanFastMarchingCenterlines(idOptions) ;
 disp('done with cleaning up centerlines')
 
 %% Cylinder cut mesh --> transforms a topological sphere into a topological cylinder
+
+
+% % SMALL ENDCAPS
+% % Look for options on disk. If not saved, define options.
+% if ~exist(tubi.fileName.endcapOptions, 'file') 
+%     endcapOpts = struct( 'adist_thres', 0.05, ...  % 20, distance threshold for cutting off anterior in pix
+%                 'pdist_thres', 0.05, ...  % 15-20, distance threshold for cutting off posterior in pix
+%                 'tref', tubi.t0) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
+%     tubi.setEndcapOptions(endcapOpts) ;
+%     % Save the options to disk
+%     disp('saving endcap options to disk')
+%     tubi.saveEndcapOptions() ;
+% else
+%     % load endcapOpts
+%     tubi.loadEndcapOptions() ;
+%     endcapOpts = tubi.endcapOptions ;
+% end
+
+
+% MEDIUM ENDCAPS
 % Look for options on disk. If not saved, define options.
-if ~exist(tubi.fileName.endcapOptions, 'file') || overwrite
-    endcapOpts = struct( 'adist_thres', 10, ...  % 20, distance threshold for cutting off anterior in pix
-                'pdist_thres', 10, ...  % 15-20, distance threshold for cutting off posterior in pix
+if ~exist(tubi.fileName.endcapOptions, 'file') || true
+    endcapOpts = struct( 'adist_thres', 15, ...  % 20, distance threshold for cutting off anterior in pix
+                'pdist_thres', 15, ...  % 15-20, distance threshold for cutting off posterior in pix
                 'tref', tubi.t0) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
     tubi.setEndcapOptions(endcapOpts) ;
     % Save the options to disk
@@ -312,14 +335,30 @@ else
     endcapOpts = tubi.endcapOptions ;
 end
 
-methodOpts = struct() ;
+
+
+% LARGE ENDCAPS
+% Look for options on disk. If not saved, define options.
+if ~exist(tubi.fileName.endcapOptions, 'file') 
+    endcapOpts = struct( 'adist_thres', 3, ...  % 20, distance threshold for cutting off anterior in pix
+                'pdist_thres', 3, ...  % 15-20, distance threshold for cutting off posterior in pix
+                'tref', tubi.t0) ;  % reference timepoint at which time dorsal-most endcap vertices are defined
+    tubi.setEndcapOptions(endcapOpts) ;
+    % Save the options to disk
+    disp('saving endcap options to disk')
+    tubi.saveEndcapOptions() ;
+else
+    % load endcapOpts
+    tubi.loadEndcapOptions() ;
+    endcapOpts = tubi.endcapOptions ;
+end
+
 methodOpts.overwrite = true ;
 methodOpts.save_figs = true ;   % save images of cutMeshes along the way
 methodOpts.preview = false  ;     % display intermediate results
-% methodOpts.timePoints = 14 ;
 tubi.sliceMeshEndcaps(endcapOpts, methodOpts) ;
 
-% Clean Cylinder Meshes
+%% Clean Cylinder Meshes
 % This removes "ears" from the endcaps of the tubular meshes (cylindrical
 % meshes)
 cleanCylOptions = struct() ;
@@ -371,9 +410,8 @@ for tt = tubi.xp.fileMeta.timePoints
     tubi.generateCurrentSPCutMesh([], spcutMeshOptions) ;
     
     % Compute the pullback if the cutMesh is ok
-    if compute_pullback || ~exist(sprintf(tubi.fullFileBase.im_sp, tt), 'file') || true
+    if compute_pullback || ~exist(sprintf(tubi.fullFileBase.im_sp, tt), 'file')
         pbOptions = struct() ;
-        pbOptions.overwrite = true ;
         tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
     else
         disp('Skipping computation of pullback')
@@ -382,175 +420,124 @@ for tt = tubi.xp.fileMeta.timePoints
 end
 disp('Done with generating spcutMeshes and cutMeshes')
 
+%% PLOT Pullback projection as mesh
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PART 3: Further refinement of dynamic meshes
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Smooth the sphi grid meshes in time ====================================
-options = struct() ;
-options.overwrite = true ;
-options.width = 0 ;  % width of kernel, in #timepoints, to use in smoothing meshes
-tubi.smoothDynamicSPhiMeshes(options) ;
+% color by dilation
+tubi.setTime(tubi.t0)
+tubi.getCurrentUVCutMesh()
+tubi.getCurrentSPCutMesh()
+mesh = tubi.currentMesh.spcutMesh ;
+uv = tubi.currentMesh.uvcutMesh.uv ;
+uv3d = tubi.currentMesh.uvcutMesh.v ;
+v2d = mesh.sphi ;
+v2d(:, 1) = v2d(:, 1) ./ max(v2d(:, 1)) ;
+v3d = mesh.v ;
+faces = mesh.f ;
+% jac = jacobian3Dto2DMesh(v2d, v3d, faces) ;
+% jac{1}
+% 
+% dilation = zeros(size(faces, 1), 1) ;
+% for f = 1:length(faces)
+%     qg = jac{faces(f)} * jac{faces(f)}' ;
+%     g_ab(f, :, :) =  qg ;
+%     dilation(f) = sqrt(det(qg)) ;
+% end
 
-%% Plot the time-smoothed meshes
-tubi.plotSPCutMeshSmRS(options) ;
+dilation = doublearea(v2d, faces) ./ doublearea(v3d, faces) ;
+dilation_uv = doublearea(uv, faces) ./ doublearea(uv3d, faces) ;
 
-% Inspect coordinate system charts using smoothed meshes
-options = struct() ;
-options.coordSys = 'spsm' ;
-tubi.coordinateSystemDemo(options)
+% wireframe of mesh
+clf
+subplot(1, 2, 1) 
+trisurf(triangulation(faces, v3d), ...
+    dilation', 'edgecolor', 'none')
+tmp = caxis ;
+caxis([0, 0.0001])
+% caxis([-5.2331   -4.2])
+axis off
+axis equal
+lighting gouraud
+view([45 45])
 
-%% Redo Pullbacks with time-smoothed meshes ===============================
-disp('Create pullback using S,Phi coords with time-averaged Meshes')
-for tt = tubi.xp.fileMeta.timePoints
-    disp(['NOW PROCESSING TIME POINT ', num2str(tt)]);
-    tidx = tubi.xp.tIdx(tt);
-    
-    % Load the data for the current time point ------------------------
-    tubi.setTime(tt) ;
-    
-    % Establish custom Options for MIP --> choose which pullbacks to use
-    pbOptions = struct() ;
-    pbOptions.numLayers = [0 0] ; % how many onion layers over which to take MIP
-    pbOptions.generate_spsm = true ;
-    pbOptions.generate_sp = false ;
-    pbOptions.overwrite = true ;
-    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
-end
+% wireframe of pullback
+subplot(1, 2, 2)
+trisurf(triangulation( faces, ...
+    cat(2, v2d, zeros(size(v2d, 1), 1))), dilation, 'edgecolor', 'none')
+tmp = caxis ;
+caxis([0, 0.0001])
+% caxis([-5.2331   -4.2])
+axis off
+axis equal ;
+view(2)
+axis equal
+colorbar
+tmp = lapaz ;
+colormap(flipud(tmp))
+% colormap(brewermap(256, '*RdBu'))
+set(gcf, 'color', 'w')
+export_fig(fullfile(tubi.dir.mesh, 'dilation_faces.png'), '-nocrop', '-transparent', '-r300')
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Part 4: Computation of tissue deformation, with in-plane and out-of-plane flow
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE ============================
-% Skip if already done
-options = struct() ;
-options.coordsys = 'spsm' ;
-tubi.doubleCoverPullbackImages(options)
-disp('done')
+%% UV
+% wireframe of mesh
+clf
+subplot(1, 2, 1) 
+trisurf(triangulation(faces, uv3d), ...
+    dilation_uv', 'edgecolor', 'none')
+tmp = caxis ;
+caxis([0, 0.0001])
+% caxis([-5.2331   -4.2])
+axis off
+axis equal
+lighting gouraud
+view([45 45])
 
-% PERFORM PIV ON PULLBACK MIPS ===========================================
-% % Compute PIV either with built-in phase correlation or in PIVLab
-options = struct() ;
-tubi.measurePIV2d(options) ;
-
-% Measure velocities =====================================================
-disp('Making map from pixel to xyz to compute velocities in 3d for smoothed meshes...')
-options = struct() ;
-options.show_v3d_on_data = false ;
-tubi.measurePIV3d(options) ;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Lagrangian dynamics
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Pullback pathline time averaging of velocities
-options = struct() ;
-tubi.timeAverageVelocities(options)
-% Velocity plots for pathline time averaging 
-options.plot_vxyz = false ;
-options.invertImage = true ;
-options.averagingStyle = 'Lagrangian'; 
-tubi.plotTimeAvgVelocities(options)
-% Divergence and Curl (Helmholtz-Hodge) for Lagrangian
-options = struct() ;
-options.averagingStyle = 'Lagrangian' ;
-options.lambda = 0 ;
-options.lambda_mesh = 0 ; 
-tubi.helmholtzHodge(options) ;
-
-% Compressibility & kinematics for Lagrangian
-options = struct() ;
-tubi.measureMetricKinematics(options)
-
-% Metric Kinematics Kymographs & Correlations -- Bandwidth Filtered
-options = struct() ;
-tubi.plotMetricKinematics(options)
-
-%% Pullback pathlines connecting Lagrangian grids
-options = struct() ;
-tubi.measurePullbackPathlines(options)
-
-% Query velocities along pathlines
-options = struct() ;
-tubi.measurePathlineVelocities(options)
-% plot the pathline velocities 
-options = struct() ;
-options.gridTopology = 'triangulated' ;
-tubi.plotPathlineVelocities(options)
-
-% Measure Pathline Kinematics
-options = struct() ;
-tubi.measurePathlineMetricKinematics(options)
-
-% Plot Pathline Kinematics
-options = struct() ;
-tubi.plotPathlineMetricKinematics(options)
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Create ricci mesh at t0 to measure Beltrami coefficient in pathlines
-
-options = struct() ;
-options.climit = 1 ;
-options.coordSys = 'ricci' ;
-tubi.measureBeltramiCoefficient(options) ;
-
-%% Strain rate (epsilon = 1/2 (djvi+divj) -vn bij)
-options = struct() ;
-tubi.measureStrainRate(options) 
-
-%% Plot time-averaged strain rates in 3d on mesh
-options = struct() ;
-tubi.plotStrainRate3DFiltered(options) 
-
-%% Kymograph strain rates
-options = struct() ;
-options.clim_trace = 0.05 ;
-options.clim_deviatoric = 0.05 ;
-tubi.plotStrainRate(options)
-
-% Measure strain rate along pathlines
-options = struct() ;
-options.overwriteImages = false ;
-options.plot_dzdp = false ;
-tubi.measurePathlineStrainRate(options)
-
-%% Measure divergence and out-of-plane deformation along pathlines
-tubi.measurePathlineMetricKinematics()
-
-% Pathline strain rate plots
-options = struct() ;
-options.climit = 0.05 ;
-options.climitWide = 1.0 ;
-tubi.plotPathlineStrainRate(options)
-
-%% Measure strain along pathlines -- note this is from pathlines, not integrating rates
-options = struct() ;
-options.plot_dzdp = false ;
-options.climitInitial = 0.05 ;
-options.climitRamp = 0.01 ;
-options.climitRatio = 1 ;
-tubi.measurePathlineStrain(options)
-tubi.plotPathlineStrain(options)
+% wireframe of pullback
+subplot(1, 2, 2)
+trisurf(triangulation( faces, ...
+    cat(2, uv, zeros(size(v2d, 1), 1))), dilation_uv, 'edgecolor', 'none')
+tmp = caxis ;
+caxis([0, 0.0001])
+% caxis([-5.2331   -4.2])
+axis off
+axis equal ;
+view(2)
+axis equal
+colorbar
+tmp = lapaz ;
+colormap(flipud(tmp))
+% colormap(brewermap(256, '*RdBu'))
+set(gcf, 'color', 'w')
+export_fig(fullfile(tubi.dir.mesh, 'dilation_faces_uv.png'), '-nocrop', '-transparent', '-r300')
 
 
+%% wireframe of mesh
+clf
+subplot(1, 2, 1) 
+trisurf(triangulation(faces, v3d), ...
+    log10(dilation'), 'edgecolor', 'none')
+tmp = caxis ;
+% caxis([0, 0.0001])
+caxis([-5.2331   -4.2])
+axis off
+axis equal
+lighting gouraud
+view([45 45])
 
-%% PCA decomposition
-pcaTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-% pcaTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-options = struct('overwrite', true, ...
-    'overwriteImages', true) ;
-options.pcaTypes = pcaTypes ;
-% options.meshStyles = 'sphi' ;
-tubi.spaceUnits = [char(181) 'm'] ;
-tubi.getPCAoverTime(options)
+% wireframe of pullback
+subplot(1, 2, 2)
+trisurf(triangulation(tubi.currentMesh.spcutMesh.f, ...
+    cat(2, v2d, zeros(size(v2d, 1), 1))), log10(dilation), 'edgecolor', 'none')
+tmp = caxis ;
+% caxis([0, 0.0001])
+caxis([-5.2331   -4.2])
+axis off
+axis equal ;
+view(2)
+axis equal
+colorbar
+% colormap batlowK
+colormap(brewermap(256, '*RdBu'))
+set(gcf, 'color', 'w')
+export_fig(fullfile(tubi.dir.mesh, 'dilation_faces_RdBu.png'), '-nocrop', '-transparent', '-r300')
 
-%% Laplace-Beltrami Spectral (LBS) decomposition
-close all; clc;
 
-% lbsTypes = {'vnVector', 'v3d', 'vt', 'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-lbsTypes = {'H2vn', 'vnScalar', 'divv', 'gdot'} ;
-options = struct('overwrite', true, ...
-    'overwriteImages', true) ;
-options.lbsTypes = lbsTypes ;
-% options.meshStyles = 'sphi' ;
-tubi.spaceUnits = [char(181) 'm'] ;
-tubi.getLBSoverTime(options)

@@ -1,4 +1,4 @@
-function cleanFastMarchingCenterlines(tubi, idOptions)
+function cntrlines = cleanFastMarchingCenterlines(tubi, idOptions)
 % cntrlines = cleanFastMarchingCenterlines(QS, idOptions)
 % Identify anomalous centerlines in a time series, fix them and save.
 %
@@ -24,6 +24,9 @@ function cleanFastMarchingCenterlines(tubi, idOptions)
 % Unpack options
 overwrite = false ;
 ssr_thres = 15 ;
+if nargin < 2
+    idOptions = struct() ;
+end
 if isfield(idOptions, 'overwrite')
     overwrite = idOptions.overwrite ;
 end
