@@ -940,7 +940,7 @@ classdef TubULAR < handle
                     disp('Loaded clean centerlines from disk')
                 catch
                     disp('No clean centerlines on disk, generating...')
-                    tubi.cleanFMCenterlines = tubi.cleanFastMarchingCenterlines() ;
+                    tubi.cleanFastMarchingCenterlines() ;
                 end
             end
             if nargout > 0

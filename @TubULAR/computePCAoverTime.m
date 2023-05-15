@@ -45,6 +45,11 @@ function results = computePCAoverTime(tubi, options)
 %       scale factor to multiply pca velocities by before advecting mesh
 %       vertices by vn*v_pca --> ie displace vertices for visualization by
 %       vn*v_pca*displacement_scale.
+%   displayTypes = {'normal', 'displacement', 'rotational', 'dilatational'} ;
+%       how to display the mode results (what field to plot on the
+%       surfaces)
+%   useCamlight : bool
+%       use a camera light for mode images
 %
 % Returns
 % -------
@@ -85,6 +90,9 @@ drawArrowsInPCA3D = false ;
 meshChoice = {'Lagrangian', 'sphi'} ;
 % On which fields do we compute PCA
 pcaTypes = {'v3d', 'vnVector', 'vt', 'vnScalar', 'divv', 'H2vn', 'gdot'};
+% How do we represent the modes as colored surfaces
+displayTypes = {'normal', 'displacement', 'rotational', 'dilatational'} ;
+useCamlight = true ;
 % pairs of mode numbers to plot in 2d projections (modes are ordered by rank)
 axPairs = [1,2;1,3;2,3] ;
 % smoothing parameters for sphi measurement
@@ -99,6 +107,7 @@ plotArrowsOnModes = false ;
 nArrows = 250 ;
 % Plotting: scale factor for displacement of vertices by PCA vectors
 displacement_scale = 1500 ; 
+xyzLimBuffer = 0 ;
 
 quiver_lw_2d = 1.0 ;
 quiver_lw_3d = 1;
@@ -173,6 +182,16 @@ end
 if isfield(options, 'displacement_scale')
     displacement_scale = options.displacement_scale ;
 end
+if isfield(options, 'displayTypes')
+    displayTypes = options.displayTypes ;
+end
+if isfield(options, 'useCamlight')
+    useCamlight = options.useCamlight ;
+end
+if isfield(options, 'xyzLimBuffer')
+    xyzLimBuffer = options.xyzLimBuffer ;
+end
+            
 
 
 %% Construct PCA for each kind of meshChoice
@@ -512,7 +531,11 @@ for meshChoiceID = 1:numel(meshChoice)
                 dmykk = dmykk + 1 ; 
             end
         else
-            disp('Did not find result on disk...')
+            if ~exist(fnResult, 'file')
+                disp('Did not find result on disk...')
+            else
+                disp('Overwriting result on disk')
+            end
             pcaType = pcaTypes{pcaTypeID} ;
 
             % Choose which component of the velocity field to analyze
@@ -586,7 +609,6 @@ for meshChoiceID = 1:numel(meshChoice)
             
             
             % Chose the mode that will be visualized
-            displayTypes = {'normal', 'displacement', 'rotational', 'dilatational'} ;
             for dispID = 1:length(displayTypes)
 
                 plotType = displayTypes{dispID} ;
@@ -601,9 +623,12 @@ for meshChoiceID = 1:numel(meshChoice)
 
                     % Extract visualization parameters
                     [~, ~, ~, xyzlim] = tubi.getXYZLims();
-                    xmin = xyzlim(1, 1); xmax = xyzlim(1, 2) ;
-                    ymin = xyzlim(2, 1); ymax = xyzlim(2, 2) ;
-                    zmin = xyzlim(3, 1); zmax = xyzlim(3, 2) ;
+                    xmin = xyzlim(1, 1) - xyzLimBuffer; 
+                    xmax = xyzlim(1, 2) + xyzLimBuffer;
+                    ymin = xyzlim(2, 1) - xyzLimBuffer; 
+                    ymax = xyzlim(2, 2) + xyzLimBuffer;
+                    zmin = xyzlim(3, 1) - xyzLimBuffer; 
+                    zmax = xyzlim(3, 2) + xyzLimBuffer;
 
                     % String for naming this mode figure
                     saveStrMode = sprintf([saveStrPrefix, '_mode_%d'], modeID);
@@ -642,10 +667,13 @@ for meshChoiceID = 1:numel(meshChoice)
 
                                     cmap = brewermap(256, '*RdBu');
                                     crange = max(sqrt(sum(vmode.^2, 2))) * [-1 1];
+                                    % vcolors = mapValueToColor( ...
+                                    %     sqrt(sum(vmode.^2, 2)) .* sign(dot(vmode, VNc, 2)), ...
+                                    %     crange, cmap);
+                                    % vcolors = laplacian_smooth(VMc, Fc, 'cotan', [], 0.1, 'implicit', vcolors, 1000) ;
                                     vcolors = mapValueToColor( ...
-                                        sqrt(sum(vmode.^2, 2)) .* sign(dot(vmode, VNc, 2)), ...
+                                        dot(vmode, VNc, 2), ...
                                         crange, cmap);
-
                                     patch( 'Faces', Fc, 'Vertices', VMc, 'FaceVertexCData', vcolors, ...
                                         'FaceColor', 'interp', 'EdgeColor', 'none', ...
                                         'FaceLighting', 'gouraud', 'FaceAlpha', 1, ...
@@ -795,7 +823,9 @@ for meshChoiceID = 1:numel(meshChoice)
                                 ylim(scaleFactor * [ymin, ymax]);
                                 zlim(scaleFactor * [zmin, zmax]);
 
-                                % camlight
+                                if useCamlight
+                                    camlight
+                                end
                                 xlabel(['AP Position [' tubi.spaceUnits ']'], 'interpreter', 'latex');
                                 ylabel(['Lateral Position [' tubi.spaceUnits ']'], 'interpreter', 'latex');
                                 zlabel(['DV Position [' tubi.spaceUnits ']'], 'interpreter', 'latex');

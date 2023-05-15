@@ -384,7 +384,10 @@ for tidx = tidx2do
         else
             error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])
         end
-        im = cat(3, im, im, im) ;  % convert to rgb for no cmap change
+        % convert im to rgb for no cmap change, if not already RGB
+        if size(im, 3) ~= 3
+            im = cat(3, im, im, im) ;
+        end
         addTitleStr = [': $t=$', num2str((tp - t0)*QS.timeInterval), ...
                        ' ', QS.timeUnits] ;
         Options = struct() ;

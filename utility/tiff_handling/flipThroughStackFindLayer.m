@@ -2,7 +2,7 @@ function [k] = flipThroughStackFindLayer(allstack, title_preamble, axis, bigstep
 %FLIPTHROUGHSTACKFINDLAYER Find a layer flipping through stack
 %   Go through 3d data and change the last index of the stack to find a
 %   desired layer. When found, press Enter. Returns the layer index 
-%   visible when Enter/Return was pressed.
+%   visible when Enter/Return was pressed. To change LUT use 'i' and 'k'.
 %
 % Parameters
 % ----------
@@ -10,9 +10,15 @@ function [k] = flipThroughStackFindLayer(allstack, title_preamble, axis, bigstep
 %   The stack of images to flip through
 % title_preamble : str
 %   Title preceding the layer index 
-% axis : int
+% axis : int (default=3)
 %   Which axis to flip through
-% 
+% bigstep : int (default=10)
+%   Step size in frame numbers for up/down keys
+% fig : figure instance (optional)
+%   If supplied, plot frames of the volume on the given figure
+% normalize : boolean (default = false)
+%   
+%
 % Returns
 % -------
 % k : int
@@ -70,10 +76,12 @@ while k <= max_k && ~pressed_enter
         trace = (squeeze(allstack(k, :, :))) ;
     end
     trace = mat2gray(trace, [imin imax]) ;
-    imshow(trace)
-    hold(ax, 'on');
-    title(ax, [title_preamble ': # ',num2str(k),'']);
-    hold(ax, 'off');
+    imshow(trace, 'Parent', ax)
+    % NPM: got rid of the holding, not sure why this was there.
+    % hold(ax, 'on');
+    % title(ax, [title_preamble ': # ',num2str(k),'']);
+    % hold(ax, 'off');
+    title([title_preamble ': # ',num2str(k),'']);
     if exist('Xlim', 'var')
         set(ax, 'xlim', Xlim) 
         set(ax, 'ylim', Ylim) 

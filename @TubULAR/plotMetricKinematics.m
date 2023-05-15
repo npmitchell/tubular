@@ -154,7 +154,9 @@ mKDir = fullfile(QS.dir.metricKinematics.root, ...
 close all
 imagesc([-1, 0, 1; -1, 0, 1])
 caxis([-1, 1])
-bwr256 = bluewhitered(256) ;
+% bwr256 = bluewhitered(256) ;
+% bwr256 = twilight_shifted(256) ;
+bwr256 = colormap(brewermap(256, '*RdBu'));
 
 %% Load time offset for first fold, t0
 QS.t0set() ;

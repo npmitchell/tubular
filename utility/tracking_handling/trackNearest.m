@@ -1,9 +1,15 @@
 function [tracks, trackM] = trackNearest(xyzs,maxdisp,param)
 % NPMitchell 2022
-% documentation adapted from Crocker-Grier codebase.
+% Tracks particles based on finding the nearest point in the subsequent
+% timepoint for each point in the current. No mergers are allowed. If two
+% points p1 and p2 match to the same point p1' in the subsequent timepoint,
+% only the point p1 or p2 that is nearer to p1' is ascribed as part of the
+% track, and the track for the other is terminated. For ex, if p1 is closer
+% to p1', then p2 would not have a partner in the subsequent timepoint.
+% Note: The documentation is adapted from the Crocker-Grier codebase.
 % 
 % NAME:
-% track
+% trackNearest
 % PURPOSE:
 % Constructs n-dimensional trajectories from a scrambled list of
 % particle coordinates determined at discrete times (e.g. in
@@ -11,14 +17,14 @@ function [tracks, trackM] = trackNearest(xyzs,maxdisp,param)
 % CATEGORY:
 % Image Processing
 % CALLING SEQUENCE:
-% result = track( positionlist, maxdisp, param )
+% result = trackNearest( xyzs, maxdisp, param )
 %  set all keywords in the space below
 % INPUTS:
-% positionlist: an array listing the scrambled coordinates and data 
+% xyzs: an array listing the scrambled coordinates and data 
 %     of the different particles at different times, such that:
-%  positionlist(0:d-1,*): contains the d coordinates and
+%  xyzs(0:d-1,*): contains the d coordinates and
 %     data for all the particles, at the different times. must be positve
-%  positionlist(d,*): contains the time t that the position 
+%  xyzs(d,*): contains the time t that the position 
 %     was determined, must be integers (e.g. frame number.  These values must 
 %               be monotonically increasing and uniformly gridded in time.
 % maxdisp: an estimate of the maximum distance that a particle 
@@ -110,7 +116,14 @@ function [tracks, trackM] = trackNearest(xyzs,maxdisp,param)
 %
 % 
 
-dim = 2 ;
+% Default 
+if nargin < 2
+    maxdisp = Inf ;
+end
+
+% Default: assume the input is xyzpqruv...t, with all elements before t
+% being spatial coordinates
+dim = size(xyzs, 2) -1 ;
 if nargin < 3
     param = struct() ;
 end

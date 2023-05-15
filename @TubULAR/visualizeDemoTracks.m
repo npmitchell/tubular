@@ -29,7 +29,7 @@ function visualizeDemoTracks(QS, Options)
     overwrite = false ;
     % Look for what tracks to make movies of
     tracks2demo = dir(fullfile(QS.dir.tracking, 'demoTracks', 'demoTracks*.mat')) ;
-    outputResolution = 4 / QS.APDV.resolution ;
+    outputResolution = QS.ssfactor / QS.APDV.resolution ;
     scaleByMetric = false ;
     scaleByMetricComponents = true ;
     detClim = 1.3 ;

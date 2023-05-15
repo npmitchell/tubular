@@ -420,18 +420,18 @@ for tidx = 1:length(timePoints)
         % Note: Keep endpt in subsampled units
 
         % Check out the mesh
-        if preview
-            hold on
-            trimesh(fvsub.faces, xs, ys, zs)
-            % plot3(xs, ys, zs, 'ko')
-            scatter3(startpt(1), startpt(2), startpt(3), 'ro')
-            scatter3(endpt(1), endpt(2), endpt(3), 'ko')
-            xlabel('x [subsampled pixels]')
-            ylabel('y [subsampled pixels]')
-            zlabel('z [subsampled pixels]')
-            hold off
-            axis equal
-        end
+        % if preview
+        %     hold on
+        %     trimesh(fvsub.faces, xs, ys, zs)
+        %     % plot3(xs, ys, zs, 'ko')
+        %     scatter3(startpt(1), startpt(2), startpt(3), 'ro')
+        %     scatter3(endpt(1), endpt(2), endpt(3), 'ko')
+        %     xlabel('x [subsampled pixels]')
+        %     ylabel('y [subsampled pixels]')
+        %     zlabel('z [subsampled pixels]')
+        %     hold off
+        %     axis equal
+        % end
 
         %% Rescale start point and end point to full resolution
         spt = [startpt(1), startpt(2), startpt(3)] * ssfactor;

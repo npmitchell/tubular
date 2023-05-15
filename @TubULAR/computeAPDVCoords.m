@@ -40,6 +40,9 @@ normal_step = 1/tubi.ssfactor ;
 ilastikOutputAxisOrder = tubi.data.ilastikOutputAxisOrder ;
 thres = 0.5 ;
 ssfactor = tubi.ssfactor ;
+use_APDVAxes = [1 3] ;  % forcibly use these axes as the AP and DV axes, respectively
+flipAP = false ;   % only used if use_APDVAxes is true 
+flipDV = false ;   % only used if use_APDVAxes is true
 
 %% Unpack opts
 if isfield(opts, 'aProbFileName')
@@ -84,6 +87,18 @@ if ~use_iLastik
         use_MOI = false ;
     end
 end
+if ~use_iLastik && ~use_MOI
+    if isfield(opts, 'use_APDVAxes')
+        use_APDVAxes = opts.use_APDVAxes ;
+    end
+    if isfield(opts, 'flipAP')
+        flipAP = opts.flipAP ;
+    end
+    if isfield(opts, 'flipDV')
+        flipDV = opts.flipDV ;
+    end
+end
+
 
 % Which timepoint to use to define dorsal and AP axis?
 if isfield(opts, 'tref')
@@ -149,7 +164,11 @@ no_rot_on_disk = ~exist(rotname, 'file') ;
 no_trans_on_disk = ~exist(transname, 'file') ;
 redo_rot_calc = no_rot_on_disk || no_trans_on_disk || overwrite ;
 if exist(rotname, 'file') 
-    disp('Rotation and translation already on disk')
+    if overwrite
+        disp('Rotation and translation already on disk -- Overwriting...')
+    else
+        disp('Rotation and translation already on disk')
+    end
     rot = dlmread(rotname) ;
     trans = dlmread(transname, ',');
     if any(isnan(rot(:))) || any(isnan(trans))
@@ -525,7 +544,7 @@ if redo_rot_calc || overwrite
         dlmwrite(aptname, acom) ;
         dlmwrite(pptname, pcom) ;    
         dlmwrite(dptname, dcom) ;   
-    else
+    else 
         % Use default axes as APDVCoords
         tubi.setTime(tt) ;
         tubi.getCurrentData() ;
@@ -534,8 +553,25 @@ if redo_rot_calc || overwrite
         acom = [0,0,0] ;
         pcom = [0,0,0] ;
         dcom = [0,0,0] ;
-        pcom(1) = axSizes(1) ;
-        dcom(3) = axSizes(3) ;
+        
+        % typically this will be pcom(1) = axSizes(1); dcom(3) = axSizes(3)
+        pcom(use_APDVAxes(1)) = axSizes(use_APDVAxes(1)) ;
+        dcom(use_APDVAxes(2)) = axSizes(use_APDVAxes(2)) ;
+        
+        % invert the orientation of the AP axis wrt the data frame
+        if flipAP
+            pcom_temp = pcom ;
+            pcom = acom ;
+            acom = pcom_temp ;
+            clearvars pcom_temp 
+        end
+        
+        % invert the orientation of the DV axes wrt the data frame
+        if flipDV
+            acom(use_APDVAxes(2)) = axSizes(use_APDVAxes(2)) ;
+            pcom(use_APDVAxes(2)) = axSizes(use_APDVAxes(2)) ;
+            dcom(use_APDVAxes(2)) = 0 ;
+        end
         
         acom = acom / ssfactor ;
         pcom = pcom / ssfactor ;
@@ -628,7 +664,15 @@ if redo_rot_calc || overwrite
         if all(dhat(:) == zhat(:))
             rotz = [1,0,0;0,1,0;0,0,1];
         else
-            rotz = RU(dhat(:), zhat(:)) ;
+            if norm(cross(dhat(:), zhat(:))) == 0
+                if all(dhat(:) == -zhat(:))
+                    rotz = [1,0,0;0,-1,0;0,0,-1];
+                else
+                    error('Somehow, the dorsal vector and zhat vector are collinear but not aligned nor antialigned. Debug this here.') 
+                end
+            else
+                rotz = RU(dhat(:), zhat(:)) ;
+            end
         end
         rot = rotz * rotx  ;
 

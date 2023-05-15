@@ -176,7 +176,8 @@ mKDir = fullfile(QS.dir.metricKinematics.root, ...
 fons = t0 - QS.xp.fileMeta.timePoints(1) ;
 
 %% Colormap
-bwr256 = bluewhitered(256) ;
+% bwr256 = bluewhitered(256) ;
+bwr256 = colormap(brewermap(256, '*RdBu')) ;
 bluecolor = QS.plotting.colors(1, :) ;
 orangecolor = QS.plotting.colors(2, :) ;
 yellowcolor = QS.plotting.colors(3, :) ;

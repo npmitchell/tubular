@@ -280,6 +280,8 @@ if tubi.dynamic
     imfn_spsm = sprintf( tubi.fullFileBase.im_sp_sm, tt) ;
     imfn_rsm = sprintf( tubi.fullFileBase.im_r_sm, tt) ;
     imfn_pivPline = sprintf( tubi.fullFileBase.im_pivPathlines, t0Pathlines, tt) ;
+else
+    imfn_pivPline = '' ;
 end
 imfn_ricci = sprintf( tubi.fullFileBase.im_ricci, tt) ;
 do_pb1 = ~exist(imfn_uv, 'file') && generate_uv ;
