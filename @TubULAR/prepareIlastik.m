@@ -58,6 +58,21 @@ function prepareIlastik(tubi)
                     end
                     image(:,:,:,c) = im{c}(1:opts.ssfactor:end,1:opts.ssfactor:end,1:opts.ssfactor:end);
                 end
+                
+                % Force conversion to desired data type
+                if isfield(xp.detectOptions, 'ilastik_data_type')
+                    ilastik_data_type = lower(xp.detectOptions.ilastik_data_type);
+                    if ~isempty(ilastik_data_type)
+                        switch ilastik_data_type     
+                            case 'uint8'
+                                if ~isa(image, 'uint8'), image = im2uint8(image); end     
+                            case 'uint16'
+                                if ~isa(image, 'uint16'), image = im2uint16(image); end
+                            otherwise
+                                error('Did not recognize desired Ilastik data type. Add capability here');
+                        end
+                    end
+                end
 
                 % Now save the subsampled images to h5 using the axis order
                 % specified by axperm
@@ -104,7 +119,9 @@ function prepareIlastik(tubi)
                 disp(['h5 for timepoint ' num2str(tt) ' was already output, skipping...'])
             end
         end    
+        
     else
+        
         % xp is an Experiment class with its own methods
         disp('Detected that tubi.xp is an ImSAnE Experiment class instance')
         fn = tubi.xp.detect.options.fileName ;
@@ -129,4 +146,5 @@ function prepareIlastik(tubi)
         end    
         disp('Open with ilastik if not already done')
     end
+    
 end

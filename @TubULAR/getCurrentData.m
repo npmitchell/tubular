@@ -57,7 +57,7 @@ function IV = getCurrentData(tubi, adjustIV, varargin)
         if adjustIV
             adjustlow = tubi.data.adjustlow ;
             adjusthigh = tubi.data.adjusthigh ;
-            if (any(adjustlow) ~= 0 || any(adjusthigh) ~=100) && ~any(isnan(adjustlow)) ...
+            if (any(adjustlow ~= 0) || any(adjusthigh ~= 100)) && ~any(isnan(adjustlow)) ...
                     && ~any(isnan(adjusthigh))
                 IVtmp = tubi.adjustIV(IV, adjustlow, adjusthigh) ;
             else
@@ -92,7 +92,8 @@ function stacks = rescaleToUnitAspect(data, resolution)
     %
     % newStack = rescaleToUnitAspect() 
 
-    if all(resolution) == resolution(1)
+    stacks = cell(1, size(data, 4));
+    if all(resolution == resolution(1))
         for channel = 1:size(data, 4)
             stacks{channel} = squeeze(data(:,:,:,channel)) ;
         end
@@ -101,11 +102,11 @@ function stacks = rescaleToUnitAspect(data, resolution)
 
     % Right now we just handle the case of equal resolution in 2 dimensions
     % and unequal in the third dimension
-    if length(unique(resolution)) > 2
-        error('Handle the case of different resolution in all three dimensions here')
-    else
-        aspect = max(resolution)/min(resolution);
-    end
+    % if length(unique(resolution)) > 2
+    %     error('Handle the case of different resolution in all three dimensions here')
+    % else
+    %     aspect = max(resolution)/min(resolution);
+    % end
     
     % prepare the perumutation of stacks, such that the low
     % resolution axis becomes the z axis;
@@ -113,31 +114,45 @@ function stacks = rescaleToUnitAspect(data, resolution)
         stacks{channel} = squeeze(data(:,:,:,channel)) ;
     end
     resolution = resolution([2,1,3]);
-    [~,ii]     = sort(resolution);
+    [~, ii]     = sort(resolution);
+    
+    imSize = size(stacks{1});
+    newImSize = ceil( imSize .* (resolution ./ min(resolution)) );
 
-    % Resample the 
+    fprintf('\n');
     for i = 1:numel(stacks)
 
-        fprintf(['Channel ' num2str(i) '\n']);
+        fprintf(['Re-scaling channel ' num2str(i) '\n']);
 
-        curr = stacks{i};
-        % permute;
-        curr = permute(curr,ii);
-        newnslices = round(size(curr,3)*aspect);
-        scaled = zeros([size(curr,1) size(curr,2) newnslices], class(curr));
-        for j=1:size(curr,1)
-            % debugMsg(1, '.');
-            % if rem(j,80) == 0
-            %     debugMsg(1, '\n');
-            % end
-            scaled(j,:,:) = imresize(squeeze(curr(j,:,:)),...
-                                        [size(curr,2) newnslices]);
-        end
-        % debugMsg(1,'\n');
-        
-        % permute back to original axis order
-        scaled = ipermute(scaled,ii);
-        stacks{i} = scaled;
+        % NEW WAY: Resize stack simultaneously --------------------
+                % Is 'imresize3' in a special toolbox?
+                
+                curr = stacks{i};
+                scaled = imresize3(curr, newImSize);
+                stacks{i} = scaled;
+                
+                % OLD WAY: Resize stack slice-by-slice --------------------
+                % Assumes isotropic resolution in X and Y
+                
+                % curr = stacks{i}; % Original stack for current channel
+                % curr = permute(curr,ii); % Stack re-ordered high-to-low by resolution
+                % newnslices = round(size(curr,3)*this.aspect); % New number of slices
+                % scaled = zeros([size(curr,1) size(curr,2) newnslices], class(curr));
+                % for j=1:size(curr,1)
+                %     % debugMsg(3, '.');
+                %     % if rem(j,80) == 0
+                %     %     debugMsg(3, '\n');
+                %     %     debugMsg(2, '.') ;
+                %     % end
+                %     scaled(j,:,:) = imresize(squeeze(curr(j,:,:)),...
+                %                                 [size(curr,2) newnslices]);
+                % end
+                % % debugMsg(3,'\n');
+                %
+                % % permute back to original axis order
+                % scaled = ipermute(scaled,ii);
+                % stacks{i} = scaled;
+                
     end
     
 end

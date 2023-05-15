@@ -50,6 +50,7 @@ if isa(xp, 'struct')
     end
 end
 
+makeDirs = true;
 tubi.xp = xp ;
 tubi.flipy = opts.flipy ;
 meshDir = opts.meshDir ;
@@ -106,7 +107,10 @@ end
 if isfield(opts, 'ilastikOutputAxisOrder')
     tubi.data.ilastikOutputAxisOrder = opts.ilastikOutputAxisOrder ;
 end
-
+if isfield(opts, 'makeDirs')
+    makeDirs = opts.makeDirs;
+end
+    
 % Assign which pullback coordsys is used for velocimetry
 if isfield(opts, 'pivPullback')
     tubi.pivPullback = pivPullback ;
@@ -578,8 +582,9 @@ tubi.fileBase.im_up = [tubi.fileBase.name, '_pbup.tif'] ;
 tubi.fullFileBase.im_up = fullfile(tubi.dir.im_up, tubi.fileBase.im_up) ;
 tubi.fileBase.im_ricci = [tubi.fileBase.name, '_ricci.tif'] ;
 tubi.fullFileBase.im_ricci = fullfile(tubi.dir.im_ricci, tubi.fileBase.im_ricci) ;
-tubi.fileBase.im_pivPathlines = [tubi.fileBase.name, '_pivPathlines.tif'] ;
+
 if dynamic
+    tubi.fileBase.im_pivPathlines = [tubi.fileBase.name, '_pivPathlines.tif'] ;
     tubi.fullFileBase.im_pivPathlines = fullfile(tubi.dir.im_pivPathlines, tubi.fileBase.im_pivPathlines) ;
 end
 
@@ -771,36 +776,38 @@ tubi.dir.PCAoverTime = fullfile(tubi.dir.mesh, 'PCAoverTime') ;
 tubi.dir.LBSoverTime = fullfile(tubi.dir.mesh, 'LBSoverTime') ;
 
 %% Ensure directories
-dirs2make = struct2cell(tubi.dir) ;
-for ii=1:length(dirs2make)
-    dir2make = dirs2make{ii} ;
-    if isa(dir2make, 'struct')
-        dirfields = struct2cell(dir2make) ;
-        for qq = 1:length(dirfields)
-            dir2make = dirfields{qq} ;
-            if isa(dir2make, 'struct')
-                dirfieldsSub = struct2cell(dir2make) ;
-                for pp = 1:length(dirfieldsSub)
-                    dir2makeSub = dirfieldsSub{pp} ;
-                    if ~exist(dir2makeSub, 'dir') && ~contains(dir2makeSub, '%04d') ...
-                            && ~contains(dir2makeSub, '%0.3f') ...
-                            && ~contains(dir2makeSub, '%06d') ...
-                            && ~contains(dir2makeSub, '%s')
-                        mkdir(dir2makeSub)
+if makeDirs
+    dirs2make = struct2cell(tubi.dir) ;
+    for ii=1:length(dirs2make)
+        dir2make = dirs2make{ii} ;
+        if isa(dir2make, 'struct')
+            dirfields = struct2cell(dir2make) ;
+            for qq = 1:length(dirfields)
+                dir2make = dirfields{qq} ;
+                if isa(dir2make, 'struct')
+                    dirfieldsSub = struct2cell(dir2make) ;
+                    for pp = 1:length(dirfieldsSub)
+                        dir2makeSub = dirfieldsSub{pp} ;
+                        if ~exist(dir2makeSub, 'dir') && ~contains(dir2makeSub, '%04d') ...
+                                && ~contains(dir2makeSub, '%0.3f') ...
+                                && ~contains(dir2makeSub, '%06d') ...
+                                && ~contains(dir2makeSub, '%s')
+                            mkdir(dir2makeSub)
+                        end
+                    end
+                else
+                    if ~exist(dir2make, 'dir') && ~contains(dir2make, '%04d') ...
+                            && ~contains(dir2make, '%0.3f') ...
+                            && ~contains(dir2make, '%06d') ...
+                            && ~contains(dir2make, '%s')
+                        mkdir(dir2make)
                     end
                 end
-            else
-                if ~exist(dir2make, 'dir') && ~contains(dir2make, '%04d') ...
-                        && ~contains(dir2make, '%0.3f') ...
-                        && ~contains(dir2make, '%06d') ...
-                        && ~contains(dir2make, '%s')
-                    mkdir(dir2make)
-                end
             end
-        end
-    else
-        if ~exist(dir2make, 'dir')
-            mkdir(dir2make)
+        else
+            if ~exist(dir2make, 'dir')
+                mkdir(dir2make)
+            end
         end
     end
 end
