@@ -66,6 +66,7 @@ classdef TubULAR < handle
     %   v2dsmMum : (#timePoints-1) x (nX*nY) x 2 float array
     %       2d velocities at PIV evaluation coordinates in scaled pix/min, but 
     %       proportional to um/min (scaled by dilation of map)
+    %   readme : struct with this information
     %
     % APDV coordinate system and Centerline specification
     % ---------------------------------------------------
@@ -122,6 +123,12 @@ classdef TubULAR < handle
         nU                              % sampling number along longitudinal axis
         uvexten                         % naming extension with nU and nV like '_nU0100_nV0100'
         t0                              % reference time in the experiment
+        features = struct('folds', [], ...  % #timepoints x #folds int, indices of nU sampling of folds
+            'fold_onset', [], ...       % #folds x 1 float, timestamps (not indices) of fold onset
+            'ssmax', [], ...            % #timepoints x 1 float, maximum length of the centerline at each timepoint
+            'ssfold', [], ...           % #timepoints x #folds float, positional pathlength along centerline of folds
+            'rssmax', [], ...           % #timepoints x 1 float, maximum proper length of the surface over time
+            'rssfold', []) ;            % #timepoints x #folds float, positional proper length along surface of folds
         normalShift = 0                 % shift to apply to meshes in pixel space along normal direction
         a_fixed = 1                     % aspect ratio for fixed geometry pullback meshes
         phiMethod = '3dcurves'          % method for determining Phi map in pullback mesh creation, with 
@@ -180,7 +187,8 @@ classdef TubULAR < handle
             'IV', [], ...
             'adjustlow', 0, ...
             'adjusthigh', 0 )           % image intensity data in 3d and scaling
-        currentVelocity = struct('piv3d', struct()) ;     
+        currentVelocity = struct('piv3d', struct(), ...
+            'average', struct()) ;     
         piv = struct( ...               % struct with details of the Particle Image Velocimetry computed for all timepoints
             'imCoords', 'sp_sme', ...   % image coord system for measuring PIV / optical flow) ;
             'Lx', [], ...               % width of image, in pixels (x coordinate)
@@ -365,6 +373,7 @@ classdef TubULAR < handle
         end
         
         function im = mip(tubi, tp, dim, pages, adjustIV)
+            % Take maximum intensity projection
             if nargin < 5
                 adjustIV = false ;
             end
@@ -374,7 +383,9 @@ classdef TubULAR < handle
                 if dim == 1
                     im = squeeze(max(tubi.currentData.IV{qq}(pages, :, :), [], dim)) ;
                 elseif dim == 2
+                    im = squeeze(max(tubi.currentData.IV{qq}(:, pages, :), [], dim)) ;
                 elseif dim == 3
+                    im = squeeze(max(tubi.currentData.IV{qq}(:, :, pages), [], dim)) ;
                 else
                     error('dim > 3 not understood')
                 end
@@ -516,6 +527,64 @@ classdef TubULAR < handle
                         tubi.measureXYZLims() ;
                     xyzlim_um_buff = tubi.plotting.xyzlim_um_buff ;
                 end
+            end
+        end
+        
+        function features = getFeatures(tubi, varargin)
+            %GETFEATURES(QS, varargin)
+            %   Load features of the tubular object (those specied, or all of 
+            %   them). 
+            %   Currently, features include {'folds', 'fold_onset', 'ssmax', 
+            %   'ssfold', 'rssmax', 'rssfold'}. 
+            if nargin > 1
+                for qq=1:length(varargin)
+                    if isempty(eval(['QS.features.' varargin{qq}]))
+                        disp(['Loading feature: ' varargin{qq}])
+                        tubi.loadFeatures(varargin{qq})
+                    end
+                end
+            else
+                tubi.loadFeatures() ;
+            end
+            if nargout > 0
+                features = tubi.features ; 
+            end
+        end
+        function loadFeatures(tubi, varargin)
+            % Load all features stored in QS.features
+            % 
+            % Parameters
+            % ----------
+            % varargin : optional string list/cell
+            %   which specific features to load
+            %
+            if nargin > 1
+                if any(strcmp(varargin, {'folds', 'fold_onset', ...
+                    'ssmax', 'ssfold', 'rssmax', 'rssfold'}))
+                    
+                    % Load all features relating to folds
+                    disp('Loading folding features')
+                    load(tubi.fileName.features.fold, 'folds', 'fold_onset', ...
+                        'ssmax', 'ssfold', 'rssmax', 'rssfold') ;
+                    tubi.features.folds = folds ;
+                    tubi.features.fold_onset = fold_onset ; 
+                    tubi.features.ssmax = ssmax ; 
+                    tubi.features.ssfold = ssfold ;
+                    tubi.features.rssmax = rssmax ;
+                    tubi.features.rssfold = rssfold ;
+                else
+                    error('Feature not recognized')
+                end
+            else
+                % Load all features
+                load(tubi.fileName.features.fold, 'folds', 'fold_onset', ...
+                    'ssmax', 'ssfold', 'rssmax', 'rssfold') ;
+                tubi.features.folds = folds ;
+                tubi.features.fold_onset = fold_onset ; 
+                tubi.features.ssmax = ssmax ; 
+                tubi.features.ssfold = ssfold ;
+                tubi.features.rssmax = rssmax ;
+                tubi.features.rssfold = rssfold ;
             end
         end
         
@@ -776,7 +845,21 @@ classdef TubULAR < handle
         end
         
         % Get velocity
-        function piv3d = getCurrentVelocity(tubi, varargin)
+        function [piv3d, vsm] = getCurrentVelocity(tubi, varargin)
+            % [piv3d, vsm] = getCurrentVelocity(tubi, varargin)
+            %
+            % Parameters
+            % ----------
+            % tubi : tubular class instance
+            % varargin: cell of strings 'piv3d' and/or 'average'
+            %   which velocities to load
+            %
+            % Returns
+            % -------
+            % piv3d: struct of raw, piv-based velocities
+            % vsm : Lagrangian-frame time-averaged velocities for all timepoints, with
+            % the averaging done over a chosen/default time window in short
+            % material pathlines.
             if isempty(tubi.currentTime)
                 error('No currentTime set. Use tubi.setTime()')
             end
@@ -793,9 +876,52 @@ classdef TubULAR < handle
                 load(sprintf(piv3dfn, tubi.currentTime), 'piv3dstruct') ;
                 tubi.currentVelocity.piv3d = piv3dstruct ;
             end
+            
+            no_vsm = ~isfield(tubi.currentVelocity.average, 'v2d') ...
+                || isempty(fieldnames(tubi.currentVelocity.average.v2d)) ;
+            if (do_all || contains(varargin, 'average')) && no_vsm
+                try
+                    vsm = loadVelocityAverage(tubi, varargin) ;
+                catch
+                    disp('WARNING: Could not load Lagrangian-averaged velocites. Returning only raw, piv-based velocities.')
+                end
+                
+                % unpack the time-averaged velocities into current measure
+                tidx = tubi.xp.tIdx(tubi.currentTime) ;
+                v3d = vsm.v3d(tidx, :, :) ;
+                v2d = vsm.v2d(tidx, :, :) ;
+                v2dum = vsm.v2dum(tidx, :, :) ;
+                vn = vsm.vn(tidx, :, :) ;
+                vf = vsm.vf(tidx, :, :) ;
+                vv = vsm.vv(tidx, :, :) ;
+                v3d = reshape(v3d, [size(v3d, 2), size(v3d, 3)]) ;
+                v2d = reshape(v2d, [size(v2d, 2), size(v2d, 3)]) ;
+                v2dum = reshape(v2d, [size(v2dum, 2), size(v2dum, 3)]) ;
+                vn = reshape(vn, [size(vn, 2), size(vn, 3)]) ;
+                vf = reshape(vf, [size(vf, 2), size(vf, 3)]) ;
+                vv = reshape(vv, [size(vv, 2), size(vv, 3)]) ;
+                tubi.currentVelocity.average.v3d = v3d ;
+                tubi.currentVelocity.average.v2d = v2d ;
+                tubi.currentVelocity.average.v2dum = v2dum ;
+                tubi.currentVelocity.average.vn = vn ;
+                tubi.currentVelocity.average.vf = vf ;
+                tubi.currentVelocity.average.vv = vv ;
+                tubi.currentVelocity.average.readme = struct('v3d', ...
+                    '(nX*nY) x 3 float array, 3d velocities at PIV evaluation coordinates in um/dt (in rotated & scaled APDV coordinate frame)',...
+                'v2d', '(nX*nY) x 2 float array, 2d velocities at PIV evaluation coordinates in pixels/ min', ...
+                'v2dum', '(nX*nY) x 2 float array, 2d velocities at PIV evaluation coordinates in scaled pix/min, but proportional to um/min (scaled by dilation of map)', ...
+                'vn', '(nX*nY) float array, normal velocity at PIV evaluation coordinates in um/dt rs', ...
+                'vf', '(2*nU*(nV-1)) x 3 float array, 3d velocities at face barycenters in um/dt (in rotated & scaled APDV coordinate frame)', ...
+                'vv', '(nU*nV) x 3 float array, 3d velocities at (1x resolution) mesh vertices in um/min (in rotated & scaled APDV coordinate frame)') ;
+            
+            end
             if nargout > 0
                 piv3d = tubi.currentVelocity.piv3d ;
             end
+            if nargout > 1
+                vsm = tubi.currentVelocity.average ;
+            end
+
         end
         
         % APDV methods
@@ -1703,6 +1829,9 @@ classdef TubULAR < handle
         end
         measurePIV2d(tubi, options)
         measurePIV3d(tubi, options)
+
+        measureTwist(tubi, options)
+
         function [vrms, timestamps] = measureRMSvelocityOverTime(tubi, options)
             % Parameters
             % ----------
@@ -2098,6 +2227,13 @@ classdef TubULAR < handle
                 tubi.velocityAverage.vv = vvsmM ;
             end
             
+            tubi.velocityAverage.readme = struct('v3d', ...
+                    '(#timePoints-1) x (nX*nY) x 3 float array, 3d velocities at PIV evaluation coordinates in um/dt (in rotated & scaled APDV coordinate frame)',...
+                'v2d', '(#timePoints-1) x (nX*nY) x 2 float array, 2d velocities at PIV evaluation coordinates in pixels/ min', ...
+                'v2dum', '(#timePoints-1) x (nX*nY) x 2 float array, 2d velocities at PIV evaluation coordinates in scaled pix/min, but proportional to um/min (scaled by dilation of map)', ...
+                'vn', '(#timePoints-1) x (nX*nY) float array, normal velocity at PIV evaluation coordinates in um/dt rs', ...
+                'vf', '(#timePoints-1) x (2*nU*(nV-1)) x 3 float array, 3d velocities at face barycenters in um/dt (in rotated & scaled APDV coordinate frame)', ...
+                'vv', '(#timePoints-1) x (nU*nV) x 3 float array, 3d velocities at (1x resolution) mesh vertices in um/min (in rotated & scaled APDV coordinate frame)') ;
             if nargout > 0 
                 vels = tubi.velocityAverage ;
             end

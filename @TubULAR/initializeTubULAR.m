@@ -143,6 +143,10 @@ tubi.dir.cutMesh = fullfile(meshDir, 'cutMesh') ;
 tubi.dir.rawRicciMesh = fullfile(meshDir, 'rawRicciMesh') ;
 tubi.dir.cylinderMeshClean = fullfile(tubi.dir.cylinderMesh, 'cleaned') ;
 tubi.dir.texturePatchIm = fullfile(meshDir, 'images_texturepatch') ;
+tubi.dir.mip = fullfile(meshDir, 'mips', 'dim%d_pages%04dto%04d') ;
+
+% Mips
+tubi.fullFileBase.mip = fullfile(tubi.dir.mip, 'mip_%06d.tif') ;
 
 % After gridding into (u,v) / (zeta,phi) pullback coords
 uvDir = fullfile(tubi.dir.mesh, sprintf('gridCoords_nU%04d_nV%04d', tubi.nU, tubi.nV)) ;
@@ -530,6 +534,16 @@ tubi.fullFileBase.clineDVhoop = ...
 tubi.fileName.writhe = fullfile(tubi.dir.writhe, ...
     ['writhe_sphi' uvexten '_avgpts.mat']) ;
 
+%% FEATURES
+% Define any features within specialized scripts
+% features =
+featuresDir = fullfile(uvDir, 'features') ;
+tubi.fileName.features = struct() ;
+tubi.fileName.features.fold = fullfile(featuresDir, ...
+  ['fold_locations_sphi' uvexten '_avgpts.mat']) ;
+tubi.fileName.features.features = ...
+  fullfile(featuresDir, ['lobe_dynamics' uvexten '.mat']) ;
+
 %% uvcutMesh
 tubi.fullFileBase.uvcutMesh = ...
     fullfile(uvmeshDir, 'uvcutMesh_%06d.mat') ;
@@ -750,6 +764,9 @@ if dynamic
     tubi.fileName.pivAvg.v3d = fullfile(tubi.dir.piv.avg, 'vM_avg.mat')  ;
     tubi.fileName.pivAvg.vv  = fullfile(tubi.dir.piv.avg, 'vvM_avg.mat') ;
     tubi.fileName.pivAvg.vf  = fullfile(tubi.dir.piv.avg, 'vfM_avg.mat') ;
+    tubi.fileName.pivAvg.vv2d  = fullfile(tubi.dir.piv.avg, 'vv2dM_avg.mat') ;
+    tubi.fileName.pivAvg.vf2d  = fullfile(tubi.dir.piv.avg, 'vf2dM_avg.mat') ;
+    tubi.fileName.pivAvg.twist  = fullfile(tubi.dir.piv.avg, 'twist_dvphi_ds_from_pivAvg.mat') ;
     % Helmholtz-Hodge and DEC -- Lagrangian averaging
     tubi.dir.piv.avgDEC = struct() ;
     tubi.dir.piv.avgDEC.data   = fullfile(tubi.dir.piv.avg, 'dec') ;

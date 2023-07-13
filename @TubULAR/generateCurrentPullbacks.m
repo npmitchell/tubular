@@ -1,6 +1,6 @@
 function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
     spcutMeshSm, pbOptions)
-%GENERATECURRENTPULLBACKS(QS, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
+%GENERATECURRENTPULLBACKS(tubi, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
 %   Generate 2D images of tissue mapped from 3D. If save_as_stack is true,
 %   then we generate a 3D stack of 2D images along the normal direction of
 %   the surface.
