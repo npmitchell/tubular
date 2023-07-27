@@ -340,7 +340,7 @@ for tid = tidx_todo
         if tiff_exists && ~overwrite_tiffs && ~overwrite_mips
             disp(['Output file already exists: ' name_out ])
         else
-            disp('Creating mips for this timepoint')
+            disp('Creating TIFF for this timepoint')
             % preallocate im_2_3D for speed, and 
             % Specify typename for correct output bitdepth
             tmp = imread(im0fn, 1) ;

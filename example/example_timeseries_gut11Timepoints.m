@@ -199,7 +199,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
         imsaneaxisorder = 'xyzc'; ... % axis order relative to mesh axis order by which to process the point cloud prediction. To keep as mesh coords, use xyzc
 
         % Name the output mesh directory --------------------------------------
-        mslsDir = [fullfile(projectDir, 'tubular_output') filesep];
+        mslsDir = [fullfile(projectDir, 'tubular_output_qbio23') filesep];
 
         % Surface detection parameters ----------------------------------------
         detectOptions = struct( 'channel', 1, ...

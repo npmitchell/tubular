@@ -53,6 +53,12 @@ else
     preview = true ;
 end
 
+if isfield(opts, 'previewIsosurface')
+    previewIsosurface = opts.previewIsosurface ;
+else
+    previewIsosurface = preview ;
+end
+
 if isfield(opts, 'pressure')
     pressure = opts.pressure ;
 else
@@ -260,8 +266,10 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 centers = centers(1:3) ;
             elseif strcmpi(center_guess, 'click') || strcmpi(center_guess, 'select')
                 if tidx == 1 || chooseSeedCenterEveryTimepoint
-                    msg = 'Flip to desired frame to select a center pt using <\^v>, then press Enter' ;
-                    framez = flipThroughStackFindLayer(pred, msg);
+                    msg = 'Flip to desired frame to select a center pt using arrows <^v>, then press Enter' ;
+                    pred2show = pred(:,:,:, opts.foreGroundChannel) ;
+                    framez = flipThroughStackFindLayer(pred2show, msg);
+                    clearvars pred2show
                     msg = 'Click on the desired point as a seed for the level set' ;
                     disp(msg)
                     title(msg)
@@ -384,8 +392,9 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
             % data_clipped(data_clipped < 0) = 0. ;
 
             % visualize result
-            if preview
-                clf
+            if preview & previewIsosurface
+                disp('Previewing data as isosurface -- close figure to continue')
+                close all
                 isosurface(data) ;
                 hold on;
                 isosurface(init_ls, ones(size(init_ls))) ;
