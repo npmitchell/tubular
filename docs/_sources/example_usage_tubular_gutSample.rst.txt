@@ -4,10 +4,12 @@ Example for using TubULAR: midgut data
 Here is an example using 20 minutes of Drosophila midgut develeopment, with the dataset available for download on FigShare: 
 Mitchell, Noah; Cislo, Dillon (2022): Example Timeseries -- Drosophila midgut, minimal data. figshare. Dataset. https://doi.org/10.6084/m9.figshare.20733091 
 
-All example datasets for this codebase are availble in the collection here:
+All example datasets for this codebase are available in the collection here:
 https://doi.org/10.6084/m9.figshare.c.6178351
 
 Note that the file paths have to be changed at the top of the script to the place where you download the data.
+
+The script below is found in tubular/example/example_timeseries_gut11Timepoints.m inside the repository.
 
 The default script below runs through just three timepoints. If you want to run more timepoints, adjust ``masterSettings.timePoints`` below. 
 

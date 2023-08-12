@@ -20,18 +20,13 @@ Note that the file paths have to be changed at the top of the script to the plac
 
 	%% Add paths
 	dataDir = '/mnt/data/tubular_test/single_coil_dynamic/' ;  % This is the path where the example dataset is downloaded
-	origpath = '../../' ; % This should be the path to tubular, like /mnt/data/code/tubular/
+	origpath = '../' ; % This should be the path to tubular, like /mnt/data/code/tubular/
 	cd(origpath)
 	addpath(origpath) ;
-	addpath(fullfile('utility', 'addpath_recurse'))
-	addpath_recurse('utility')
-	% Here we do use gptoolbox code: add to the MATLAB path here the location
-	% of your gptoolbox copy:
-	addpath_recurse('/mnt/data/code/gptoolbox')
+	addpath(genpath('utility'))
 	addpath('TexturePatch')
 	addpath('DECLab')
 	addpath('RicciFlow_MATLAB')
-	addpath(fullfile('utility','plotting'))
 	addpath(fullfile('utility','plotting'))
 	% go back to the data
 	cd(dataDir)

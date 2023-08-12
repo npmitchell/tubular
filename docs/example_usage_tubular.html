@@ -153,6 +153,9 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
+<li class="toctree-l1"><a class="reference internal" href="faq_debugging.html">Common issues in TubULAR and suggestions</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR: midgut data</a></li>
 </ul>
 <ul class="current">
@@ -234,18 +237,13 @@ Mitchell, Noah (2022): Synthetic Dataset 1. figshare. Dataset. <a class="referen
 
 <span class="c">%% Add paths</span><span class="w"></span>
 <span class="n">dataDir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'/mnt/data/tubular_test/single_coil_dynamic/'</span><span class="w"> </span><span class="p">;</span><span class="w">  </span><span class="c">% This is the path where the example dataset is downloaded</span><span class="w"></span>
-<span class="n">origpath</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'../../'</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% This should be the path to tubular, like /mnt/data/code/tubular/</span><span class="w"></span>
+<span class="n">origpath</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'../'</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% This should be the path to tubular, like /mnt/data/code/tubular/</span><span class="w"></span>
 <span class="nb">cd</span><span class="p">(</span><span class="n">origpath</span><span class="p">)</span><span class="w"></span>
 <span class="nb">addpath</span><span class="p">(</span><span class="n">origpath</span><span class="p">)</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
-<span class="nb">addpath</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="s">'utility'</span><span class="p">,</span><span class="w"> </span><span class="s">'addpath_recurse'</span><span class="p">))</span><span class="w"></span>
-<span class="n">addpath_recurse</span><span class="p">(</span><span class="s">'utility'</span><span class="p">)</span><span class="w"></span>
-<span class="c">% Here we do use gptoolbox code: add to the MATLAB path here the location</span><span class="w"></span>
-<span class="c">% of your gptoolbox copy:</span><span class="w"></span>
-<span class="n">addpath_recurse</span><span class="p">(</span><span class="s">'/mnt/data/code/gptoolbox'</span><span class="p">)</span><span class="w"></span>
+<span class="nb">addpath</span><span class="p">(</span><span class="nb">genpath</span><span class="p">(</span><span class="s">'utility'</span><span class="p">))</span><span class="w"></span>
 <span class="nb">addpath</span><span class="p">(</span><span class="s">'TexturePatch'</span><span class="p">)</span><span class="w"></span>
 <span class="nb">addpath</span><span class="p">(</span><span class="s">'DECLab'</span><span class="p">)</span><span class="w"></span>
 <span class="nb">addpath</span><span class="p">(</span><span class="s">'RicciFlow_MATLAB'</span><span class="p">)</span><span class="w"></span>
-<span class="nb">addpath</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="s">'utility'</span><span class="p">,</span><span class="s">'plotting'</span><span class="p">))</span><span class="w"></span>
 <span class="nb">addpath</span><span class="p">(</span><span class="nb">fullfile</span><span class="p">(</span><span class="s">'utility'</span><span class="p">,</span><span class="s">'plotting'</span><span class="p">))</span><span class="w"></span>
 <span class="c">% go back to the data</span><span class="w"></span>
 <span class="nb">cd</span><span class="p">(</span><span class="n">dataDir</span><span class="p">)</span><span class="w"></span>

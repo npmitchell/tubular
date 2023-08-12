@@ -27,7 +27,7 @@ Common issues in TubULAR and suggestions
 > Install Curve Fitting Toolbox or obtain a working version of the ``smooth`` function.
 
 - ``Undefined function 'perform_front_propagation_3d' for input arguments of type 'double'.``
-> This is a function that is inside gptoolbox, in the external folder. Make sure you run gptoolbox's external/toolbox_fast_marching/compile_mex.m successfully, run with MATLAB from within the parent directory (ie the current working directory should be something like ``tubular/external/gptoolbox/external/toolbox_fast_marching/``).  
+> This is a function that is inside gptoolbox, in the external folder. Make sure you run tubular/external/gptoolbox/external/toolbox_fast_marching/compile_mex.m successfully. Run with MATLAB from within the parent directory (ie the current working directory should be something like ``tubular/external/gptoolbox/external/toolbox_fast_marching/`` when you run the script compile_mex.m).  
 
 - ``Could NOT find Matlab`` error while compiling gptoolbox
 > As described on the gptoolbox `mex troubleshooting page <https://github.com/alecjacobson/gptoolbox/tree/master/mex>`_, cmake requires a hardcoded version mapping between MATLAB's numerical versions (e.g. 9.5) and their named versions (e.g. 2018b). Unfortunately this mapping goes stale a couple of times a year when new MATLAB versions are released. If you find that cmake can't figure out your MATLAB version, and you have a fairly recent version of MATLAB, it's likely that you need to update the mapping. To do so, update the ``MATLAB_VERSIONS_MAPPING`` variable in ``tubular/external/gptoolbox/mex/cmake/FindMATLAB.cmake`` and add your version number. You can check your MATLAB version using the ``version`` command. If you still run into an error like
@@ -53,3 +53,16 @@ Then you might consider hardcoding your local MATLAB directory into the cmake in
         find_package(Matlab REQUIRED COMPONENTS MEX_COMPILER MX_LIBRARY ENG_LIBRARY)
 
 where you should replace ``your/local/MATLAB/R?????`` with the correct path to your local MATLAB directory.
+
+- Image Processing Toolbox error could look like this, for example:
+
+.. code-block:: console
+
+		'regionprops3' requires Image Processing Toolbox.
+		Error in TubULAR/generateFastMarchingCenterlines (line 307)
+                  props = regionprops3(insideM, 'Volume') ;
+		Error in example_tubular_synthetic_dataset1 (line 291)
+		tubi.generateFastMarchingCenterlines(cntrlineOpts)
+
+Click on the link in the error message to the Image Processing Toolbox, install it and then rerun the script.
+

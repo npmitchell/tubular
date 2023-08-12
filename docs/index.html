@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for using TubULAR: midgut data" href="example_usage_tubular_gutSample.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Common issues in TubULAR and suggestions" href="faq_debugging.html" />
 
     <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
         <title>TubULAR 2022 documentation</title>
@@ -153,6 +153,9 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
+<li class="toctree-l1"><a class="reference internal" href="faq_debugging.html">Common issues in TubULAR and suggestions</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="example_usage_tubular_gutSample.html">Example for using TubULAR: midgut data</a></li>
 </ul>
 <ul>
@@ -237,52 +240,46 @@ With TubULAR, we can capture the tissue motion and quantify how it changes over 
 <p>TubULAR is written in MATLAB. There are example scripts in the Tubular repository, in <code class="docutils literal notranslate"><span class="pre">tubular/example/</span></code> (see the GitHub page here: <a class="reference external" href="https://github.com/npmitchell/tubular">https://github.com/npmitchell/tubular</a>). The basic workflow of a typical pipeline is shown below:</p>
 <a class="reference internal image-reference" href="_images/figSI_tubular_examplePipeline.jpg"><img alt="_images/figSI_tubular_examplePipeline.jpg" src="_images/figSI_tubular_examplePipeline.jpg" style="width: 891px;"/></a>
 </section>
-<section id="let-s-get-going">
-<h2>Let’s get going<a class="headerlink" href="#let-s-get-going" title="Permalink to this headline">#</a></h2>
-<p>Download TubULAR in Mac or Linux, navigate in Terminal to a path where you’d like to place the code, then clone the repository:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">tubular</span>
+<section id="installation-let-s-get-going">
+<h2>Installation (Let’s get going!)<a class="headerlink" href="#installation-let-s-get-going" title="Permalink to this headline">#</a></h2>
+<p>We have tested TubULAR in Linux and Mac platforms. We don’t currently guarantee that everything will work on a Windows machine. Here, we will walk through the installation, but if anything goes awry, check the FAQ page here:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq_debugging.html">Common issues in TubULAR and suggestions</a></li>
+</ul>
+</div>
+<p>To get going, install MATLAB from www.mathworks.com if you don’t already have an installation. To download TubULAR in Linux or Mac, just navigate in Terminal to a path where you’d like to place the code, then clone the repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">repository</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">npmitchell</span><span class="o">/</span><span class="n">tubular</span>
 </pre></div>
 </div>
-<p>There is now a directory called tubular. Open up MATLAB and take a look at some example scripts to get familiar.</p>
-<p>Updates to the code are installed running the following command from the <code class="docutils literal notranslate"><span class="pre">tubular</span></code> directory:</p>
+<p>There is now a directory called tubular. Open up MATLAB and take a look at some example scripts.</p>
+<p>Updates to the code are installed by running the following command from the <code class="docutils literal notranslate"><span class="pre">tubular</span></code> directory:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span>
 </pre></div>
 </div>
-<p>So now your tubular is definitely up-to-date. There are two linked repositories that are not pulled with this line: upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories within TubULAR, were pulled only because we used the <code class="docutils literal notranslate"><span class="pre">--recursive</span></code> option before. These two repositories are available here: <a class="reference external" href="http://github.com/DillonCislo/DEC">http://github.com/DillonCislo/DEC</a> and <a class="reference external" href="https://github.com/npmitchell/TexturePatch">https://github.com/npmitchell/TexturePatch</a>. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch, so if you didn’t clone with <code class="docutils literal notranslate"><span class="pre">--recursive</span></code>, you can clone them from Github and make sure their contents sit in those directories. To update them, run:</p>
+<p>So now your tubular is definitely up-to-date.</p>
+<p>Just FYI, there are two linked repositories that are not pulled with this line: upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories within TubULAR, were pulled only because we used the <code class="docutils literal notranslate"><span class="pre">--recursive</span></code> option before. These two repositories are available here: <a class="reference external" href="https://github.com/DillonCislo/DEC">https://github.com/DillonCislo/DEC</a> and <a class="reference external" href="https://github.com/npmitchell/TexturePatch">https://github.com/npmitchell/TexturePatch</a>. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch, so be sure to clone with the <a href="#id1"><span class="problematic" id="id2">``</span></a>–recursive’’ option and make sure their contents sit in those directories. To update them, run:</p>
 <blockquote>
 <div><p>cd TexturePatch</p>
 <p>git pull</p>
 <p>cd ../DECLab</p>
 <p>git pull</p>
 </div></blockquote>
-<p>We have tried to keep dependencies to a minimum. One package that TubULAR will try to use if your surfaces are so “prickly” that they would cause potential issues is gptoolbox. This is a <em>MATLAB</em> package, but it has some mex files, which are <em>MATLAB</em>’s way of interfacing with custom <em>C++</em> code. If that sounds complicated, don’t worry – all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a <em>Terminal</em> window. If you like, you can also skip this step, go straight to the examples and deal with any potential issues by tweaking TubULAR’s surface extraction parameters.</p>
-<p>First download <strong>gptoolbox</strong> inside <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code>.</p>
+<p>We have tried to keep dependencies to a minimum. One package that TubULAR will try to use if your surfaces are so “prickly” that they would cause potential issues is gptoolbox. This is a <em>MATLAB</em> package, but it has some mex files, which are <em>MATLAB</em>’s way of interfacing with custom <em>C++</em> code. If that sounds complicated, don’t worry – all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a <em>Terminal</em> window. You can also skip this step, go straight to the examples section further down on this page and deal with any potential issues by tweaking TubULAR’s surface extraction parameters.</p>
+<p>Now that you’ve cloned TubULAR, <strong>gptoolbox</strong> is found inside this TubULAR repository, and we need to compile one function in there. Let’s navigate there:</p>
 <blockquote>
-<div><p>cd tubular/external/</p>
-<p>git clone <a class="reference external" href="https://github.com/alecjacobson/gptoolbox.git">https://github.com/alecjacobson/gptoolbox.git</a></p>
+<div><p>cd tubular/external/gptoolbox/external/toolbox_fast_marching/</p>
+<p>compile_mex</p>
 </div></blockquote>
-<p>Now that you’ve downloaded gptoolbox, check that you have CMake installed, since this does not come preinstalled on Mac OSX or Windows machines. To install CMake, follow the instructions here <a class="reference external" href="https://cmake.org/install/">https://cmake.org/install/</a>. Installation can take ~20 minutes.
-Then go into the mex folder and compile gptoolbox:</p>
-<blockquote>
-<div><p>cd gptoolbox</p>
-<p>cd mex</p>
-<p>mkdir build</p>
-<p>cd build</p>
-<p>cmake ..</p>
-<p>make</p>
-</div></blockquote>
-<p>If this runs into trouble, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.</p>
-<p>Ok, now we still have to compile the gptoolbox functions by running <code class="docutils literal notranslate"><span class="pre">compile_mex.m</span></code> in MATLAB, from the directory <code class="docutils literal notranslate"><span class="pre">gptoolbox/external/toolbox_fast_marching</span></code>.
-In other words, open MATLAB, then open the script in <code class="docutils literal notranslate"><span class="pre">tubular/external/gptoolbox/external/toolbox_fast_marching/compile_mex.m</span></code>. Change the current working directory to the parent directory of this file (which is <code class="docutils literal notranslate"><span class="pre">`tubular/external/gptoolbox/external/toolbox_fast_marching/''),</span> <span class="pre">then</span> <span class="pre">run</span> <span class="pre">the</span> <span class="pre">file.</span> <span class="pre">In</span> <span class="pre">our</span> <span class="pre">hands,</span> <span class="pre">this</span> <span class="pre">works</span> <span class="pre">on</span> <span class="pre">Linux</span> <span class="pre">and</span> <span class="pre">Mac</span> <span class="pre">operating</span> <span class="pre">systems,</span> <span class="pre">and</span> <span class="pre">we</span> <span class="pre">expect</span> <span class="pre">it</span> <span class="pre">should</span> <span class="pre">work</span> <span class="pre">on</span> <span class="pre">Windows</span> <span class="pre">as</span> <span class="pre">well.</span> <span class="pre">If</span> <span class="pre">these</span> <span class="pre">functions</span> <span class="pre">compile,</span> <span class="pre">then</span> <span class="pre">we're</span> <span class="pre">good</span> <span class="pre">to</span> <span class="pre">go</span> <span class="pre">with</span> <span class="pre">gptoolbox.</span> <span class="pre">If</span> <span class="pre">this</span> <span class="pre">compilation</span> <span class="pre">fails,</span> <span class="pre">you</span> <span class="pre">might</span> <span class="pre">get</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">when</span> <span class="pre">running</span> <span class="pre">a</span> <span class="pre">script</span> <span class="pre">like</span> <span class="pre">``Undefined</span> <span class="pre">function</span> <span class="pre">'perform_front_propagation_3d'</span> <span class="pre">for</span> <span class="pre">input</span> <span class="pre">arguments</span> <span class="pre">of</span> <span class="pre">type</span> <span class="pre">'double'.</span></code></p>
-<p>TubULAR also uses CGAL, described in detail at <a class="reference external" href="https://www.cgal.org/">https://www.cgal.org/</a>. Installation instructions are at <a class="reference external" href="https://www.cgal.org/download.html">https://www.cgal.org/download.html</a>.</p>
+<p>In other words, open MATLAB, then open the script in <code class="docutils literal notranslate"><span class="pre">tubular/external/gptoolbox/external/toolbox_fast_marching/compile_mex.m</span></code>. Change the current working directory to the parent directory of this file (which is <code class="docutils literal notranslate"><span class="pre">`tubular/external/gptoolbox/external/toolbox_fast_marching/''),</span> <span class="pre">then</span> <span class="pre">run</span> <span class="pre">the</span> <span class="pre">file.</span> <span class="pre">In</span> <span class="pre">our</span> <span class="pre">hands,</span> <span class="pre">this</span> <span class="pre">works</span> <span class="pre">on</span> <span class="pre">Linux</span> <span class="pre">and</span> <span class="pre">Mac</span> <span class="pre">operating</span> <span class="pre">systems.</span> <span class="pre">For</span> <span class="pre">Windows</span> <span class="pre">machines,</span> <span class="pre">you</span> <span class="pre">will</span> <span class="pre">need</span> <span class="pre">a</span> <span class="pre">supported</span> <span class="pre">compiler</span> <span class="pre">--</span> <span class="pre">see</span> <span class="pre">https://www.mathworks.com/support/requirements/supported-compilers.html.</span> <span class="pre">If</span> <span class="pre">these</span> <span class="pre">functions</span> <span class="pre">compile,</span> <span class="pre">then</span> <span class="pre">we're</span> <span class="pre">good</span> <span class="pre">to</span> <span class="pre">go</span> <span class="pre">with</span> <span class="pre">**gptoolbox**.</span> <span class="pre">If</span> <span class="pre">this</span> <span class="pre">compilation</span> <span class="pre">fails,</span> <span class="pre">you</span> <span class="pre">might</span> <span class="pre">get</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">when</span> <span class="pre">running</span> <span class="pre">a</span> <span class="pre">TubULAR</span> <span class="pre">script</span> <span class="pre">like</span> <span class="pre">``Undefined</span> <span class="pre">function</span> <span class="pre">'perform_front_propagation_3d'</span> <span class="pre">for</span> <span class="pre">input</span> <span class="pre">arguments</span> <span class="pre">of</span> <span class="pre">type</span> <span class="pre">'double'.</span></code></p>
 <p>Making pullback projections will require the Optimization Toolbox, and we also use Curve Fitting Toolbox (for <code class="docutils literal notranslate"><span class="pre">smooth</span></code>), Statistics and Machine Learning Toolbox (or you can just rip the function <code class="docutils literal notranslate"><span class="pre">prctile</span></code> for this one), and the Image Processing Toolbox. You can install these in MATLAB by clicking in the Home tab of the toolbar: <code class="docutils literal notranslate"><span class="pre">Add-Ons</span> <span class="pre">&gt;</span> <span class="pre">Get</span> <span class="pre">Add-Ons</span></code> and searching for the Toolbox name. If you don’t have access to these toolboxes, you can get functions that do the trick ‘a la carte’.</p>
-<p>TubULAR uses “under-the-hood” PIVLab commands for refinement of the stabilized coordinates after the smoothed (s,phi) coordinates are defined. To install PIVLab, click the APPS tab in MATLAB (next to PLOTS and EDITOR tabs), click ‘Get More Apps’ and search for PIVLab.</p>
+<p>TubULAR uses “under-the-hood” PIVLab commands for refinement of the stabilized coordinates after the smoothed (s,phi) coordinates are defined. To install PIVLab, click the APPS tab in MATLAB (next to PLOTS and EDITOR tabs), click ‘Get More Apps’, search for PIVLab, and click Install.</p>
 <p>Now that you’ve downloaded TubULAR and gathered the dependencies, let’s look over the components of <strong>TubULAR</strong> and walk through an example.</p>
 </section>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
-<p>This toolkit is written for MATLAB 2018 and above. The toolkit uses some external code included in the <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code> directory, but also you will need to compile gptoolbox for some functionality (see above).</p>
+<p>This toolkit is written for MATLAB 2018 and above in Linux or Mac operating systems. The toolkit uses some external code included in the <code class="docutils literal notranslate"><span class="pre">tubular/external/</span></code> directory, but also you will need to compile gptoolbox for some functionality (see above).</p>
 </section>
 <section id="components">
 <h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">#</a></h2>
@@ -291,6 +288,161 @@ In other words, open MATLAB, then open the script in <code class="docutils liter
 <a class="reference internal image-reference" href="_images/fig_tubular_tissueFlow_v2.jpg"><img alt="_images/fig_tubular_tissueFlow_v2.jpg" src="_images/fig_tubular_tissueFlow_v2.jpg" style="width: 891px;"/></a>
 <p><strong>TexturePatch</strong> visualizes volumetric data on meshes in 3D and handles texture mapping data from one space/surface to another, such as the example gut images shown below:</p>
 <a class="reference internal image-reference" href="_images/gut_figSI_morphsnakes_caax_sequence_v3.jpg"><img alt="_images/gut_figSI_morphsnakes_caax_sequence_v3.jpg" src="_images/gut_figSI_morphsnakes_caax_sequence_v3.jpg" style="width: 891px;"/></a>
+</section>
+<section id="overview-of-a-tubular-script">
+<h2>Overview of a TubULAR script<a class="headerlink" href="#overview-of-a-tubular-script" title="Permalink to this headline">#</a></h2>
+<p>We first will define metadata in three forms: there is <code class="docutils literal notranslate"><span class="pre">expMeta</span></code> for experiment metadata, <code class="docutils literal notranslate"><span class="pre">fileMeta</span></code> for information on the filenames and formats, and <code class="docutils literal notranslate"><span class="pre">opts</span></code> for options for how TubULAR will handle the data. For example, the resolution (in microns per pixel, for ex) is in <code class="docutils literal notranslate"><span class="pre">expMeta</span></code>, <code class="docutils literal notranslate"><span class="pre">channelsUsed</span></code> specifies which channels (ex, GFP) are used in <code class="docutils literal notranslate"><span class="pre">fileMeta</span></code>, and <code class="docutils literal notranslate"><span class="pre">phiMethod</span></code> selecting how to stabilize motion along the circumferential axis is stored in <code class="docutils literal notranslate"><span class="pre">opts</span></code>. For organizational homology with ImSAnE, we also define <code class="docutils literal notranslate"><span class="pre">detectOptions</span></code> specifying how to detect the surface, and we place this struct inside a struct <code class="docutils literal notranslate"><span class="pre">xp</span></code> along with <code class="docutils literal notranslate"><span class="pre">expMeta</span></code> and <code class="docutils literal notranslate"><span class="pre">fileMeta</span></code>. We then define an instance of the TubULAR class by passing <code class="docutils literal notranslate"><span class="pre">xp</span></code> and <code class="docutils literal notranslate"><span class="pre">opts</span></code>. Creating the TubULAR instance will define some folders to store the output in <code class="docutils literal notranslate"><span class="pre">opts.meshDir</span></code>.</p>
+<p>We note that the user can choose to crease <code class="docutils literal notranslate"><span class="pre">xp</span></code> as an instance of ImSAnE’s Experiment class instead of as a simple struct. In that case, it also contains fileMeta, expMeta, and detectOptions information already.</p>
+<p>The next step is to define the surface meshes (if they don’t already exist in the output meshDir). By default, we do this by creating downsampled h5 files of the data, loading them into iLastik, training on the boundary surface that you want to capture, and then using a 3D active contour. To create the downsampled h5 files, run</p>
+<blockquote>
+<div><p>tubi.prepareIlastik() ;</p>
+</div></blockquote>
+<p>then to create the meshes we run</p>
+<blockquote>
+<div><p>tubi.getMeshes();</p>
+</div></blockquote>
+<p>We then define the coordinate frame in which we analyze the data, which we call APDV after ‘anterior-posterior-dorsal-ventral’. In practice, this could just be the XYZ coordinate system of the data, or something else like a proximal-distal axis. Note that this is just to define the viewing frame and not yet to define anything about the true anterior and posterior end of the sample (or proximal and distal end, etc). This step can either use the data frame, the elongation axis of the surface mesh at the reference timepoint, or the output of iLastik training. If you choose to use iLastik, you would train on a blob near one ‘anterior’ end, a blob near another ‘posterior’ end, background, and a blob near the ‘dorsal’ side to define a coordinate system.</p>
+<blockquote>
+<div><p>tubi.computeAPDVCoords() ;</p>
+</div></blockquote>
+<p>We then select the endcaps for the centerline computation (A and P) and a point along which we will form a branch cut for mapping to the plane (D). We call this D because we envision choosing the dorsal direction as the cut. Similarly to before, you can select these points by hand (point-and-click in a figure) or using iLastik to train on the particular endcaps and another blob elsewhere on the surface (in the dorsal direction).</p>
+<blockquote>
+<div><p>tubi.computeAPDpoints(apdvOpts);</p>
+</div></blockquote>
+<p>At this point, you could choose to render the data on the surfaces that you’ve extracted using</p>
+<blockquote>
+<div><p>tubi.plotSeriesOnSurfaceTexturePatch() ;</p>
+</div></blockquote>
+<p>We then define centerlines, which are 1D curves in 3D that pass from the anterior point to the posterior point through the center of the mesh.</p>
+<blockquote>
+<div><p>tubi.generateFastMarchingCenterlines() ;</p>
+</div></blockquote>
+<p>We also ‘clean’ the centerlines in case there are spurious results in isolated timepoints. If your sample is moving around a lot, you can choose a very large distance threshold to ignore the cleaning step.</p>
+<blockquote>
+<div><p>tubi.cleanFastMarchingCenterlines() ;</p>
+</div></blockquote>
+<p>Now we cut off a little endcap on each end around the ‘anterior’ and ‘posterior’ endpoints.</p>
+<blockquote>
+<div><p>tubi.sliceMeshEndcaps();</p>
+</div></blockquote>
+<p>Triangles of the mesh triangulation near the endpoints need to have vertices with more than two edges for technical reasons. So we remove “ears” on the endcaps of the cylindrical meshes:</p>
+<blockquote>
+<div><p>tubi.cleanCylMeshes();</p>
+</div></blockquote>
+<p>Finally, we can create pullbacks to the plane for each timepoint:</p>
+<blockquote>
+<div><dl>
+<dt>for tt = tubi.xp.fileMeta.timePoints</dt><dd><p>tubi.setTime(tt) ;</p>
+<p>% Create the Cut Mesh
+tubi.generateCurrentCutMesh(options)</p>
+<blockquote>
+<div><p>% Plot the cutPath (cutP) in 3D</p>
+</div></blockquote>
+<p>tubi.plotCutPath(tubi.currentMesh.cutMesh, tubi.currentMesh.cutPath)</p>
+<blockquote>
+<div><p>tubi.getCurrentUVCutMesh() ;</p>
+</div></blockquote>
+<p>spcutMeshOptions = struct() ;
+spcutMeshOptions.t0_for_phi0 = tubi.t0set() ;  % which timepoint do we define corners of pullback map
+spcutMeshOptions.save_phi0patch = false ;
+spcutMeshOptions.iterative_phi0 = false ;
+spcutMeshOptions.smoothingMethod = ‘none’ ;
+tubi.generateCurrentSPCutMesh([], spcutMeshOptions) ;</p>
+<p>pbOptions = struct() ;
+pbOptions.numLayers = [0 1] ; % how many onion layers over which to take MIP
+tubi.generateCurrentPullbacks([], [], [], pbOptions) ;</p>
+</dd>
+</dl>
+<p>end</p>
+</div></blockquote>
+<p>Now that we have a partially stabilized parameterization, we can smooth the (s,phi) grid meshes in time, if desired. A width of 0 will result in no smoothing. We find this smoothing step helps with the subsequent PIV stabilization.</p>
+<blockquote>
+<div><p>options = struct() ;
+options.width = 4 ;  % width of kernel, in #timepoints, to use in smoothing meshes
+tubi.smoothDynamicSPhiMeshes(options)</p>
+<p>% Redo Pullbacks with time-smoothed meshes
+for tt = tubi.xp.fileMeta.timePoints</p>
+<blockquote>
+<div><p>tidx = tubi.xp.tIdx(tt);</p>
+<p>% Load the data for the current time point ————————
+tubi.setTime(tt) ;</p>
+<p>% Establish custom Options for MIP –&gt; choose which pullbacks to use
+pbOptions = struct() ;
+pbOptions.numLayers = [0 5] ; % how many onion layers over which to take MIP
+pbOptions.generate_spsm = true ;
+pbOptions.generate_sp = false ;
+pbOptions.overwrite = false ;
+tubi.generateCurrentPullbacks([], [], [], pbOptions) ;</p>
+</div></blockquote>
+<p>end</p>
+</div></blockquote>
+<p>We are in a position to stabilize any residual motion in the pullback plane using PIV to modify the parameterization of the curved surfaces. To avoid artifacts near the edges of the pullback image, we “double cover” the surface by tiling the pullback image along the periodic dimension. Note that measuring these 2D velocities immediately gives us 3D velocities of the material by connecting material points in meshes across timepoints.</p>
+<blockquote>
+<div><p>% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE
+options = struct() ;
+options.coordsys = ‘spsm’ ;
+tubi.doubleCoverPullbackImages(options)</p>
+<p>%% PERFORM PIV ON PULLBACK MIPS
+% Compute PIV either with built-in phase correlation or in PIVLab
+options = struct() ;
+options.overwrite = true ;
+tubi.measurePIV2d(options) ;</p>
+<p>%% MEAUSRE VELOCITIES
+% Make map from pixel to xyz to compute velocities in 3d for smoothed meshes
+tubi.measurePIV3d() ;</p>
+</div></blockquote>
+<p>You might want to smooth the velocities a bit</p>
+<blockquote>
+<div><p>% Time-averaging of velocities along pullback pathlines
+options = struct() ;
+tubi.timeAverageVelocities(options)</p>
+<p>% Velocity plots for pathline time averaging
+options.plot_vxyz = false ;
+options.invertImage = true ;
+options.averagingStyle = ‘Lagrangian’;
+tubi.plotTimeAvgVelocities(options)</p>
+</div></blockquote>
+<p>At this point, we encourage you to explore the analysis methods available, depending on your goals. For example, we can compute divergence and curl of the velocity fields.</p>
+<blockquote>
+<div><p>tubi.helmholtzHodge() ;</p>
+</div></blockquote>
+<p>and compute the rate of area change</p>
+<blockquote>
+<div><p>tubi.measureMetricKinematics() ;
+tubi.plotMetricKinematics() ;</p>
+</div></blockquote>
+<p>We can save and plot the material pathlines and render the data in the stabilized frame. Note that if there are residual errors in the stabilization, they will compound over time.</p>
+<blockquote>
+<div><p>tubi.measurePullbackPathlines() ;</p>
+<p>%% Pullback pathline texturepatching (PIV pathline –&gt; most stable image sequence)
+for tt = tubi.xp.fileMeta.timePoints</p>
+<blockquote>
+<div><p>% Load the data for the current time point ————————
+tubi.setTime(tt) ;</p>
+<p>% Establish custom Options for MIP –&gt; choose which pullbacks to use
+pbOptions = struct() ;
+pbOptions.numLayers = [0 5] ; % how many onion layers over which to take MIP
+pbOptions.generate_spsm = false ;
+pbOptions.generate_sp = false ;
+pbOptions.overwrite = false ;
+pbOptions.generate_pivPathline = true ;
+tubi.generateCurrentPullbacks([], [], [], pbOptions) ;</p>
+</div></blockquote>
+<p>end</p>
+</div></blockquote>
+<p>We can compute the material strain rate:</p>
+<blockquote>
+<div><p>tubi.measureStrainRate() ;</p>
+</div></blockquote>
+<p>or compute PCA of the velocity field:</p>
+<blockquote>
+<div><p>tubi.getPCAoverTime(options);</p>
+</div></blockquote>
+<p>or perform a Laplace-Beltrami Spectral (LBS) decomposition:</p>
+<blockquote>
+<div><p>tubi.getLBSoverTime(options)</p>
+</div></blockquote>
+<p>Happy analysis!</p>
 </section>
 <section id="let-s-walk-through-an-example-or-two">
 <h2>Let’s walk through an example or two<a class="headerlink" href="#let-s-walk-through-an-example-or-two" title="Permalink to this headline">#</a></h2>
@@ -335,6 +487,22 @@ In other words, open MATLAB, then open the script in <code class="docutils liter
 </section>
 <section id="optional-packages-for-extra-functionality">
 <h2>Optional packages for extra functionality<a class="headerlink" href="#optional-packages-for-extra-functionality" title="Permalink to this headline">#</a></h2>
+<p><strong>gptoolbox</strong></p>
+<p>There are some functions from <strong>gptoolbox</strong> that are used only with custom options. If you want all this functionality, we’ll need to compile <strong>gptoolbox</strong>. To do so, check that you have CMake installed since this does not come preinstalled on Mac OSX (or Windows) machines. To install CMake, follow the instructions here <a class="reference external" href="https://cmake.org/install/">https://cmake.org/install/</a>. Installation takes just a minute on a Mac. As of 2023, If you’re on a Mac and haven’t installed CMake before, you can download a dmg file from <a class="reference external" href="https://cmake.org/download/">https://cmake.org/download/</a>, copy the application to the Applications folder, then open Terminal and run</p>
+<blockquote>
+<div><p>PATH=”/Applications/CMake.app/Contents/bin”:”$PATH”</p>
+</div></blockquote>
+<p>on a Terminal window. Now we can make the gptoolbox functions by going into the mex folder and compile gptoolbox:</p>
+<blockquote>
+<div><p>cd mex</p>
+<p>mkdir build</p>
+<p>cd build</p>
+<p>cmake ..</p>
+<p>make</p>
+</div></blockquote>
+<p>If this runs into trouble, it is possible that you may have to tweak the CMake file depending on your computer specs. StackExchange is a place to look for any errors you might get.</p>
+<p><strong>CGAL</strong></p>
+<p>TubULAR also uses CGAL, described in detail at <a class="reference external" href="https://www.cgal.org/">https://www.cgal.org/</a>. Installation instructions are at <a class="reference external" href="https://www.cgal.org/download.html">https://www.cgal.org/download.html</a>.</p>
 <p><strong>ImSAnE</strong></p>
 <p>ImSAnE is a tissue cartography package developed by Idse Heemskirk and Sebastian Streichan [1]. Users already familiar with the ImSAnE workflow can access all the power of TubULAR within ImSAnE. If you’ve never heard of this before, you can take a look at <a class="reference external" href="https://www.nature.com/articles/nmeth.3648">this paper</a> for more details, or you can just skip this section without worry. To use ImSAnE with tubular or to use tubular inside ImSAnE, get the latest version of ImSAnE:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
@@ -423,12 +591,12 @@ In other words, open MATLAB, then open the script in <code class="docutils liter
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="example_usage_tubular_gutSample.html">
+          <a class="next-page" href="faq_debugging.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Example for using TubULAR: midgut data</div>
+                <div class="title">Common issues in TubULAR and suggestions</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -468,9 +636,10 @@ In other words, open MATLAB, then open the script in <code class="docutils liter
 <li><a class="reference internal" href="#">Welcome to TubULAR’s documentation!</a><ul>
 <li><a class="reference internal" href="#what-is-it">What is it?</a></li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
-<li><a class="reference internal" href="#let-s-get-going">Let’s get going</a></li>
+<li><a class="reference internal" href="#installation-let-s-get-going">Installation (Let’s get going!)</a></li>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li><a class="reference internal" href="#components">Components</a></li>
+<li><a class="reference internal" href="#overview-of-a-tubular-script">Overview of a TubULAR script</a></li>
 <li><a class="reference internal" href="#let-s-walk-through-an-example-or-two">Let’s walk through an example or two</a><ul>
 </ul>
 </li>
