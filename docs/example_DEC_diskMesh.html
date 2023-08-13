@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Example for analyzing flow on a spherical surface" href="example_DEC_sphericalMesh.html" /><link rel="prev" title="DEC is a Discrete Exterior Calculus toolbox for MATLAB." href="DEC.html" />
 
-    <meta name="generator" content="sphinx-4.4.0, furo 2022.03.04"/>
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.07.26 -->
         <title>Example for analyzing flow on a planar surface - TubULAR 2022 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=935aa2abcc5c1da4283d1dc201fb1f0add16d23a" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=25ceb02ed1c46dc30f2321ff83e92799f69dfdb9" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -36,10 +36,12 @@
   }
 </style></head>
   <body>
+    
     <script>
       document.body.dataset.theme = localStorage.getItem("theme") || "auto";
     </script>
     
+
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="svg-toc" viewBox="0 0 24 24">
     <title>Contents</title>
@@ -147,7 +149,7 @@
   <span class="sidebar-brand-text">TubULAR 2022 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -178,7 +180,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Principal contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 has-children"><a class="reference internal" href="TubULAR.html">TubULAR</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="TubULAR.html">TubULAR</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of TubULAR</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#coordinate-systems">Coordinate Systems</a></li>
@@ -186,7 +188,7 @@
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#properties">Properties</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#module-@TubULAR">Full Contents:</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TubULAR.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="DEC.html">DEC is a Discrete Exterior Calculus toolbox for MATLAB.</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="DEC.html">DEC is a Discrete Exterior Calculus toolbox for MATLAB.</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of DEC is a Discrete Exterior Calculus toolbox for MATLAB.</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Example for analyzing flow on a planar surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="example_DEC_sphericalMesh.html">Example for analyzing flow on a spherical surface</a></li>
 </ul>
@@ -209,7 +211,9 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -224,314 +228,314 @@
         </div>
         <article role="main">
           <section id="example-for-analyzing-flow-on-a-planar-surface">
-<h1>Example for analyzing flow on a planar surface<a class="headerlink" href="#example-for-analyzing-flow-on-a-planar-surface" title="Permalink to this headline">#</a></h1>
+<h1>Example for analyzing flow on a planar surface<a class="headerlink" href="#example-for-analyzing-flow-on-a-planar-surface" title="Permalink to this heading">#</a></h1>
 <p>The code below ascribes a flow to a planar disk-shaped surface and decomposes this flow into it’s curl-free and divergence-free components. If the user has <code class="docutils literal notranslate"><span class="pre">gptoolbox</span></code> installed, then we compare to Finite Element methods, but we simply skip this comparison if not.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">%% DEC TEST FLAT CARTESIAN GEOMETRY =======================================</span><span class="w"></span>
-<span class="c">% This is a test of the Helmholtz-Hodge decomposition functionality of the</span><span class="w"></span>
-<span class="c">% Discrete Exterior Calculus implementation</span><span class="w"></span>
-<span class="c">%</span><span class="w"></span>
-<span class="c">%   by Dillon Cislo and Noah P Mitchell 2022</span><span class="w"></span>
-<span class="c">%</span><span class="w"></span>
-<span class="c">%==========================================================================</span><span class="w"></span>
-
-<span class="nb">clear</span><span class="p">;</span><span class="w"> </span><span class="n">close</span><span class="w"> </span><span class="s">all</span><span class="p">;</span><span class="w"> </span><span class="nb">clc</span><span class="p">;</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% Create a triangulation of the unit disk</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="p">[</span><span class="n">tutorialDir</span><span class="p">,</span><span class="w"> </span><span class="o">~</span><span class="p">,</span><span class="w"> </span><span class="o">~</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">fileparts</span><span class="p">(</span><span class="n">matlab</span><span class="p">.</span><span class="n">desktop</span><span class="p">.</span><span class="n">editor</span><span class="p">.</span><span class="n">getActiveFilename</span><span class="p">);</span><span class="w"></span>
-<span class="nb">cd</span><span class="p">(</span><span class="n">tutorialDir</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">%% DEC TEST FLAT CARTESIAN GEOMETRY =======================================</span>
+<span class="c">% This is a test of the Helmholtz-Hodge decomposition functionality of the</span>
+<span class="c">% Discrete Exterior Calculus implementation</span>
+<span class="c">%</span>
+<span class="c">%   by Dillon Cislo and Noah P Mitchell 2022</span>
+<span class="c">%</span>
+<span class="c">%==========================================================================</span>
+
+<span class="nb">clear</span><span class="p">;</span><span class="w"> </span><span class="n">close</span><span class="w"> </span><span class="s">all</span><span class="p">;</span><span class="w"> </span><span class="nb">clc</span><span class="p">;</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% Create a triangulation of the unit disk</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="p">[</span><span class="n">tutorialDir</span><span class="p">,</span><span class="w"> </span><span class="o">~</span><span class="p">,</span><span class="w"> </span><span class="o">~</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">fileparts</span><span class="p">(</span><span class="n">matlab</span><span class="p">.</span><span class="n">desktop</span><span class="p">.</span><span class="n">editor</span><span class="p">.</span><span class="n">getActiveFilename</span><span class="p">);</span>
+<span class="nb">cd</span><span class="p">(</span><span class="n">tutorialDir</span><span class="p">)</span>
 
-<span class="nb">load</span><span class="p">(</span><span class="s">'testData.mat'</span><span class="p">,</span><span class="w"> </span><span class="s">'diskTri'</span><span class="p">)</span><span class="w"></span>
-<span class="nb">cd</span><span class="p">(</span><span class="s">'..'</span><span class="p">)</span><span class="w"></span>
+<span class="nb">load</span><span class="p">(</span><span class="s">&#39;testData.mat&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;diskTri&#39;</span><span class="p">)</span>
+<span class="nb">cd</span><span class="p">(</span><span class="s">&#39;..&#39;</span><span class="p">)</span>
 
-<span class="c">% Re-create the triangulation</span><span class="w"></span>
-<span class="n">TR</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">diskTri</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
-<span class="n">V</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">diskTri</span><span class="p">.</span><span class="n">Points</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
-<span class="n">F</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">diskTri</span><span class="p">.</span><span class="n">ConnectivityList</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="c">% Re-create the triangulation</span>
+<span class="n">TR</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">diskTri</span><span class="w"> </span><span class="p">;</span>
+<span class="n">V</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">diskTri</span><span class="p">.</span><span class="n">Points</span><span class="w"> </span><span class="p">;</span>
+<span class="n">F</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">diskTri</span><span class="p">.</span><span class="n">ConnectivityList</span><span class="w"> </span><span class="p">;</span>
 
-<span class="c">% Edge connectivity list</span><span class="w"></span>
-<span class="n">E</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">edges</span><span class="p">(</span><span class="n">TR</span><span class="p">);</span><span class="w"></span>
+<span class="c">% Edge connectivity list</span>
+<span class="n">E</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">edges</span><span class="p">(</span><span class="n">TR</span><span class="p">);</span>
 
-<span class="c">% Calculate centroid of faces</span><span class="w"></span>
-<span class="nb">COM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">cat</span><span class="p">(</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="p">:)</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="nb">COM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">mean</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
+<span class="c">% Calculate centroid of faces</span>
+<span class="nb">COM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">cat</span><span class="p">(</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="p">:),</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="p">:)</span><span class="w"> </span><span class="p">);</span>
+<span class="nb">COM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">mean</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">);</span>
 
-<span class="c">% Calculate edge midpoints</span><span class="w"></span>
-<span class="n">Emp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">E</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="p">:)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">E</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),:)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% Generate Discrete Exterior Calculus Object</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% profile on</span><span class="w"></span>
-<span class="n">DEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">DiscreteExteriorCalculus</span><span class="p">(</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="c">% profile viewer</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% View Results</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% triplot(TR);</span><span class="w"></span>
-<span class="c">% axis equal</span><span class="w"></span>
-
-<span class="c">%% ************************************************************************</span><span class="w"></span>
-<span class="c">% *************************************************************************</span><span class="w"></span>
-<span class="c">%          COMPARE DEC DIFFERENTIAL OPERATORS TO FEM OPERATORS</span><span class="w"></span>
-<span class="c">% *************************************************************************</span><span class="w"></span>
-<span class="c">% *************************************************************************</span><span class="w"></span>
-
-<span class="nb">clc</span><span class="p">;</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% Compare the Scalar Gradient Operator</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-
-<span class="n">gradDEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">sharpPD</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">d0</span><span class="p">;</span><span class="w"></span>
-
-<span class="k">try</span><span class="w"></span>
-<span class="n">gradFEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">grad</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">);</span><span class="w"></span>
-<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">gradFEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">gradDEC</span><span class="p">(:))));</span><span class="w"></span>
-<span class="nb">fprintf</span><span class="p">(</span><span class="s">'Maximum Difference in Gradient Operators = %f\n'</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span><span class="w"></span>
-
-<span class="k">catch</span><span class="w"></span>
-<span class="nb">disp</span><span class="p">(</span><span class="s">'To compare DEC against FEM results, install gptoolbox and add to your MATLAB path'</span><span class="p">)</span><span class="w"></span>
-<span class="k">end</span><span class="w"></span>
-
-<span class="nb">clear</span><span class="w"> </span><span class="n">gradFEM</span><span class="w"> </span><span class="n">gradDEC</span><span class="w"> </span><span class="n">maxErr</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% Compare Scalar Laplacian Operator</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-
-<span class="c">% The non-area weighted Laplacians</span><span class="w"></span>
-<span class="n">LN_DEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">dd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">hd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">d0</span><span class="p">;</span><span class="w"></span>
-
-<span class="k">try</span><span class="w"></span>
-<span class="n">LN_FEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">cotmatrix</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">);</span><span class="w"></span>
-<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">LN_FEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">LN_DEC</span><span class="p">(:))));</span><span class="w"></span>
-<span class="nb">fprintf</span><span class="p">(</span><span class="s">'Maximum Difference in Bare Laplacian Operators = %f\n'</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span><span class="w"></span>
-
-<span class="n">clear</span><span class="w"> </span><span class="s">LN_FEM</span><span class="w"> </span><span class="s">LN_DEC</span><span class="w"></span>
-<span class="k">catch</span><span class="w"></span>
-<span class="nb">disp</span><span class="p">(</span><span class="s">'To compare DEC against FEM results, install gptoolbox and add to your MATLAB path'</span><span class="p">)</span><span class="w"></span>
-
-<span class="k">end</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% Compare Vector Divergence Operator</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-
-<span class="n">divDEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">inv</span><span class="p">(</span><span class="n">DEC</span><span class="p">.</span><span class="n">hd0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">dd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">hd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">flatDP</span><span class="p">;</span><span class="w"></span>
-
-<span class="k">try</span><span class="w"></span>
-<span class="n">divFEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">div</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">);</span><span class="w"></span>
-<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">divFEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">divDEC</span><span class="p">(:))));</span><span class="w"></span>
-<span class="nb">fprintf</span><span class="p">(</span><span class="s">'Maxumum Difference Between DEC Divergence and Bare FEM Divergence = %f\n'</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span><span class="w"></span>
-
-<span class="c">% Re-scale the bare FEM divergence operator</span><span class="w"></span>
-<span class="n">divFEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="nb">diag</span><span class="p">(</span><span class="n">invVA</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">divFEM</span><span class="p">;</span><span class="w"></span>
-
-<span class="c">% THIS SCALING BRINGS THE ELEMENTS MUCH CLOSER TO EACH OTHER, BUT THEIR</span><span class="w"></span>
-<span class="c">% SPARSITY PATTERNS ARE DIFFERENT AND I DO NOT UNDERSTAND WHY</span><span class="w"></span>
-<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">divFEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">divDEC</span><span class="p">(:))));</span><span class="w"></span>
-<span class="nb">fprintf</span><span class="p">(</span><span class="s">'Maxumum Difference Between DEC Divergence and Weighted FEM Divergence = %f\n'</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span><span class="w"></span>
-
-<span class="n">clear</span><span class="w"> </span><span class="s">divFEM</span><span class="w"> </span><span class="s">divDEC</span><span class="w"> </span><span class="s">maxErr</span><span class="w"></span>
-<span class="k">catch</span><span class="w"></span>
-<span class="nb">disp</span><span class="p">(</span><span class="s">'To compare DEC against FEM results, install gptoolbox and add to your MATLAB path'</span><span class="p">)</span><span class="w"></span>
-
-<span class="k">end</span><span class="w"></span>
-
-
-<span class="c">%% ************************************************************************</span><span class="w"></span>
-<span class="c">% *************************************************************************</span><span class="w"></span>
-<span class="c">%                   TEST HELMHOLTZ-HODGE DECOMPOSITION</span><span class="w"></span>
-<span class="c">% *************************************************************************</span><span class="w"></span>
-<span class="c">% *************************************************************************</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% Design a tangent-vector field</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-
-<span class="n">g</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">@(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="nb">exp</span><span class="p">(</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">.^</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">Ufunc</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">@(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">),</span><span class="w"> </span><span class="nb">zeros</span><span class="p">(</span><span class="nb">size</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"> </span><span class="p">];</span><span class="w"></span>
-<span class="n">U</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Ufunc</span><span class="p">(</span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
-
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-<span class="c">% View Results</span><span class="w"></span>
-<span class="c">%--------------------------------------------------------------------------</span><span class="w"></span>
-
-<span class="c">% ssf = 20;</span><span class="w"></span>
-<span class="c">%</span><span class="w"></span>
-<span class="c">% triplot(triangulation(F, V(:, [1 2])));</span><span class="w"></span>
-<span class="c">% hold on</span><span class="w"></span>
-<span class="c">% quiver( COM(1:ssf:end,1), COM(1:ssf:end,2), ...</span><span class="w"></span>
-<span class="c">%     U(1:ssf:end,1), U(1:ssf:end,2), ...</span><span class="w"></span>
-<span class="c">%     1, 'LineWidth', 2, 'Color', 'k' );</span><span class="w"></span>
-<span class="c">% hold off</span><span class="w"></span>
-<span class="c">% axis equal</span><span class="w"></span>
-<span class="c">%</span><span class="w"></span>
-<span class="c">% clear ssf</span><span class="w"></span>
-
-<span class="c">%% Perform Decomposition ==================================================</span><span class="w"></span>
-
-<span class="nb">clc</span><span class="p">;</span><span class="w"></span>
-
-<span class="c">% Perform Helmholtz-Hodge decomposition</span><span class="w"></span>
-<span class="p">[</span><span class="n">divU</span><span class="p">,</span><span class="w"> </span><span class="n">rotU</span><span class="p">,</span><span class="w"> </span><span class="n">harmU</span><span class="p">,</span><span class="w"> </span><span class="n">scalarP</span><span class="p">,</span><span class="w"> </span><span class="n">vectorP</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">DEC</span><span class="p">.</span><span class="n">helmholtzHodgeDecomposition</span><span class="p">(</span><span class="n">U</span><span class="p">);</span><span class="w"></span>
-
-<span class="c">% Normalize rows for plotting</span><span class="w"></span>
-<span class="n">plotU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">U</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="n">plotDivU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">divU</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">divU</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="n">plotRotU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">rotU</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">rotU</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="n">plotHU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">harmU</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">harmU</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-
-<span class="c">% Sub-sampling factor for vector field visualization</span><span class="w"></span>
-<span class="n">ssf</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span><span class="w"></span>
-
-<span class="n">figure</span><span class="w"></span>
-<span class="s">lw</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% line width for quiver arrows</span><span class="w"></span>
-
-<span class="c">% The full vector field ---------------------------------------------------</span><span class="w"></span>
-
-<span class="c">% Plot based on internal angles</span><span class="w"></span>
-<span class="n">s12</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),:)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),:),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="n">s31</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">3</span><span class="p">),:)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),:),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="n">s23</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">3</span><span class="p">),:)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),:),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="n">a23</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">acos</span><span class="p">((</span><span class="n">s12</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s31</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s23</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="o">./</span><span class="p">(</span><span class="mi">2</span><span class="o">.*</span><span class="n">s12</span><span class="o">.*</span><span class="n">s31</span><span class="p">));</span><span class="w"></span>
-<span class="n">a31</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">acos</span><span class="p">((</span><span class="n">s23</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s12</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s31</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="o">./</span><span class="p">(</span><span class="mi">2</span><span class="o">.*</span><span class="n">s23</span><span class="o">.*</span><span class="n">s12</span><span class="p">));</span><span class="w"></span>
-<span class="n">a12</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">acos</span><span class="p">((</span><span class="n">s31</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s23</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s12</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="o">./</span><span class="p">(</span><span class="mi">2</span><span class="o">.*</span><span class="n">s31</span><span class="o">.*</span><span class="n">s23</span><span class="p">));</span><span class="w"></span>
-<span class="n">internal_angles</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="n">a23</span><span class="w"> </span><span class="n">a31</span><span class="w"> </span><span class="n">a12</span><span class="p">];</span><span class="w"></span>
-
-
-<span class="n">UColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">(</span><span class="w"> </span><span class="n">F</span><span class="p">(:),</span><span class="w"> </span><span class="nb">repmat</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">internal_angles</span><span class="p">,</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">UColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">UColors</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">U</span><span class="p">;</span><span class="w"></span>
-<span class="n">UColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">UColors</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
-
-<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
-<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">'Faces'</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">'Vertices'</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">'FaceVertexCData'</span><span class="p">,</span><span class="w"> </span><span class="n">UColors</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'FaceColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'interp'</span><span class="p">,</span><span class="w"> </span><span class="s">'EdgeColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'none'</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'SpecularStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">'DiffuseStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'AmbientStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">on</span><span class="w"></span>
-<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">plotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">'LineWidth'</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">'Color'</span><span class="p">,</span><span class="w"> </span><span class="s">'k'</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">off</span><span class="w"></span>
-<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span><span class="w"></span>
-<span class="nb">camlight</span><span class="w"></span>
-<span class="nb">title</span><span class="p">(</span><span class="s">'The Vector Field and its Norm'</span><span class="p">);</span><span class="w"></span>
-<span class="n">colorbar</span><span class="w"></span>
-
-<span class="s">%</span><span class="w"> </span><span class="s">The</span><span class="w"> </span><span class="s">curl-free</span><span class="w"> </span><span class="s">part</span><span class="w"> </span><span class="o">------------------------------------------------------</span><span class="w"></span>
-<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
-<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">'Faces'</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">'Vertices'</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">'FaceVertexCData'</span><span class="p">,</span><span class="w"> </span><span class="n">scalarP</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'FaceColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'interp'</span><span class="p">,</span><span class="w"> </span><span class="s">'EdgeColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'none'</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'SpecularStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">'DiffuseStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'AmbientStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">on</span><span class="w"></span>
-<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">plotDivU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotDivU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotDivU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">'LineWidth'</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">'Color'</span><span class="p">,</span><span class="w"> </span><span class="s">'k'</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">off</span><span class="w"></span>
-<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span><span class="w"></span>
-<span class="nb">camlight</span><span class="w"></span>
-<span class="nb">title</span><span class="p">(</span><span class="s">'The Irrotational (Curl-Free) Part and the Scalar Potential'</span><span class="p">);</span><span class="w"></span>
-<span class="n">colorbar</span><span class="w"></span>
-
-<span class="s">%</span><span class="w"> </span><span class="s">The</span><span class="w"> </span><span class="s">divergence-free</span><span class="w"> </span><span class="s">part</span><span class="w"> </span><span class="o">------------------------------------------------</span><span class="w"></span>
-<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span><span class="w"></span>
-<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">'Faces'</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">'Vertices'</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">'FaceVertexCData'</span><span class="p">,</span><span class="w"> </span><span class="n">vectorP</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'FaceColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'flat'</span><span class="p">,</span><span class="w"> </span><span class="s">'EdgeColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'none'</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'SpecularStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">'DiffuseStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'AmbientStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">on</span><span class="w"></span>
-<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">plotRotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotRotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotRotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">'LineWidth'</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">'Color'</span><span class="p">,</span><span class="w"> </span><span class="s">'k'</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">off</span><span class="w"></span>
-<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span><span class="w"></span>
-<span class="nb">camlight</span><span class="w"></span>
-<span class="nb">title</span><span class="p">(</span><span class="s">'The Rotational (Divergence-Free) Part and the Vector Potential'</span><span class="p">);</span><span class="w"></span>
-<span class="n">colorbar</span><span class="w"></span>
-
-<span class="s">%</span><span class="w"> </span><span class="s">The</span><span class="w"> </span><span class="s">harmonic</span><span class="w"> </span><span class="s">part</span><span class="w"> </span><span class="o">-------------------------------------------------------</span><span class="w"></span>
-<span class="n">HUColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">(</span><span class="w"> </span><span class="n">F</span><span class="p">(:),</span><span class="w"> </span><span class="nb">repmat</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">internal_angles</span><span class="p">,</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">HUColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">HUColors</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">harmU</span><span class="p">;</span><span class="w"></span>
-<span class="n">HUColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">HUColors</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
-
-
-<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span><span class="w"></span>
-<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">'Faces'</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">'Vertices'</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">'FaceVertexCData'</span><span class="p">,</span><span class="w"> </span><span class="n">HUColors</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'FaceColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'interp'</span><span class="p">,</span><span class="w"> </span><span class="s">'EdgeColor'</span><span class="p">,</span><span class="w"> </span><span class="s">'none'</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'SpecularStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">'DiffuseStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="s">'AmbientStrength'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">on</span><span class="w"></span>
-<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="n">plotHU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotHU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotHU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span><span class="w"></span>
-<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">'LineWidth'</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">'Color'</span><span class="p">,</span><span class="w"> </span><span class="s">'k'</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-<span class="n">hold</span><span class="w"> </span><span class="s">off</span><span class="w"></span>
-<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span><span class="w"></span>
-<span class="nb">camlight</span><span class="w"></span>
-<span class="nb">title</span><span class="p">(</span><span class="s">'The Harmonic Part and its Norm'</span><span class="p">);</span><span class="w"></span>
-<span class="n">colorbar</span><span class="w"></span>
-
-<span class="s">%</span><span class="w"> </span><span class="s">clear</span><span class="w"> </span><span class="s">ssf</span><span class="w"> </span><span class="s">UColors</span><span class="w"> </span><span class="s">HUColors</span><span class="w"> </span><span class="s">plotU</span><span class="w"> </span><span class="s">plotDivU</span><span class="w"> </span><span class="s">plotRotU</span><span class="w"> </span><span class="s">plotHU</span><span class="w"></span>
-
-
-<span class="c">%% CALCULATE ANALYIC RESULTS ==============================================</span><span class="w"></span>
-<span class="c">% NOTE: This section is only usable with the single supplied vector field.</span><span class="w"></span>
-<span class="c">% In principle one could solve the linear equations for the potentials</span><span class="w"></span>
-<span class="c">% analytically for an arbitrary vector field.</span><span class="w"></span>
-<span class="c">%</span><span class="w"></span>
-<span class="c">% The scalar and vector potentials are each only unique up to a pair of</span><span class="w"></span>
-<span class="c">% constants - their choice is arbitrary and can be absorbed into the</span><span class="w"></span>
-<span class="c">% harmonic component of the vector field.  The discrete solution process</span><span class="w"></span>
-<span class="c">% will choose an unknown pair of constants to specify the potentials.  In</span><span class="w"></span>
-<span class="c">% order to compare the solutions to analytic results we fit the constants</span><span class="w"></span>
-<span class="c">% to the numerical results in the least-squares sense</span><span class="w"></span>
-
-<span class="c">% Generate the scalar potential -------------------------------------------</span><span class="w"></span>
-
-<span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">V</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))),</span><span class="w"> </span><span class="nb">ones</span><span class="p">(</span><span class="nb">size</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">];</span><span class="w"></span>
-<span class="n">A</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-
-<span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scalarP</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="n">V</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">V</span><span class="p">(:,</span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
-
-<span class="n">Cscalar</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">\</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"></span>
-
-<span class="n">trueScalarP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="n">V</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">V</span><span class="p">(:,</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cscalar</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">V</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)));</span><span class="w"></span>
-<span class="n">trueScalarP</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">trueScalarP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="n">trueScalarP</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">trueScalarP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-
-<span class="c">% Generate the vector potential -------------------------------------------</span><span class="w"></span>
-
-<span class="n">vectorP_OLD</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">vectorP</span><span class="p">;</span><span class="w"></span>
-<span class="n">vectorP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">-</span><span class="nb">full</span><span class="p">(</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">hd2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vectorP</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
-
-
-<span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">COM</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))),</span><span class="w"> </span><span class="nb">ones</span><span class="p">(</span><span class="nb">size</span><span class="p">(</span><span class="nb">COM</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">];</span><span class="w"></span>
-<span class="n">A</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-
-<span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">vectorP</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="w"> </span><span class="p">(:,</span><span class="mi">2</span><span class="p">));</span><span class="w"></span>
-
-<span class="n">Cvector</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">\</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"></span>
-
-<span class="n">trueVectorP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cvector</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cvector</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">COM</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)));</span><span class="w"></span>
-<span class="n">trueVectorP</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">trueVectorP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="n">trueVectorP</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">trueVectorP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="c">% Calculate edge midpoints</span>
+<span class="n">Emp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">E</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="p">:)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">E</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),:)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% Generate Discrete Exterior Calculus Object</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% profile on</span>
+<span class="n">DEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">DiscreteExteriorCalculus</span><span class="p">(</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="w"> </span><span class="p">);</span>
+<span class="c">% profile viewer</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% View Results</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% triplot(TR);</span>
+<span class="c">% axis equal</span>
+
+<span class="c">%% ************************************************************************</span>
+<span class="c">% *************************************************************************</span>
+<span class="c">%          COMPARE DEC DIFFERENTIAL OPERATORS TO FEM OPERATORS</span>
+<span class="c">% *************************************************************************</span>
+<span class="c">% *************************************************************************</span>
+
+<span class="nb">clc</span><span class="p">;</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% Compare the Scalar Gradient Operator</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+
+<span class="n">gradDEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">sharpPD</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">d0</span><span class="p">;</span>
+
+<span class="k">try</span>
+<span class="n">gradFEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">grad</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">);</span>
+<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">gradFEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">gradDEC</span><span class="p">(:))));</span>
+<span class="nb">fprintf</span><span class="p">(</span><span class="s">&#39;Maximum Difference in Gradient Operators = %f\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span>
+
+<span class="k">catch</span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">&#39;To compare DEC against FEM results, install gptoolbox and add to your MATLAB path&#39;</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="nb">clear</span><span class="w"> </span><span class="n">gradFEM</span><span class="w"> </span><span class="n">gradDEC</span><span class="w"> </span><span class="n">maxErr</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% Compare Scalar Laplacian Operator</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+
+<span class="c">% The non-area weighted Laplacians</span>
+<span class="n">LN_DEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">dd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">hd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">d0</span><span class="p">;</span>
+
+<span class="k">try</span>
+<span class="n">LN_FEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">cotmatrix</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">);</span>
+<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">LN_FEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">LN_DEC</span><span class="p">(:))));</span>
+<span class="nb">fprintf</span><span class="p">(</span><span class="s">&#39;Maximum Difference in Bare Laplacian Operators = %f\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span>
+
+<span class="n">clear</span><span class="w"> </span><span class="s">LN_FEM</span><span class="w"> </span><span class="s">LN_DEC</span>
+<span class="k">catch</span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">&#39;To compare DEC against FEM results, install gptoolbox and add to your MATLAB path&#39;</span><span class="p">)</span>
+
+<span class="k">end</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% Compare Vector Divergence Operator</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+
+<span class="n">divDEC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">inv</span><span class="p">(</span><span class="n">DEC</span><span class="p">.</span><span class="n">hd0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">dd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">hd1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">flatDP</span><span class="p">;</span>
+
+<span class="k">try</span>
+<span class="n">divFEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">div</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">);</span>
+<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">divFEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">divDEC</span><span class="p">(:))));</span>
+<span class="nb">fprintf</span><span class="p">(</span><span class="s">&#39;Maxumum Difference Between DEC Divergence and Bare FEM Divergence = %f\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span>
+
+<span class="c">% Re-scale the bare FEM divergence operator</span>
+<span class="n">divFEM</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="nb">diag</span><span class="p">(</span><span class="n">invVA</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">divFEM</span><span class="p">;</span>
+
+<span class="c">% THIS SCALING BRINGS THE ELEMENTS MUCH CLOSER TO EACH OTHER, BUT THEIR</span>
+<span class="c">% SPARSITY PATTERNS ARE DIFFERENT AND I DO NOT UNDERSTAND WHY</span>
+<span class="n">maxErr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">full</span><span class="p">(</span><span class="n">divFEM</span><span class="p">(:)</span><span class="o">-</span><span class="n">divDEC</span><span class="p">(:))));</span>
+<span class="nb">fprintf</span><span class="p">(</span><span class="s">&#39;Maxumum Difference Between DEC Divergence and Weighted FEM Divergence = %f\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">maxErr</span><span class="p">);</span>
+
+<span class="n">clear</span><span class="w"> </span><span class="s">divFEM</span><span class="w"> </span><span class="s">divDEC</span><span class="w"> </span><span class="s">maxErr</span>
+<span class="k">catch</span>
+<span class="nb">disp</span><span class="p">(</span><span class="s">&#39;To compare DEC against FEM results, install gptoolbox and add to your MATLAB path&#39;</span><span class="p">)</span>
+
+<span class="k">end</span>
+
+
+<span class="c">%% ************************************************************************</span>
+<span class="c">% *************************************************************************</span>
+<span class="c">%                   TEST HELMHOLTZ-HODGE DECOMPOSITION</span>
+<span class="c">% *************************************************************************</span>
+<span class="c">% *************************************************************************</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% Design a tangent-vector field</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+
+<span class="n">g</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">@(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="nb">exp</span><span class="p">(</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">.^</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="n">Ufunc</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">@(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">),</span><span class="w"> </span><span class="nb">zeros</span><span class="p">(</span><span class="nb">size</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"> </span><span class="p">];</span>
+<span class="n">U</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Ufunc</span><span class="p">(</span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">2</span><span class="p">));</span>
+
+<span class="c">%--------------------------------------------------------------------------</span>
+<span class="c">% View Results</span>
+<span class="c">%--------------------------------------------------------------------------</span>
+
+<span class="c">% ssf = 20;</span>
+<span class="c">%</span>
+<span class="c">% triplot(triangulation(F, V(:, [1 2])));</span>
+<span class="c">% hold on</span>
+<span class="c">% quiver( COM(1:ssf:end,1), COM(1:ssf:end,2), ...</span>
+<span class="c">%     U(1:ssf:end,1), U(1:ssf:end,2), ...</span>
+<span class="c">%     1, &#39;LineWidth&#39;, 2, &#39;Color&#39;, &#39;k&#39; );</span>
+<span class="c">% hold off</span>
+<span class="c">% axis equal</span>
+<span class="c">%</span>
+<span class="c">% clear ssf</span>
+
+<span class="c">%% Perform Decomposition ==================================================</span>
+
+<span class="nb">clc</span><span class="p">;</span>
+
+<span class="c">% Perform Helmholtz-Hodge decomposition</span>
+<span class="p">[</span><span class="n">divU</span><span class="p">,</span><span class="w"> </span><span class="n">rotU</span><span class="p">,</span><span class="w"> </span><span class="n">harmU</span><span class="p">,</span><span class="w"> </span><span class="n">scalarP</span><span class="p">,</span><span class="w"> </span><span class="n">vectorP</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">...</span>
+<span class="n">DEC</span><span class="p">.</span><span class="n">helmholtzHodgeDecomposition</span><span class="p">(</span><span class="n">U</span><span class="p">);</span>
+
+<span class="c">% Normalize rows for plotting</span>
+<span class="n">plotU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">U</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">plotDivU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">divU</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">divU</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">plotRotU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">rotU</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">rotU</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">plotHU</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">harmU</span><span class="w"> </span><span class="o">./</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">harmU</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+
+<span class="c">% Sub-sampling factor for vector field visualization</span>
+<span class="n">ssf</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span>
+
+<span class="n">figure</span>
+<span class="s">lw</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="c">% line width for quiver arrows</span>
+
+<span class="c">% The full vector field ---------------------------------------------------</span>
+
+<span class="c">% Plot based on internal angles</span>
+<span class="n">s12</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),:)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),:),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">s31</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">3</span><span class="p">),:)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),:),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">s23</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">vecnorm</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">3</span><span class="p">),:)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">F</span><span class="p">(:,</span><span class="mi">2</span><span class="p">),:),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">a23</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">acos</span><span class="p">((</span><span class="n">s12</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s31</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s23</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="o">./</span><span class="p">(</span><span class="mi">2</span><span class="o">.*</span><span class="n">s12</span><span class="o">.*</span><span class="n">s31</span><span class="p">));</span>
+<span class="n">a31</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">acos</span><span class="p">((</span><span class="n">s23</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s12</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s31</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="o">./</span><span class="p">(</span><span class="mi">2</span><span class="o">.*</span><span class="n">s23</span><span class="o">.*</span><span class="n">s12</span><span class="p">));</span>
+<span class="n">a12</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">acos</span><span class="p">((</span><span class="n">s31</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s23</span><span class="o">.^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s12</span><span class="o">.^</span><span class="mi">2</span><span class="p">)</span><span class="o">./</span><span class="p">(</span><span class="mi">2</span><span class="o">.*</span><span class="n">s31</span><span class="o">.*</span><span class="n">s23</span><span class="p">));</span>
+<span class="n">internal_angles</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="n">a23</span><span class="w"> </span><span class="n">a31</span><span class="w"> </span><span class="n">a12</span><span class="p">];</span>
+
+
+<span class="n">UColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">(</span><span class="w"> </span><span class="n">F</span><span class="p">(:),</span><span class="w"> </span><span class="nb">repmat</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="n">internal_angles</span><span class="p">,</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="n">UColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">UColors</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">U</span><span class="p">;</span>
+<span class="n">UColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">UColors</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">));</span>
+
+<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">&#39;Faces&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Vertices&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;FaceVertexCData&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">UColors</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;FaceColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;interp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;EdgeColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;none&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;SpecularStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;DiffuseStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;AmbientStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">on</span>
+<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="n">plotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;LineWidth&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;k&#39;</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">off</span>
+<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span>
+<span class="nb">camlight</span>
+<span class="nb">title</span><span class="p">(</span><span class="s">&#39;The Vector Field and its Norm&#39;</span><span class="p">);</span>
+<span class="n">colorbar</span>
+
+<span class="s">%</span><span class="w"> </span><span class="s">The</span><span class="w"> </span><span class="s">curl-free</span><span class="w"> </span><span class="s">part</span><span class="w"> </span><span class="o">------------------------------------------------------</span>
+<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">&#39;Faces&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Vertices&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;FaceVertexCData&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">scalarP</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;FaceColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;interp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;EdgeColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;none&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;SpecularStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;DiffuseStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;AmbientStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">on</span>
+<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="n">plotDivU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotDivU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotDivU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;LineWidth&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;k&#39;</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">off</span>
+<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span>
+<span class="nb">camlight</span>
+<span class="nb">title</span><span class="p">(</span><span class="s">&#39;The Irrotational (Curl-Free) Part and the Scalar Potential&#39;</span><span class="p">);</span>
+<span class="n">colorbar</span>
+
+<span class="s">%</span><span class="w"> </span><span class="s">The</span><span class="w"> </span><span class="s">divergence-free</span><span class="w"> </span><span class="s">part</span><span class="w"> </span><span class="o">------------------------------------------------</span>
+<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">&#39;Faces&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Vertices&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;FaceVertexCData&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">vectorP</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;FaceColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;flat&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;EdgeColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;none&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;SpecularStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;DiffuseStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;AmbientStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">on</span>
+<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="n">plotRotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotRotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotRotU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;LineWidth&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;k&#39;</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">off</span>
+<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span>
+<span class="nb">camlight</span>
+<span class="nb">title</span><span class="p">(</span><span class="s">&#39;The Rotational (Divergence-Free) Part and the Vector Potential&#39;</span><span class="p">);</span>
+<span class="n">colorbar</span>
+
+<span class="s">%</span><span class="w"> </span><span class="s">The</span><span class="w"> </span><span class="s">harmonic</span><span class="w"> </span><span class="s">part</span><span class="w"> </span><span class="o">-------------------------------------------------------</span>
+<span class="n">HUColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sparse</span><span class="p">(</span><span class="w"> </span><span class="n">F</span><span class="p">(:),</span><span class="w"> </span><span class="nb">repmat</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="n">internal_angles</span><span class="p">,</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">size</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="n">HUColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">HUColors</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">harmU</span><span class="p">;</span>
+<span class="n">HUColors</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">HUColors</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">));</span>
+
+
+<span class="nb">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
+<span class="nb">patch</span><span class="p">(</span><span class="w"> </span><span class="s">&#39;Faces&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Vertices&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;FaceVertexCData&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">HUColors</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;FaceColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;interp&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;EdgeColor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;none&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;SpecularStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;DiffuseStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="k">...</span>
+<span class="s">&#39;AmbientStrength&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">on</span>
+<span class="nb">quiver3</span><span class="p">(</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="n">plotHU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">plotHU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">plotHU</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">ssf</span><span class="p">:</span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="k">...</span>
+<span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;LineWidth&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">lw</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;k&#39;</span><span class="w"> </span><span class="p">);</span>
+<span class="n">hold</span><span class="w"> </span><span class="s">off</span>
+<span class="nb">axis</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">tight</span>
+<span class="nb">camlight</span>
+<span class="nb">title</span><span class="p">(</span><span class="s">&#39;The Harmonic Part and its Norm&#39;</span><span class="p">);</span>
+<span class="n">colorbar</span>
+
+<span class="s">%</span><span class="w"> </span><span class="s">clear</span><span class="w"> </span><span class="s">ssf</span><span class="w"> </span><span class="s">UColors</span><span class="w"> </span><span class="s">HUColors</span><span class="w"> </span><span class="s">plotU</span><span class="w"> </span><span class="s">plotDivU</span><span class="w"> </span><span class="s">plotRotU</span><span class="w"> </span><span class="s">plotHU</span>
+
+
+<span class="c">%% CALCULATE ANALYIC RESULTS ==============================================</span>
+<span class="c">% NOTE: This section is only usable with the single supplied vector field.</span>
+<span class="c">% In principle one could solve the linear equations for the potentials</span>
+<span class="c">% analytically for an arbitrary vector field.</span>
+<span class="c">%</span>
+<span class="c">% The scalar and vector potentials are each only unique up to a pair of</span>
+<span class="c">% constants - their choice is arbitrary and can be absorbed into the</span>
+<span class="c">% harmonic component of the vector field.  The discrete solution process</span>
+<span class="c">% will choose an unknown pair of constants to specify the potentials.  In</span>
+<span class="c">% order to compare the solutions to analytic results we fit the constants</span>
+<span class="c">% to the numerical results in the least-squares sense</span>
+
+<span class="c">% Generate the scalar potential -------------------------------------------</span>
+
+<span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">V</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))),</span><span class="w"> </span><span class="nb">ones</span><span class="p">(</span><span class="nb">size</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">];</span>
+<span class="n">A</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">scalarP</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="n">V</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">V</span><span class="p">(:,</span><span class="mi">2</span><span class="p">));</span>
+
+<span class="n">Cscalar</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">\</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+
+<span class="n">trueScalarP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="n">V</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">V</span><span class="p">(:,</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cscalar</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">V</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)));</span>
+<span class="n">trueScalarP</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">trueScalarP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">trueScalarP</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">trueScalarP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c">% Generate the vector potential -------------------------------------------</span>
+
+<span class="n">vectorP_OLD</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">vectorP</span><span class="p">;</span>
+<span class="n">vectorP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">-</span><span class="nb">full</span><span class="p">(</span><span class="w"> </span><span class="n">DEC</span><span class="p">.</span><span class="n">hd2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vectorP</span><span class="w"> </span><span class="p">);</span>
+
+
+<span class="n">A</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">COM</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))),</span><span class="w"> </span><span class="nb">ones</span><span class="p">(</span><span class="nb">size</span><span class="p">(</span><span class="nb">COM</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">];</span>
+<span class="n">A</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">A</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">vectorP</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="w"> </span><span class="p">(:,</span><span class="mi">2</span><span class="p">));</span>
+
+<span class="n">Cvector</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">\</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+
+<span class="n">trueVectorP</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nb">COM</span><span class="p">(:,</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cvector</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Cvector</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">.*</span><span class="w"> </span><span class="nb">log</span><span class="p">(</span><span class="nb">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="nb">COM</span><span class="o">.^</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)));</span>
+<span class="n">trueVectorP</span><span class="p">(</span><span class="nb">isnan</span><span class="p">(</span><span class="n">trueVectorP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">trueVectorP</span><span class="p">(</span><span class="nb">isinf</span><span class="p">(</span><span class="n">trueVectorP</span><span class="p">))</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_relativeError_gradient.png"><img alt="_images/DEC_sphericalMesh_relativeError_gradient.png" src="_images/DEC_sphericalMesh_relativeError_gradient.png" style="width: 891px;"/></a>
-<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_decomposition.png"><img alt="_images/DEC_sphericalMesh_decomposition.png" src="_images/DEC_sphericalMesh_decomposition.png" style="width: 891px;"/></a>
-<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_divergence.png"><img alt="_images/DEC_sphericalMesh_divergence.png" src="_images/DEC_sphericalMesh_divergence.png" style="width: 891px;"/></a>
-<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_curl.png"><img alt="_images/DEC_sphericalMesh_curl.png" src="_images/DEC_sphericalMesh_curl.png" style="width: 891px;"/></a>
-<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_laplacian_tangentialVel.png"><img alt="_images/DEC_sphericalMesh_laplacian_tangentialVel.png" src="_images/DEC_sphericalMesh_laplacian_tangentialVel.png" style="width: 891px;"/></a>
-<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_relativeError_Laplacian.png"><img alt="_images/DEC_sphericalMesh_relativeError_Laplacian.png" src="_images/DEC_sphericalMesh_relativeError_Laplacian.png" style="width: 891px;"/></a>
+<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_relativeError_gradient.png"><img alt="_images/DEC_sphericalMesh_relativeError_gradient.png" src="_images/DEC_sphericalMesh_relativeError_gradient.png" style="width: 891px;" /></a>
+<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_decomposition.png"><img alt="_images/DEC_sphericalMesh_decomposition.png" src="_images/DEC_sphericalMesh_decomposition.png" style="width: 891px;" /></a>
+<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_divergence.png"><img alt="_images/DEC_sphericalMesh_divergence.png" src="_images/DEC_sphericalMesh_divergence.png" style="width: 891px;" /></a>
+<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_curl.png"><img alt="_images/DEC_sphericalMesh_curl.png" src="_images/DEC_sphericalMesh_curl.png" style="width: 891px;" /></a>
+<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_laplacian_tangentialVel.png"><img alt="_images/DEC_sphericalMesh_laplacian_tangentialVel.png" src="_images/DEC_sphericalMesh_laplacian_tangentialVel.png" style="width: 891px;" /></a>
+<a class="reference internal image-reference" href="_images/DEC_sphericalMesh_relativeError_Laplacian.png"><img alt="_images/DEC_sphericalMesh_relativeError_Laplacian.png" src="_images/DEC_sphericalMesh_relativeError_Laplacian.png" style="width: 891px;" /></a>
 <section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">#</a></h2>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
@@ -552,10 +556,10 @@
                 </div>
                 <div class="title">Example for analyzing flow on a spherical surface</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           <a class="prev-page" href="DEC.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -577,9 +581,7 @@
             
           </div>
           <div class="right-details">
-            <div class="icons">
-              
-            </div>
+            
           </div>
         </div>
         
@@ -591,7 +593,7 @@
       <div class="toc-sticky toc-scroll">
         <div class="toc-title-container">
           <span class="toc-title">
-            Contents
+            On this page
           </span>
         </div>
         <div class="toc-tree-container">
@@ -610,10 +612,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/furo.js"></script>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=78de3d3a"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

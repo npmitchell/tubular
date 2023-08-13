@@ -283,7 +283,7 @@ or perform a Laplace-Beltrami Spectral (LBS) decomposition:
 
 	tubi.getLBSoverTime(options)
 
-Happy analysis!
+That's a quick overview of the workflow. Next we'll look at more detailed examples.
 
   
 Let's walk through an example or two
