@@ -146,6 +146,7 @@ tubi.dir.texturePatchIm = fullfile(meshDir, 'images_texturepatch') ;
 tubi.dir.mip = fullfile(meshDir, 'mips', 'dim%d_pages%04dto%04d') ;
 
 % Mips
+tubi.fileBase.mip = 'mip_%06d.tif' ;
 tubi.fullFileBase.mip = fullfile(tubi.dir.mip, 'mip_%06d.tif') ;
 
 % After gridding into (u,v) / (zeta,phi) pullback coords
@@ -378,7 +379,7 @@ tubi.fullFileBase.cylinderKeep = ...
     fullfile(tubi.dir.cylinderMesh, tubi.fileBase.cylinderKeep) ;
 tubi.fullFileBase.cylinderMeshClean = ...
     fullfile(tubi.dir.cylinderMesh, 'cleaned',...
-    [tubi.fileBase.mesh '_cylindercut_clean.ply']) ;            
+    [tubi.fileBase.mesh '_cylindercut_clean.ply']) ;   
 
 %% Define cutMesh directories
 % cutMesh = fullfile(meshDir, 'cutMesh') ;
@@ -665,7 +666,7 @@ if dynamic
     
     % pathlines data
     tubi.dir.pathlines = struct() ;
-    tubi.dir.pathlines.data = fullfile(tubi.dir.piv.root, 'pathlines', 't0_%04d') ; 
+    tubi.dir.pathlines.data = fullfile(tubi.dir.piv.root, 'pathlines', 't0_%04d') ; % HARDCODED TIMESTAMP FORMAT DELIMITER HERE FOR T0
     tubi.dir.pathlines.XY = fullfile(tubi.dir.pathlines.data, 'images_XY') ;
     tubi.dir.pathlines.XYZ = fullfile(tubi.dir.pathlines.data, 'images_XYZ') ;
     tubi.dir.pathlines.vXY = fullfile(tubi.dir.pathlines.data, 'images_vXY') ;
@@ -858,6 +859,16 @@ if t0supplied_in_opts
     disp(['Writing t0 to disk: ' tubi.fileName.t0])
     write_txt_with_header(tubi.fileName.t0, tubi.t0, 't0, the reference timestamp')
 end
+
+%% Since Windows machines have issues with sprintf due to the presence of 
+% backslashes in filenames. We therefore use num2str() with the timestamp
+% delimiter. 
+timeStampFormatSpec = '%\d+[a-z]';
+tmp = regexp(tubi.fileBase.fn, timeStampFormatSpec, 'match');
+tubi.timeStampStringSpec = tmp{1};
+
+
+
 
 
 

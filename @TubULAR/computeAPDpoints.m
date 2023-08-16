@@ -4,12 +4,18 @@ function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
 %   (1) Clicking on the points on the mesh from t=t0
 %   (2) moments of inertia of the mesh surface, identifying the endpoints
 %       near the long axis of the object at t=t0. (autoAP = true)
-%   (3) iLastik training for CENTERLINE computation.  (use_iLastik=true)
+%   (3) iLastik training for CENTERLINE computation.  (opts.use_iLastik=true)
 %       Note that these are allowed to be different than the
-%       APD points for ALIGNMENT computation. 
+%       APD points for ALIGNMENT computation. Here, we do not require any
+%       dorsal point to be trained, as that was defined in the previous
+%       step. However, it is useful to have A and P be separable from the
+%       previous step.
 %       For example, the posterior point
 %       might be a point which does NOT form an AP axis  with the 
-%       anteriormost point, as in the illustration of the midgut below:
+%       anteriormost point, as in the illustration of the midgut below.
+%       To use this option, set opts.use_iLastik=true and by default the
+%       script looks for iLastik files called
+%       <<fn>>_Probabilities_apcenterline.h5.
 %   (4) Directly supplying a custom set of anterior and posterior points
 %       for each time point
 % 
@@ -248,8 +254,13 @@ if ~load_from_disk || overwrite
                 disp(msg)
                 thres = 0.5 ;
                 % load the probabilities for anterior posterior dorsal
-                afn = sprintf(aProbFileName, tt);
-                pfn = sprintf(pProbFileName, tt);
+                afn = replace(aProbFileName, tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec));
+                pfn = replace(pProbFileName, tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec));
+                
+                % Old version (no good on Windows)
+                % afn = sprintf(aProbFileName, tt);
+                % pfn = sprintf(pProbFileName, tt);
+
                 disp(['Reading ', afn])
                 adatM = h5read(afn, '/exported_data');
                 if ~strcmp(afn, pfn)
@@ -260,34 +271,53 @@ if ~load_from_disk || overwrite
                 end
 
                 % Load the training for anterior and posterior positions
-                if strcmpi(ilastikOutputAxisOrder(1), 'c')
+                channelAxis = strfind(ilastikOutputAxisOrder, 'c') ;
+                if channelAxis == 1
                     adat = squeeze(adatM(anteriorChannel,:,:,:)) ;
                     pdat = squeeze(pdatM(posteriorChannel,:,:,:)) ;
-                elseif strcmpi(ilastikOutputAxisOrder(4), 'c')
-                    adat = squeeze(adatM(:,:,:,anteriorChannel)) ;
-                    pdat = squeeze(pdatM(:,:,:,posteriorChannel)) ;
+                elseif channelAxis == 2 
+                    adat = squeeze(adatM(:, anteriorChannel,:,:)) ;
+                    pdat = squeeze(pdatM(:, posteriorChannel,:,:)) ;
+                elseif channelAxis == 3
+                    adat = squeeze(adatM(:,:,anteriorChannel,:)) ;
+                    pdat = squeeze(pdatM(:,:,posteriorChannel,:)) ;
+                elseif channelAxis == 4 
+                    adat = squeeze(adatM(:,:,:, anteriorChannel)) ;
+                    pdat = squeeze(pdatM(:,:,:, posteriorChannel)) ;
                 else
-                    error('Did not recognize ilastikAxisOrder. Code here')
+                    error(['Expected 4D probabilities data, and was ' ...
+                        num2str(length(size(ddatM))) 'D, or failed to recognize ilastikOutputAxisOrder'])
                 end
 
-                if contains(lower(ilastikOutputAxisOrder), 'xyz')
-                    disp('no permutation necessary')
-                    % adat = permute(adat, [1,2,3]);
-                elseif contains(lower(ilastikOutputAxisOrder), 'yxz')
-                    disp('permuting yxz')
-                    adat = permute(adat, [2,1,3]);
-                    pdat = permute(pdat, [2,1,3]);
-                elseif contains(lower(ilastikOutputAxisOrder), 'zyx')
-                    disp('permuting zyx')
-                    adat = permute(adat, [3,2,1]);
-                    pdat = permute(pdat, [3,2,1]);
-                elseif contains(lower(ilastikOutputAxisOrder), 'yzx')
-                    disp('permuting zyx')
-                    adat = permute(adat, [2,3,1]);
-                    pdat = permute(pdat, [2,3,1]);
-                else
-                    error('unrecognized permutation in ilastikOutputAxisOrder')
-                end
+                disp(['Extracted adat and pdat of size [' num2str(size(adat)) ']'])
+        
+                xyzstring = erase(lower(ilastikOutputAxisOrder), 'c') ;
+                xpos = strfind(xyzstring, 'x') ;
+                ypos = strfind(xyzstring, 'y') ;
+                zpos = strfind(xyzstring, 'z') ;
+                disp(['Permuting adat and pdat as [' ...
+                    num2str(xpos) ',' num2str(ypos) ',' num2str(zpos) ']'])
+                adat = permute(adat, [xpos, ypos, zpos]) ;
+                pdat = permute(pdat, [xpos, ypos, zpos]) ;
+                
+                % if contains(lower(ilastikOutputAxisOrder), 'xyz')
+                %     disp('no permutation necessary')
+                %     % adat = permute(adat, [1,2,3]);
+                % elseif contains(lower(ilastikOutputAxisOrder), 'yxz')
+                %     disp('permuting yxz')
+                %     adat = permute(adat, [2,1,3]);
+                %     pdat = permute(pdat, [2,1,3]);
+                % elseif contains(lower(ilastikOutputAxisOrder), 'zyx')
+                %     disp('permuting zyx')
+                %     adat = permute(adat, [3,2,1]);
+                %     pdat = permute(pdat, [3,2,1]);
+                % elseif contains(lower(ilastikOutputAxisOrder), 'yzx')
+                %     disp('permuting zyx')
+                %     adat = permute(adat, [2,3,1]);
+                %     pdat = permute(pdat, [2,3,1]);
+                % else
+                %     error('unrecognized permutation in ilastikOutputAxisOrder')
+                % end
 
                 % define axis order: 
                 % if 1, 2, 3: axes will be yxz
@@ -319,7 +349,8 @@ if ~load_from_disk || overwrite
                     ppts(tidx, :)
 
                     clf
-                    mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+                    meshfn = replace(tubi.fullFileBase.mesh, tt)
+                    mesh = read_ply_mod(meshfn) ;
                     for ii = 1:3
                         subplot(1, 3, ii)
                         trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
@@ -350,7 +381,9 @@ if ~load_from_disk || overwrite
                     end
                     for ii = 1:3
                         subplot(1, 3, ii)
-                        mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+                        meshfn = replace(tubi.fullFileBase.mesh, ...
+                            tubi.timeStampStringSpec, num2str(tt, tubi.fullFileBase.mesh)) ;
+                        mesh = read_ply_mod(meshfn) ;
                         trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
                         hold on;
                         plot3(acom(1) * tubi.ssfactor, acom(2) * tubi.ssfactor, acom(3) * tubi.ssfactor, 'o')
@@ -384,7 +417,8 @@ if ~load_from_disk || overwrite
         % First do t0
         ssfactor = tubi.ssfactor ;
         tubi.setTime(tubi.t0set()) ;
-        meshfn = sprintf(tubi.fullFileBase.mesh, tubi.t0set()) ;
+        meshfn = replace(tubi.fullFileBase.mesh, tubi.timeStampStringSpec, ...
+            num2str(tubi.t0set(), tubi.timeStampStringSpec)) ;
         disp(['Loading mesh ' meshfn])
         mesh = read_ply_mod(meshfn );
         cntrd = mean(mesh.v) ;
@@ -516,7 +550,8 @@ if ~load_from_disk || overwrite
         % First do t0
         ssfactor = tubi.ssfactor ;
         tubi.setTime(tubi.t0set()) ;
-        meshfn = sprintf(tubi.fullFileBase.mesh, tubi.t0set()) ;
+        meshfn = replace(tubi.fullFileBase.mesh, tubi.timeStampStringSpec, ...
+            num2str(tubi.timeStampStringSpec, tubi.t0set())) ;
         disp(['Loading mesh ' meshfn])
         mesh = read_ply_mod( meshfn );
         

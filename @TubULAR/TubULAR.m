@@ -118,6 +118,7 @@ classdef TubULAR < handle
             'resolution', [], ...       % resolution of data in spaceUnits / pixel
             'rot', [], ...              % rotation matrix to transform data into APDV frame (rot*v+trans)*resolution
             'trans', [])                % translation vector to transform data into APDV frame (rot*v+trans)*resolution
+        timeStampStringSpec             % String format specifier for the timestamp. For ex, Time_001.tif would be %03d since filename is returned by sprintf('Time_%03d.tif', 3)
         flipy                           % whether data is mirror image of lab frame coordinates
         nV                              % sampling number along circumferential axis
         nU                              % sampling number along longitudinal axis
@@ -227,6 +228,10 @@ classdef TubULAR < handle
                 'mu_material_filtered', [], ...
                 'mu_material_vertices', [], ...
                 'fitlerOptions', []));     
+       currentSegmentation = struct(...
+           'seg2d', [], ...                 % polygonal segmentation of cells in 2D pullback space
+           'seg2dCorrected', [], ...        % polygonal segmentation of cells in 2D pullback space with manual corrections
+           'seg3d', [])                     % polygonal segmentation of cells in 3D space
        currentStrain = struct(...           % strain from pathline measurements at current timepoint
             'pathline', ...                 % strain from pathlines
             struct('t0Pathlines', [], ...   % t=0 timepoint for pathlines in question
@@ -340,6 +345,21 @@ classdef TubULAR < handle
         end
         
         function makeMIPs(tubi, dim, pages, timePoints, adjustIV)
+            % Generate maximum intensity projections along the desired axis
+            % and for all pages specified.
+            % 
+            % Parameters
+            % ----------
+            % tubi: TubULAR class instance
+            % dim : int
+            %   dimension along which to project
+            % pages : int array
+            %   pages of the tiff stack to project
+            % timePoints : int array
+            %   timePoints for which to take MIPs
+            % adjustIV : bool (default=true)
+            %   apply the intensity adjustment stored in
+            %   tubi.data.adjustlow/high
             if nargin < 5
                 adjustIV = false ;
             end
@@ -353,8 +373,13 @@ classdef TubULAR < handle
             end
             % create mip directories if needed
             for qq = 1:length(pages)
-                outdir = sprintf(tubi.dir.mip, dim, ...
-                            min(pages{qq}), max(pages{qq})) ;
+
+                % OS-independent path definition
+                outdir = replace(tubi.dir.mip, ...
+                    'dim%d_pages%04dto%04d', ...
+                    sprintf('dim%d_pages%04dto%04d', dim, ...
+                    min(pages{qq}), max(pages{qq})));
+            
                 if ~exist(outdir, 'dir')
                     mkdir(outdir)
                 end
@@ -364,8 +389,16 @@ classdef TubULAR < handle
             for tp = timePoints
                 for qq = 1:length(pages)
                     im = tubi.mip(tp, dim, pages{qq}, adjustIV) ;
-                    imfn = sprintf(tubi.fullFileBase.mip, dim, ...
-                        min(pages{qq}), max(pages{qq}), tp) ;
+
+                    % define the output filename for the MIP
+                    % Note: this is the same as tubi.fullFileBase.mip
+                    outdir = replace(tubi.dir.mip, ...
+                        'dim%d_pages%04dto%04d', ...
+                        sprintf('dim%d_pages%04dto%04d', dim, ...
+                        min(pages{qq}), max(pages{qq})));
+                    imfn = fullfile(outdir, sprintf(tubi.fileBase.mip, tp)) ;
+
+                    % write the image to disk
                     imwrite(im, imfn,'tiff','Compression','none')
                 end
             end
@@ -872,8 +905,9 @@ classdef TubULAR < handle
             no_piv3d = isempty(fieldnames(tubi.currentVelocity.piv3d)) ;
             if (do_all || contains(varargin, 'piv3d')) && no_piv3d
                 % Load 3D data for piv results
-                piv3dfn = tubi.fullFileBase.piv3d ;
-                load(sprintf(piv3dfn, tubi.currentTime), 'piv3dstruct') ;
+                piv3dfn = replace(tubi.fullFileBase.piv3d, ...
+                    'piv3d_%04d.mat', sprintf('piv3d_%04d.mat', tubi.currentTime));
+                load(piv3dfn, 'piv3dstruct') ;
                 tubi.currentVelocity.piv3d = piv3dstruct ;
             end
             
@@ -994,7 +1028,8 @@ classdef TubULAR < handle
 
         % Load raw mesh or alignedMesh (rotated & scaled to APDV)
         function rawMesh = loadCurrentRawMesh(tubi)
-            meshfn = sprintf(tubi.fullFileBase.mesh, tubi.currentTime) ;
+            meshfn = fullfile(tubi.dir.mesh, ...
+                sprintf(tubi.fileBase.mesh, tubi.currentTime)) ;
             rawMesh = read_ply_mod(meshfn) ;
             tubi.currentMesh.rawMesh = rawMesh ;
         end
@@ -1010,7 +1045,8 @@ classdef TubULAR < handle
             end
         end
         function alignedMesh = loadCurrentAlignedMesh(tubi)
-            meshfn = sprintf(tubi.fullFileBase.alignedMesh, tubi.currentTime) ;
+            meshfn = fullfile(tubi.dir.alignedMesh, ...
+                sprintf(tubi.fileBase.alignedMesh, tubi.currentTime)) ;
             alignedMesh = read_ply_mod(meshfn) ;
             tubi.currentMesh.alignedMesh = alignedMesh ;
         end
@@ -1083,12 +1119,16 @@ classdef TubULAR < handle
         end
         function loadCurrentCylinderMesh(tubi)
             cylmeshfn = ...
-                sprintf( tubi.fullFileBase.cylinderMesh, tubi.currentTime ) ;
+                replace( tubi.fullFileBase.cylinderMesh, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime , tubi.timeStampStringSpec)) ;
             tubi.currentMesh.cylinderMesh = read_ply_mod( cylmeshfn );
         end
         function mesh = loadCurrentCylinderMeshClean(tubi)
             cylmeshfn = ...
-                sprintf( tubi.fullFileBase.cylinderMeshClean, tubi.currentTime ) ;
+                replace( tubi.fullFileBase.cylinderMeshClean, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             disp(['Loading cylinderMeshClean ' cylmeshfn])
             tubi.currentMesh.cylinderMeshClean = read_ply_mod( cylmeshfn );
             if nargout > 0
@@ -1123,8 +1163,12 @@ classdef TubULAR < handle
             if isempty(tubi.currentTime)
                 error('No currentTime set. Use QuapSlap.setTime()')
             end
-            cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tubi.currentTime) ;
-            cutPfn = sprintf(tubi.fullFileBase.cutPath, tubi.currentTime) ;
+            cutMeshfn = replace(tubi.fullFileBase.cutMesh, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
+            cutPfn = replace(tubi.fullFileBase.cutPath, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             tmp = load(cutMeshfn, 'cutMesh') ;
             tmp.cutMesh.v = tmp.cutMesh.v + tmp.cutMesh.vn * tubi.normalShift ;
             tubi.currentMesh.cutMesh = tmp.cutMesh ;
@@ -1165,7 +1209,9 @@ classdef TubULAR < handle
             if isempty(tubi.currentTime)
                 error('First set currentTime')
             end
-            uvcutMeshfn = sprintf(tubi.fullFileBase.uvcutMesh, tubi.currentTime) ;    
+            uvcutMeshfn = replace(tubi.fullFileBase.uvcutMesh, ...
+                tubi.timeStampStringSpec,...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;    
             tmp = load(uvcutMeshfn, 'uvcutMesh') ;
             tubi.currentMesh.uvcutMesh = tmp.uvcutMesh ;
             if nargout > 0
@@ -1190,7 +1236,9 @@ classdef TubULAR < handle
             if isempty(tubi.currentTime)
                 error('First set currentTime')
             end
-            spcutMeshfn = sprintf(tubi.fullFileBase.spcutMesh, tubi.currentTime) ;
+            spcutMeshfn = replace(tubi.fullFileBase.spcutMesh, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             tmp = load(spcutMeshfn, 'spcutMesh') ;
             tubi.currentMesh.spcutMesh = tmp.spcutMesh ;
             if nargout > 0
@@ -1209,7 +1257,9 @@ classdef TubULAR < handle
             end
         end
         function loadCurrentSPCutMeshSm(tubi)
-            spcutMeshfn = sprintf(tubi.fullFileBase.spcutMeshSm, tubi.currentTime) ;
+            spcutMeshfn = replace(tubi.fullFileBase.spcutMeshSm, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             tmp = load(spcutMeshfn, 'spcutMeshSm') ;
             tubi.currentMesh.spcutMeshSm = tmp.spcutMeshSm ;
         end
@@ -1225,7 +1275,8 @@ classdef TubULAR < handle
             end
         end
         function mesh = loadCurrentSPCutMeshSmRS(tubi)
-            spcutMeshfn = sprintf(tubi.fullFileBase.spcutMeshSmRS, tubi.currentTime) ;
+            spcutMeshfn = replace(tubi.fullFileBase.spcutMeshSmRS, ...
+                tubi.timeStampStringSpec, num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             tmp = load(spcutMeshfn, 'spcutMeshSmRS') ;
             tubi.currentMesh.spcutMeshSmRS = tmp.spcutMeshSmRS ;
             if nargout > 0
@@ -1244,7 +1295,8 @@ classdef TubULAR < handle
             end
         end
         function loadCurrentSPCutMeshSmRSC(tubi)
-            spcutMeshfn = sprintf(tubi.fullFileBase.spcutMeshSmRSC, tubi.currentTime) ;
+            spcutMeshfn = replace(tubi.fullFileBase.spcutMeshSmRSC, ...
+                tubi.timeStampStringSpec, num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             tmp = load(spcutMeshfn, 'spcutMeshSmRSC') ;
             tubi.currentMesh.spcutMeshSmRSC = tmp.spcutMeshSmRSC ;
         end
@@ -1335,8 +1387,9 @@ classdef TubULAR < handle
             if nargin < 2
                 maxIter = 200 ;
             end
-            ricciMeshfn = sprintf(tubi.fullFileBase.ricciMesh, ...
-                maxIter, tubi.currentTime) ;
+            ricciMeshfn = replace(tubi.fullFileBase.ricciMesh, ...
+                tubi.fileBase.ricciMesh, ...
+                sprintf(tubi.fileBase.ricciMesh, maxIter, tubi.currentTime)) ;
             load(ricciMeshfn, 'ricciMesh') ;
             tubi.currentMesh.ricciMesh = ricciMesh ;
         end
@@ -1360,7 +1413,16 @@ classdef TubULAR < handle
             else
                 t0Pathlines = tubi.t0set() ;
             end
-            fn = sprintf(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
+            % To define the filename in an operating-system dependent way,
+            % we here must do some gymnastics
+            if ispc
+                fn = replace(tubi.fileName.pathlines.quasiconformal, ...
+                    't0_%04d', sprintf('t0_%04d', t0Pathlines)) ;
+            else
+                % this should be identical as the above, but including the
+                % Unix version since it is easier to read.
+                fn = sprintf(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
+            end
             tubi.pathlines.beltrami = load(fn)  ;
             if nargout > 0 
                 beltrami = tubi.pathlines.beltrami ;
@@ -1384,9 +1446,14 @@ classdef TubULAR < handle
             if isfield(options, 't0Pathline')
                 t0p = options.t0Pathline ;
             end
-            indentFn = sprintf(tubi.fileName.pathlines.indentation, t0p) ;
+
+            indentFn = replace(tubi.fileName.pathlines.indentation, ...
+                    't0_%04d', sprintf('t0_%04d', t0p)) ;
+            % Unix-only version of path specification
+            % indentFn = sprintf(tubi.fileName.pathlines.indentation, t0p) ;
             if ~exist(indentFn, 'file') || overwrite 
-                radFn = sprintf(tubi.fileName.pathlines.radius, t0p) ;
+                radFn = replace(tubi.fileName.pathlines.radius, ...
+                    't0_%04d', sprintf('t0_%04d', t0p)) ;
                 if ~exist(radFn, 'file')
                     disp(['pathline radii not on disk: ' radFn])
                     tubi.measurePullbackPathlines(options) ;
@@ -1404,8 +1471,11 @@ classdef TubULAR < handle
                 
                 % Plot the indentation as a kymograph
                 close all
-                figfn = fullfile(sprintf(tubi.dir.pathlines.data, ...
-                    t0p), 'indentation_kymograph.png') ;
+                
+                figfn = fullfile(...
+                    replace(tubi.fileName.pathlines.data, ...
+                    't0_%04d', sprintf('t0_%04d', t0p)), ...
+                    'indentation_kymograph.png') ;
                 set(gcf, 'visible', 'off')
                 indentAP = mean(indentation, 3) ;
                 uspace = linspace(0, 1, nU) ;
@@ -1420,18 +1490,28 @@ classdef TubULAR < handle
                 
                 % Plot in 3d
                 % load reference mesh and pathline vertices in 3d
-                load(sprintf(tubi.fileName.pathlines.refMesh, t0p), ...
-                    'refMesh') ;
-                load(sprintf(tubi.fileName.pathlines.v3d, t0p), 'v3dPathlines') ;
-                indentDir = sprintf(tubi.dir.pathlines.indentation, t0p) ;
+                % Windows-compatible path specification:
+                refmeshLoadFile = replace(tubi.fileName.pathlines.refMesh, ...
+                    't0_%04d', sprintf('t0_%04d', t0p)) ;
+                % Unix-style is easier to read but equivalent:
+                % refmeshLoadFile = sprintf(tubi.fileName.pathlines.refMesh, t0p) ;
+                load(refmeshLoadFile, 'refMesh') ;
+
+                % Load the pathlines 
+                pathlineLoadFile = replace(tubi.fileName.pathlines.v3d, 't0_%04d', ...
+                    sprintf('t0_%04d', t0p)) ;
+                load(pathlineLoadFile, 'v3dPathlines') ;
+
+                indentDir = replace(tubi.dir.pathlines.indentation, 't0_%04d', ...
+                    sprintf('t0_%04d', t0p)) ;
                 if ~exist(indentDir, 'dir')
                     mkdir(indentDir) 
                 end
                 [~,~,~,xyzlim] = tubi.getXYZLims() ;
                 for tidx = 1:size(rad, 1)
                     tp = tubi.xp.fileMeta.timePoints(tidx) ;
-                    fn = fullfile(indentDir, 'indentation_%06d.png') ;
-                    if ~exist(fn, 'file') || overwrite
+                    figOutFn = fullfile(indentDir, sprintf('indentation_%06d.png', tp)) ;
+                    if ~exist(figOutFn, 'file') || overwrite
                         close all 
                         fig = figure('visible', 'off') ;
                         opts = struct() ;
@@ -1456,7 +1536,7 @@ classdef TubULAR < handle
                         sgtitle(['constriction, $t=$', ...
                             sprintf('%03d', (tp-t0p)*tubi.timeInterval), ...
                             ' ', tubi.timeUnits ], 'interpreter', 'latex')
-                        saveas(gcf, sprintf(fn, tp)) ;
+                        saveas(gcf, figOutFn) ;
                         close all
                     end
                 end
@@ -1587,12 +1667,20 @@ classdef TubULAR < handle
         
         % measure mean hoop centerline, Length, & Writhe of curve
         function [mss, mcline, avgpts] = getCurrentClineDVhoop(tubi)
+            %[mss, mcline, avgpts] = getCurrentClineDVhoop(tubi)
+            % Compute or load the centerline based on centroids of each 
+            % circumferential hoop of constant s (mean pathlength along
+            % tube)
+            %
+            %
             clineDVhoopBase = tubi.fullFileBase.clineDVhoop ;
             % load the centerline for this timepoint
             if isempty(tubi.currentTime)
                 error('Please first set currentTime')
             end
-            fn = sprintf(clineDVhoopBase, tubi.currentTime) ;
+            fn = replace(clineDVhoopBase, ...
+                tubi.timeStampStringSpec, ...
+                num2str(tubi.currentTime, tubi.timeStampStringSpec)) ;
             disp(['Loading DVhoop centerline from ' fn])
             try
                 load(fn, 'mss', 'mcline', 'avgpts')
@@ -1612,6 +1700,7 @@ classdef TubULAR < handle
         [Wr, Wr_density, dWr, Length_t, clines_resampled] = ...
             measureWrithe(tubi, options)
         function Length_t = measureLength(tubi, options)
+            % Measure the length of the centerline curve over time
             if nargin < 2
                 options = struct() ;
             end
@@ -1635,8 +1724,9 @@ classdef TubULAR < handle
             nsmM = zeros(length(timePoints), tubi.nU*tubi.nV, 3) ;
             % Load each mesh into v3dsmM and nsmM    
             for qq = 1:length(timePoints)
-                load(sprintf(tubi.fullFileBase.spcutMeshSm, ...
-                    timePoints(qq)), 'spcutMeshSm') ;
+                load(replace(tubi.fullFileBase.spcutMeshSm, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(timePoints(qq), tubi.timeStampStringSpec)), 'spcutMeshSm') ;
                 v3dsmM(qq, :, :) = spcutMeshSm.v ;
                 nsmM(qq, :, :) = spcutMeshSm.vn ;
             end
@@ -1650,15 +1740,34 @@ classdef TubULAR < handle
         processCorrectedCellSegmentation2D(tubi, options)
         generateCellSegmentation3D(tubi, options)
         generateCellSegmentationPathlines3D(tubi, options)
+
         function seg2d = getCurrentSegmentation2D(tubi, options)
             % Obtain the cell segmentation in 3D pullback space
+            %
+            % Parameters
+            % ----------
+            % tubi : current TubULAR class instance
+            % options : struct with fields passed to
+            % generateCellSegmentation() if segmentation is not on disk or 
+            % in current properties
+            %  
+
+            % If we don't already have a segmentation in hand, load or
+            % compute one
             if isempty(tubi.currentSegmentation.seg2d)
-                try
-                    tubi.currentSegmentation.seg2d = load(sprintf(tubi.fullFileBase.segmentation2d, tubi.currentTime)) ;
+                try 
+                    assert(options.overwrite == false)
+                    tubi.currentSegmentation.seg2d = ...
+                        load(replace(tubi.fullFileBase.segmentation2d, ...
+                        tubi.timeStampStringSpec, ...
+                        num2str(tubi.currentTime, tubi.timeStampStringSpec))) ;
                 catch
                     options.timePoints = [tubi.currentTime] ;
                     tubi.generateCellSegmentation2D(options) ;
-                    tubi.currentSegmentation.seg2d = load(sprintf(tubi.fullFileBase.segmentation2d, tubi.currentTime)) ;
+                    tubi.currentSegmentation.seg2d = ...
+                        load(replace(tubi.fullFileBase.segmentation2d,...
+                        tubi.timeStampStringSpec, ...
+                        num2str(tubi.currentTime, tubi.timeStampStringSpec))) ;
                 end
             end
             % if requested, return segmentation as output
@@ -1678,13 +1787,31 @@ classdef TubULAR < handle
             % Obtain the cell segmentation in 3D pullback space
             if isempty(tubi.currentSegmentation.seg2dCorrected)
                 try
-                    tubi.currentSegmentation.seg2dCorrected = ...
-                        load(sprintf(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
+                    if ispc
+                        % OS-independent file path:
+                        tubi.currentSegmentation.seg2dCorrected = ...
+                            load(fullfile(tubi.dir.segmentation, ...
+                            sprintf('seg2d_corrected_%s', coordSys), ...
+                            sprintf(tubi.fileName.seg2dCorrected, tubi.currentTime))) ;
+                    else
+                        % Unix file path:
+                        tubi.currentSegmentation.seg2dCorrected = ...
+                           load(sprintf(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
+                    end
                 catch
                     options.timePoints = [tubi.currentTime] ;
                     tubi.processCorrectedCellSegmentation2D(options) ;
-                    tubi.currentSegmentation.seg2dCorrected = ...
-                        load(sprintf(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
+                    if ispc
+                        % OS-independent file path:
+                        tubi.currentSegmentation.seg2dCorrected = ...
+                            load(fullfile(tubi.dir.segmentation, ...
+                            sprintf('seg2d_corrected_%s', coordSys), ...
+                            sprintf(tubi.fileName.seg2dCorrected, tubi.currentTime))) ;
+                    else
+                        % Unix file path:
+                        tubi.currentSegmentation.seg2dCorrected = ...
+                           load(sprintf(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
+                    end
                 end
             end
             % if requested, return segmentation as output
@@ -1713,14 +1840,34 @@ classdef TubULAR < handle
             % Obtain the cell segmentation in 3D pullback space
             if isempty(tubi.currentSegmentation.seg3dCorrected)
                 try
-                    tubi.currentSegmentation.seg3dCorrected = ...
-                        load(sprintf(tubi.fullFileBase.segmentation3dCorrected, tubi.currentTime)) ;
+                    if ispc
+                        % OS-independent file path:
+                        tubi.currentSegmentation.seg3dCorrected = ...
+                            load(fullfile(tubi.dir.segmentation, ...
+                            sprintf('seg2d_corrected_%s', coordSys), ...
+                            sprintf(tubi.fileName.seg3dCorrected, tubi.currentTime))) ;
+                    else
+                        % Unix file path:
+                        tubi.currentSegmentation.seg3dCorrected = ...
+                           load(sprintf(tubi.fullFileBase.segmentation3dCorrected, ...
+                           coordSys, tubi.currentTime)) ;
+                    end
                 catch
                     options.timePoints = [tubi.currentTime] ;
                     options.corrected = true ;
                     tubi.processCorrectedCellSegmentation3D(options) ;
-                    tubi.currentSegmentation.seg3dCorrected = ...
-                        load(sprintf(tubi.fullFileBase.segmentation3dCorrected, tubi.currentTime)) ;
+                    if ispc
+                        % OS-independent file path:
+                        tubi.currentSegmentation.seg3dCorrected = ...
+                            load(fullfile(tubi.dir.segmentation, ...
+                            sprintf('seg2d_corrected_%s', coordSys), ...
+                            sprintf(tubi.fileName.seg3dCorrected, tubi.currentTime))) ;
+                    else
+                        % Unix file path:
+                        tubi.currentSegmentation.seg3dCorrected = ...
+                           load(sprintf(tubi.fullFileBase.segmentation3dCorrected, ...
+                           coordSys, tubi.currentTime)) ;
+                    end
                 end
             end
             % if requested, return segmentation as output
@@ -1730,14 +1877,18 @@ classdef TubULAR < handle
         end
         function seg3d = loadCurrentSegmentation3D(tubi) 
             tubi.currentSegmentation.seg3d = ...
-                load(sprintf(tubi.fullFileBase.segmentation3d, tubi.currentTime)) ;
+                load(replace(tubi.fullFileBase.segmentation3d, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(tubi.currentTime, tubi.timeStampStringSpec))) ;
             if nargout > 0
                 seg3d = tubi.currentSegmentation.seg3d ;
             end
         end
         function seg3dCorr = loadCurrentSegmentation3DCorrected(tubi) 
             tubi.currentSegmentation.seg3dCorrected = ...
-                load(sprintf(tubi.fullFileBase.segmentation3dCorrected, tubi.currentTime)) ;
+                load(replace(tubi.fullFileBase.segmentation3dCorrected, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(tubi.currentTime, tubi.timeStampStringSpec))) ;
             if nargout > 0
                 seg3dCorr = tubi.currentSegmentation.seg3dCorrected ;
             end
@@ -1815,8 +1966,9 @@ classdef TubULAR < handle
             tubi.piv.raw = load(tubi.fileName.pivRaw.raw) ;  
             timePoints = tubi.xp.fileMeta.timePoints ;
             if strcmp(tubi.piv.imCoords, 'sp_sme')
-                im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, ...
-                    timePoints(1))) ;
+                im0 = imread(replace(tubi.fullFileBase.im_sp_sme, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(timePoints(1), tubi.timeStampStringSpec)));
                 % for now assume all images are the same size
                 tubi.piv.Lx = size(im0, 1) * ones(length(timePoints), 1) ;
                 tubi.piv.Ly = size(im0, 2) * ones(length(timePoints), 1) ;
@@ -1919,7 +2071,9 @@ classdef TubULAR < handle
             
             % get image size if we push to 3d or forceShift
             if strcmp(tubi.piv.imCoords, 'sp_sme')
-                im = imread(sprintf(tubi.fullFileBase.im_sp_sme, t0)) ;
+                im = imread(replace(tubi.fullFileBase.im_sp_sme, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(t0, tubi.timeStampStringSpec))) ;
                 forceShift = -size(im, 1) * 0.5 ;
             else
                 error('Handle coordSys here')
@@ -2121,7 +2275,8 @@ classdef TubULAR < handle
             end
             % assign t0 as the pathline t0
             tubi.pathlines.t0 = t0 ;
-            tmp = load(sprintf(tubi.fileName.pathlines.refMesh, t0), ...
+            tmp = load(replace(tubi.fileName.pathlines.refMesh, ...
+                't0_%04d', sprintf('t0_%04d', t0)), ...
                 'refMesh') ;
             tubi.pathlines.refMesh = tmp.refMesh ;
             
@@ -2130,19 +2285,34 @@ classdef TubULAR < handle
                     'facePathlines'} ;
             end
             if any(contains(varargin, 'pivPathlines'))
-                load(sprintf(tubi.fileName.pathlines.XY, t0), 'pivPathlines')
+                if ispc
+                    % OS-independent path building
+                    xyfn = replace(tubi.fileName.pathlines.XY, 't0_%04d', ...
+                        sprintf('t0_%04d', t0)) ;
+                else
+                    % Unix-only equivalent
+                    xyfn = sprintf(tubi.fileName.pathlines.XY, t0) ;
+                end    
+                load(xyfn, 'pivPathlines')
                 tubi.pathlines.piv = pivPathlines ;
             end
             if any(contains(varargin, 'vertexPathlines'))
-                load(sprintf(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
+                vXYpathlinefn = replace(tubi.fileName.pathlines.vXY, ...
+                    't0_%04d', sprintf('t0_%04d', t0)) ;
+                load(vXYpathlinefn, 'vertexPathlines')
                 tubi.pathlines.vertices = vertexPathlines ;
             end
             if any(contains(varargin, 'facePathlines'))
-                load(sprintf(tubi.fileName.pathlines.fXY, t0), 'facePathlines')
+                fXYpathlinefn = replace(tubi.fileName.pathlines.fXY, ...
+                    't0_%04d', sprintf('t0_%04d', t0)) ;
+                load(fXYpathlinefn, 'facePathlines')
                 tubi.pathlines.faces = facePathlines ;
             end
             if any(contains(varargin, 'vertexPathlines3d')) || any(contains(varargin, 'vertices3d'))
-                tmp = load(sprintf(tubi.fileName.pathlines.v3d, t0)) ;
+                % load pathlines that intersect the mesh vertices at t=t0
+                v3dpathlinefn = replace(tubi.fileName.pathlines.v3d, ...
+                    't0_%04d', sprintf('t0_%04d', t0)) ;
+                tmp = load(v3dpathlinefn) ;
                 tubi.pathlines.vertices3d = tmp.v3dPathlines ;
                 tubi.pathlines.vertices3d.smoothing_sigma = tmp.smoothing_sigma ;
             end
@@ -2337,7 +2507,11 @@ classdef TubULAR < handle
             
             tubi.currentStrain.pathline.t0Pathlines = t0Pathlines ;
             if any(contains(varargin, 'strain'))
-                ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0Pathlines, tubi.currentTime) ;
+                % OS-independent file path definition
+                ffn = replace(replace(tubi.fullFileBase.pathlines.strain, ...
+                    't0_%04d', sprintf('t0_%04d', t0Pathlines)), ...
+                    tubi.fileBase.strain, sprintf(tubi.fileBase.strain, tubi.currentTime));
+                % ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0Pathlines, tubi.currentTime) ;
                 tubi.currentStrain.pathline.strain = load(ffn) ;
             end
 
@@ -2362,6 +2536,11 @@ classdef TubULAR < handle
         end
         measurePathlineStrain(tubi, options)
         function [strain, tre, dev, theta] = getPathlineStrain(tubi, options)
+            % [strain, tre, dev, theta] = getPathlineStrain(tubi, options)
+            % Compute or load the integrated tissue strain measured in the
+            % Lagrangian frame via the deformation of a mesh whose vertices
+            % are advected along pathlines.
+            % 
             % Parameters
             % ----------
             % tubi : TubULAR instance
@@ -2383,7 +2562,9 @@ classdef TubULAR < handle
             for tidx = 1:ntps
                 tp = tubi.xp.fileMeta.timePoints(tidx) ;
                 disp(['t = ' num2str(tp)])
-                ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0Pathlines, tp) ;
+                ffn = replace(replace(tubi.fullFileBase.pathlines.strain,...
+                    't0_%04d', sprintf('t0_%04d', t0Pathlines)), ...
+                    'strain_%06d.mat', sprintf('strain_%06d.mat', tp)) ;
                 tmp = load(ffn, 'strain', 'tre', 'dev', 'theta') ;
                 
                 if tidx == 1
@@ -2434,8 +2615,9 @@ classdef TubULAR < handle
                 end
             end
             
-            muAPfn = sprintf(...
-                tubi.fileName.pathlines.kymographs.mu, t0Pathlines) ;
+            muAPfn = replace(...
+                tubi.fileName.pathlines.kymographs.mu, ...
+                't0_%04d', sprintf('t0_%04d', t0Pathlines)) ;
             tmp = load(muAPfn) ;
             
             re = real(tmp.mu_apM) ;
@@ -2460,8 +2642,9 @@ classdef TubULAR < handle
             set(gcf, 'color','w')
             % set(gcf, 'renderer', 'painters')
             
-            saveas(gcf, fullfile(sprintf(...
-                tubi.dir.pathlines.kymographs, t0Pathlines), ...
+            saveas(gcf, fullfile(replace(...
+                tubi.dir.pathlines.kymographs, 't0_%04d', ...
+                sprintf('t0_%04d', t0Pathlines)), ...
                 sprintf(...
                 'mu_apM_kumograph_pullbackPathlines_%06dt0.png', ...
                 t0Pathlines)))
@@ -2469,8 +2652,9 @@ classdef TubULAR < handle
             % Save axis content as png image with accompanying pdf of
             % figure frame
             FF = getframe(gca) ;
-            imwrite(FF.cdata, fullfile(sprintf(...
-                tubi.dir.pathlines.kymographs, t0Pathlines), ...
+            imwrite(FF.cdata, fullfile(replace(...
+                tubi.dir.pathlines.kymographs, ...
+                't0_%04d', sprintf('t0_%04d', t0Pathlines)), ...
                 sprintf(...
                 'mu_apM_kumograph_pullbackPathlines_%06dt0_image.png', ...
                 t0Pathlines)))
@@ -2479,8 +2663,9 @@ classdef TubULAR < handle
             axes(cbs{1})
             % Save figure frame as PDF without image content (for fusion in
             % vector graphics software)
-            saveas(gcf, fullfile(sprintf(...
-                tubi.dir.pathlines.kymographs, t0Pathlines), ...
+            saveas(gcf, fullfile(replace(...
+                tubi.dir.pathlines.kymographs, ...
+                sprintf('t0_%04d', t0Pathlines)), ...
                 sprintf(...
                 'mu_apM_kumograph_pullbackPathlines_%06dt0_frame.pdf', ...
                 t0Pathlines)))

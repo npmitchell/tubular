@@ -268,6 +268,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 if tidx == 1 || chooseSeedCenterEveryTimepoint
                     msg = 'Flip to desired frame to select a center pt using arrows <^v>, then press Enter' ;
                     pred2show = pred(:,:,:, opts.foreGroundChannel) ;
+                    clf
                     framez = flipThroughStackFindLayer(pred2show, msg);
                     clearvars pred2show
                     msg = 'Click on the desired point as a seed for the level set' ;
@@ -392,7 +393,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
             % data_clipped(data_clipped < 0) = 0. ;
 
             % visualize result
-            if preview & previewIsosurface
+            if preview && previewIsosurface
                 disp('Previewing data as isosurface -- close figure to continue')
                 close all
                 isosurface(data) ;
@@ -404,16 +405,17 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 % view([60,80,45])
                 % set(gcf, 'color', 'w')
                 % export_fig( './initial_guess_300_v2.png', '-r300')
-                waitfor(gcf)
+                % waitfor(gcf)
+                pause(5)
             end
 
-            disp(['niter is ', num2str(niter_ii)]);
+            disp(['Smoothing now; niter is ', num2str(niter_ii)]);
             BW = activecontour(data, init_ls, niter_ii, 'Chan-Vese', ...
                 'SmoothFactor', tension, 'ContractionBias', -pressure) ;
 
             % visualize result
             if preview
-                clf
+                close all
                 isosurface(BW) ;
                 hold on;
                 isosurface(data, ones(size(init_ls))) ;
@@ -423,7 +425,8 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 % view([60,80,45])
                 % set(gcf, 'color', 'w')
                 % export_fig( './final_guess_300_full.png', '-r300')
-                waitfor(gcf)
+                % waitfor(gcf)
+                pause(5)
             end
 
             % Post processing

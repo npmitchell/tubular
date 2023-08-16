@@ -62,6 +62,8 @@ else
 end
 if isfield(opts, 'ilastikOutputAxisOrder')
     ilastikOutputAxisOrder = opts.ilastikOutputAxisOrder ;
+elseif isfield(opts, 'iLastikOutputAxisOrder')
+    ilastikOutputAxisOrder = opts.iLastikOutputAxisOrder ;
 end
 if isfield(opts, 'normal_step')
     normal_step = opts.normal_step ;
@@ -186,9 +188,15 @@ if redo_rot_calc || overwrite
     if use_iLastik
         %% Dorsal COM for first timepoint
         % load the probabilities for anterior posterior dorsal
-        afn = sprintf(aProbFileName, tt);
-        pfn = sprintf(pProbFileName, tt);
-        dfn = sprintf(dProbFileName, tt);
+        afn = replace(aProbFileName, tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec));
+        pfn = replace(pProbFileName, tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec));
+        dfn = replace(dProbFileName, tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec));
+    
+        % Old version fails on Windows:
+        % afn = sprintf(aProbFileName, tt);
+        % pfn = sprintf(pProbFileName, tt);
+        % dfn = sprintf(dProbFileName, tt);
+    
         disp(['Reading ' afn])
         adatM = h5read(afn, '/exported_data');
 
@@ -209,31 +217,58 @@ if redo_rot_calc || overwrite
         end
 
         % Obtain just the dorsal channel from probabilities
-        if strcmpi(ilastikOutputAxisOrder, 'cxyz')
+        dorsalAxis = strfind(ilastikOutputAxisOrder, 'c') ;
+        if dorsalAxis == 1
             ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'xyzc')
+        elseif dorsalAxis == 2 
+            ddat = squeeze(ddatM(:, dorsalChannel, :, :)) ;
+        elseif dorsalAxis == 3
+            ddat = squeeze(ddatM(:, :, dorsalChannel, :)) ;
+        elseif dorsalAxis == 4 
             ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'czyx')
-            ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
-            ddat = permute(ddat, [3, 2, 1]) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'cyzx')
-            ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
-            ddat = permute(ddat, [2, 3, 1]) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'cyxz')
-            ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
-            ddat = permute(ddat, [2, 1, 3]) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'zyxc')
-            ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
-            ddat = permute(ddat, [3, 2, 1]) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'yxzc')
-            ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
-            ddat = permute(ddat, [2, 1, 3]) ;
-        elseif strcmpi(ilastikOutputAxisOrder, 'czxy')
-            ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
-            ddat = permute(ddat, [3, 1, 2]) ;
         else
-            error('Did not recognize ilastikOutputAxisOrder')
+            error(['Expected 4D dorsal probabilities data, but was ' ...
+                num2str(length(size(ddatM))) 'D'])
         end
+
+        xyzstring = erase(lower(ilastikOutputAxisOrder), 'c') ;
+        xpos = strfind(xyzstring, 'x') ;
+        ypos = strfind(xyzstring, 'y') ;
+        zpos = strfind(xyzstring, 'z') ;
+        ddat = permute(ddat, [xpos, ypos, zpos]) ;
+
+        % if strcmpi(ilastikOutputAxisOrder, 'cxyz')
+        %     ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'xyzc')
+        %     ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'czyx')
+        %     ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
+        %     ddat = permute(ddat, [3, 2, 1]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'zyxc')
+        %     ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+        %     ddat = permute(ddat, [3, 2, 1]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'cyxz')
+        %     ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
+        %     ddat = permute(ddat, [2, 1, 3]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'yxzc')
+        %     ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+        %     ddat = permute(ddat, [2, 1, 3]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'cyzx')
+        %     ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
+        %     ddat = permute(ddat, [3, 1, 2]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'yzxc')
+        %     ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+        %     ddat = permute(ddat, [3, 1, 2]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'czxy')
+        %     ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
+        %     ddat = permute(ddat, [2, 3, 1]) ;
+        % elseif strcmpi(ilastikOutputAxisOrder, 'zxyc')
+        %     ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+        %     % ddat = permute(ddat, [3, 1, 2]) ;
+        %     ddat = permute(ddat, [2, 3, 1]) ;
+        % else
+        %     error('Did not recognize ilastikOutputAxisOrder')
+        % end
 
         % Convert from xyz to the mesh / tubi class axis order, if not xyz
         % Note that axisOrder is applying upon invoking getCurrentData()
@@ -294,6 +329,7 @@ if redo_rot_calc || overwrite
             % load current mesh & plot the dorsal dot
             for ii = 1:3
                 subplot(1, 3, ii)
+                
                 mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
                 trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
                 hold on;
@@ -310,7 +346,7 @@ if redo_rot_calc || overwrite
                 ylabel('y')
                 zlabel('z')
             end
-            legend({'surface', 'dorsal pt for axess definition'}, ...
+            legend({'surface', 'dorsal pt for axis definition'}, ...
                 'Location', 'northwest')
             sgtitle('Dorsal point for APDV coordinates')
             saveas(gcf, [dptname(1:end-3) 'png'])
