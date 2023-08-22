@@ -618,7 +618,9 @@ if redo_rot_calc || overwrite
         clf
         for ii = 1:3
             subplot(1, 3, ii)
-            mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+            mesh = read_ply_mod(...
+                replace(tubi.fullFileBase.mesh, tubi.timeStampStringSpec, ...
+                num2str(tt, tubi.timeStampStringSpec))) ;
             trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
             hold on;
             plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')

@@ -1,5 +1,8 @@
 function dat2crop = cropToMatchSize(dat2crop, dataRef)
 % dat2crop = cropToMatchSize(dat2crop, dataRef)
+% 
+% Todo: crop to keep the center of the data in the center instead of taking
+% the smallest-position corner
 %   
 % Parameters
 % ----------
@@ -10,6 +13,7 @@ function dat2crop = cropToMatchSize(dat2crop, dataRef)
 % -------
 % dat2crop : output data whose size matches dataRef
 %
+% NPMitchell 2023
 
     if ~all(size(dat2crop) == size(data))
 

@@ -181,11 +181,11 @@ if ~exist(meshDir, 'dir')
 end
 
 if ~contains(ofn_ply, '%') || ~contains(ofn_ply, 'd')
-    ofn_ply = [ofn_ply '%06d.ply'] ;
+    ofn_ply = [ofn_ply tubi.timeStampStringSpec '.ply'] ;
 end
 
 if ~contains(ofn_smoothply, '%') || ~contains(ofn_smoothply, 'd')
-    ofn_smoothply = [ofn_smoothply '%06d.ply'] ;
+    ofn_smoothply = [ofn_smoothply tubi.timeStampStringSpec '.ply'] ;
 end
 
 for tidx = 1:length(tubi.xp.fileMeta.timePoints)
@@ -197,7 +197,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
     end
     
     %% Define the mesh we seek & check if it exists already on disk
-    outputLSfn = fullfile(meshDir, sprintf([ofn_ls '%06d.' dtype], tp)) ;
+    outputLSfn = fullfile(meshDir, sprintf([ofn_ls tubi.timeStampStringSpec '.' dtype], tp)) ;
     outputMesh = fullfile(meshDir, sprintf(ofn_ply, tp)) ;
     outputSmoothMesh = fullfile(meshDir, sprintf(ofn_smoothply, tp));
     
@@ -294,7 +294,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
             if tidx > 1 || strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
                 % User has NOT supplied fn from detectOptions
                 init_ls_fn = [ofn_ls, ...
-                    num2str(previous_tp, '%06d' ) '.' dtype] ;
+                    num2str(previous_tp, tubi.timeStampStringSpec ) '.' dtype] ;
             end
 
             disp([ 'initial level set fn = ', init_ls_fn])
