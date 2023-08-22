@@ -1,7 +1,10 @@
 function getMeshes(tubi, overwrite, method)
 % Obtain mesh surfaces of volumetric data (like ImSAnE's surface
 % detection methods), here using level sets activecontours, akin to 
-% ImSAnE's integralDetector method. 
+% ImSAnE's integralDetector method. Note that you can adjust the starting
+% configuration of the level set by using the output of a previous
+% timepoint (which can be modified before evolution using pre_pressure 
+% and pre_tension, for example by seeding with a sphere at centerguess.
 %
 % Parameters
 % ----------
@@ -302,6 +305,12 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 init_ls = load(init_ls_fn, 'BW') ;
                 init_ls = init_ls.BW ;
                 niter_ii = niter ;
+                
+                % If the level set is not the same size as the current data
+                % (this will happen if different timepoints have different
+                % sizes of data)
+                init_ls = cropToMatchSize(init_ls, data) ;
+
             elseif exist(fullfile(meshDir, init_ls_fn), 'file') || ...
                     exist(fullfile(meshDir,[init_ls_fn '.mat']), 'file') 
                 % It does exist, and given name is the relative path
@@ -311,6 +320,11 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 init_ls = load(fullfile(meshDir, init_ls_fn), 'BW') ;
                 init_ls = init_ls.BW ;
                 niter_ii = niter ; 
+                
+                % If the level set is not the same size as the current data
+                % (this will happen if different timepoints have different
+                % sizes of data)
+                init_ls = cropToMatchSize(init_ls, data) ;
             else
                 % The guess for the initial levelset does NOT exist, so use
                 % a sphere for the guess.
