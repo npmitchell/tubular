@@ -1,7 +1,11 @@
-function out = sprintfm(inputString, number)
+function out = sprintfm(inputString, varargin)
+% Wrapper for sprintf()
 
-out = regexprep(inputString, '(?<!\\)\\(?!\\)', '\\\\');
-out = sprintf(out, number) ;
+if ispc
+    inputString = regexprep(inputString, '(?<!\\)\\(?!\\)', '\\\\');
+end
+
+out = sprintf(inputString, varargin{:}) ;
 
 end
 
