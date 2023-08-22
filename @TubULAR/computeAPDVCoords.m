@@ -330,7 +330,8 @@ if redo_rot_calc || overwrite
             for ii = 1:3
                 subplot(1, 3, ii)
                 
-                mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+                mesh = read_ply_mod(sprintfm(tubi.fullFileBase.mesh, tt)) ;
+
                 trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
                 hold on;
                 plot3(dcom(1) * ssfactor, dcom(2) * ssfactor, dcom(3) * ssfactor, 'o')
@@ -432,7 +433,7 @@ if redo_rot_calc || overwrite
             clf
             for ii = 1:3
                 subplot(1, 3, ii)
-                mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+                mesh = read_ply_mod(sprintfm(tubi.fullFileBase.mesh, tt)) ;
                 trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
                 hold on;
                 plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')
@@ -458,7 +459,7 @@ if redo_rot_calc || overwrite
             %% Define "start point" as anterior COM projected onto mesh
             if strcmpi(anteriorMethod, 'insideornearestvertex')
                 disp('Defining start point via point matching for first TP')
-                meshfn = sprintf(tubi.fullFileBase.mesh, tubi.xp.fileMeta.timePoints(1)) ;
+                meshfn = sprintfm(tubi.fullFileBase.mesh, tubi.xp.fileMeta.timePoints(1)) ;
                 disp(['Loading mesh ' meshfn])
                 mesh = read_ply_mod(meshfn );
                 vtx_sub = mesh.v / ssfactor ;
@@ -506,7 +507,7 @@ if redo_rot_calc || overwrite
         end
     elseif use_MOI
         disp('Defining APDV based on datavolume axes, without major alignment/rotation of the object')
-        meshfn = sprintf(tubi.fullFileBase.mesh, tt) ;
+        meshfn = sprintfm(tubi.fullFileBase.mesh, tt) ;
         disp(['Loading mesh ' meshfn])
         mesh = read_ply_mod(meshfn );
         moi = momentOfInertia3D(mesh.v) ;    
@@ -550,7 +551,7 @@ if redo_rot_calc || overwrite
         clf
         for ii = 1:3
             subplot(1, 3, ii)
-            mesh = read_ply_mod(sprintf(tubi.fullFileBase.mesh, tt)) ;
+            mesh = read_ply_mod(sprintfm(tubi.fullFileBase.mesh, tt)) ;
             trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
             hold on;
             plot3(acom(1) * ssfactor, acom(2) * ssfactor, acom(3) * ssfactor, 'o')
@@ -780,7 +781,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%
 fig = figure ;
 disp('Displaying mesh in figure ...')
-mesh = read_ply_mod(sprintf([tubi.fullFileBase.mesh ], tt)) ;
+mesh = read_ply_mod(sprintfm([tubi.fullFileBase.mesh ], tt)) ;
 for ii = 1:3
     subplot(1, 3, ii)
     trisurf(triangulation(mesh.f, mesh.v), 'edgecolor', 'none', 'facealpha', 0.1)
