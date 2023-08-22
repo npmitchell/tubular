@@ -24,11 +24,12 @@ function [phi0_fit, phi0s] = fitPhiOffsetsFromPrevPullback(IV,...
 %   lower bound for the fit of phi (offset to v)
 % upperbound : float
 %   upper bound for the fit of phi (offs
-% save_im 
-% plotfn
+% save_im : bool
+%   save images for debugging
+% plotfn : path to filename for saving plots
 % Options : struct 
 %   Options for the pullback generation to compare
-% step : int
+% step_phi0tile : int (pixels)
 %   How far apart each column to correlate, distance in pixels in x dir
 % width : int
 %   How wide in pixels for each column to correlate

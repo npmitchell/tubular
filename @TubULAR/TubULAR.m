@@ -1028,8 +1028,7 @@ classdef TubULAR < handle
 
         % Load raw mesh or alignedMesh (rotated & scaled to APDV)
         function rawMesh = loadCurrentRawMesh(tubi)
-            meshfn = fullfile(tubi.dir.mesh, ...
-                sprintf(tubi.fileBase.mesh, tubi.currentTime)) ;
+            meshfn = sprintfm(tubi.fullFileBase.mesh, tubi.currentTime) ;
             rawMesh = read_ply_mod(meshfn) ;
             tubi.currentMesh.rawMesh = rawMesh ;
         end
@@ -1045,8 +1044,7 @@ classdef TubULAR < handle
             end
         end
         function alignedMesh = loadCurrentAlignedMesh(tubi)
-            meshfn = fullfile(tubi.dir.alignedMesh, ...
-                sprintf(tubi.fileBase.alignedMesh, tubi.currentTime)) ;
+            meshfn = sprintfm(tubi.fullFileBase.alignedMesh, tubi.currentTime) ;
             alignedMesh = read_ply_mod(meshfn) ;
             tubi.currentMesh.alignedMesh = alignedMesh ;
         end

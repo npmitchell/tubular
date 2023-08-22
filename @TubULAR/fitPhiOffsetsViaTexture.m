@@ -10,8 +10,14 @@ function phi0_fit = fitPhiOffsetsViaTexture(tubi, ...
 %   lowerboundy : float
 %   lowerboundy : float
 %   step_phi0tile : float
+%   step_phi0tile : int (pixels)
+%       How far apart each column to correlate, distance in pixels in x dir
 %   width_phi0tile : float 
-%   potential_sigmay : 
+%       How wide in pixels to consider each circumferential strip's 
+%       correlation 
+%   potential_sigmay : float
+%       Impose quadratic potential cost for motion in phi away from input
+%       guess with this prefactor. This penalizes errant large deviations. 
 %
 %
 %
