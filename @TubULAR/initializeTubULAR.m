@@ -153,6 +153,12 @@ tubi.fullFileBase.mip = fullfile(tubi.dir.mip, 'mip_%06d.tif') ;
 uvDir = fullfile(tubi.dir.mesh, sprintf('gridCoords_nU%04d_nV%04d', tubi.nU, tubi.nV)) ;
 tubi.dir.uvCoord = uvDir ;
 
+%% Since Windows machines have issues with sprintf due to the presence of 
+% backslashes in filenames. We therefore use num2str() with the timestamp
+% format specifier. 
+timeStampFormatSpec = '%\d+[a-z]';
+tmp = regexp(tubi.fileBase.fn, timeStampFormatSpec, 'match');
+tubi.timeStampStringSpec = tmp{1};
 
 %% fileBases
 tubi.fileBase.name = xp.fileMeta.filenameFormat(1:end-4) ;
@@ -182,14 +188,13 @@ catch
         end
     else
         if contains(xp.detectOptions.ofn_smoothply, '.ply')
-            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply(1:end-4) '%06d'] ;
+            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply(1:end-4) tubi.timeStampStringSpec] ;
         else
-            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply '%06d'] ;
+            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply tubi.timeStampStringSpec] ;
         end
             
     end
      
-         
 end
 tubi.fileBase.alignedMesh = ...
     [tubi.fileBase.mesh '_APDV_um'] ;
@@ -377,9 +382,10 @@ tubi.fullFileBase.apBoundary = ...
 % tubi.fullFileBase.apBoundaryDorsalPts = tubi.fileName.apBoundaryDorsalPts ;
 tubi.fullFileBase.cylinderKeep = ...
     fullfile(tubi.dir.cylinderMesh, tubi.fileBase.cylinderKeep) ;
+tubi.fileBase.cylinderMeshClean = [tubi.fileBase.mesh '_cylindercut_clean.ply'] ;
 tubi.fullFileBase.cylinderMeshClean = ...
     fullfile(tubi.dir.cylinderMesh, 'cleaned',...
-    [tubi.fileBase.mesh '_cylindercut_clean.ply']) ;   
+    tubi.fileBase.cylinderMeshClean) ;   
 
 %% Define cutMesh directories
 % cutMesh = fullfile(meshDir, 'cutMesh') ;
@@ -522,7 +528,8 @@ tubi.dir.im_re_stack = imFolder_re_stack ;
 tubi.dir.curvatures = KHSmDir ;
 tubi.dir.meanCurvature = HSmDir ;
 tubi.dir.gaussCurvature = KSmDir ;
-tubi.fullFileBase.curvatures = fullfile(tubi.dir.curvatures, 'gauss_mean_curvature_%06d.mat') ;
+tubi.fileBase.curvatures = 'guass_mean_curvature_%06d.mat' ;
+tubi.fullFileBase.curvatures = fullfile(tubi.dir.curvatures, tubi.fileBase.curvatures);
 tubi.fullFileBase.cutMesh = ...
     fullfile(tubi.dir.cutMesh, [tubi.fileBase.name, '_cutMesh.mat']) ;
 tubi.fullFileBase.phi0fit = ...
@@ -860,12 +867,7 @@ if t0supplied_in_opts
     write_txt_with_header(tubi.fileName.t0, tubi.t0, 't0, the reference timestamp')
 end
 
-%% Since Windows machines have issues with sprintf due to the presence of 
-% backslashes in filenames. We therefore use num2str() with the timestamp
-% delimiter. 
-timeStampFormatSpec = '%\d+[a-z]';
-tmp = regexp(tubi.fileBase.fn, timeStampFormatSpec, 'match');
-tubi.timeStampStringSpec = tmp{1};
+
 
 
 

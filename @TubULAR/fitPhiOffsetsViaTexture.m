@@ -1,8 +1,19 @@
-function phi0_fit = fitPhiOffsetsViaTexture(QS, ...
+function phi0_fit = fitPhiOffsetsViaTexture(tubi, ...
     uspace_ds_umax, vspace, phi0_init, phi0TextureOpts)
-% fitPhiOffsetsViaTexture(QS)
+% fitPhiOffsetsViaTexture(tubi, uspace_ds_umax, vspace, phi0_init, phi0TextureOpts)
 %   fit offsets in the DV direction of pullback mesh by measuring phase
 %   correlation between current and previous frame
+%
+% Parameters
+% ----------
+% phi0TextureOpts : struct with fields
+%   lowerboundy : float
+%   lowerboundy : float
+%   step_phi0tile : float
+%   width_phi0tile : float 
+%   potential_sigmay : 
+%
+%
 %
 % NPMitchell 2020
 
@@ -13,42 +24,59 @@ step_phi0tile = 25 ;
 width_phi0tile = 150 ;
 potential_sigmay = 350 ;
 if nargin > 4
-    lowerboundy = phi0TextureOpts.lowerboundy ;
-    upperboundy = phi0TextureOpts.upperboundy ;
-    step_phi0tile = phi0TextureOpts.step_phi0tile ;
-    width_phi0tile = phi0TextureOpts.width_phi0tile ;
-    potential_sigmay = phi0TextureOpts.potential_sigmay ;
+    if isfield(phi0TextureOpts, 'lowerboundy')
+        lowerboundy = phi0TextureOpts.lowerboundy ;
+    end
+    if isfield(phi0TextureOpts, 'upperboundy')
+        upperboundy = phi0TextureOpts.upperboundy ;
+    end
+    if isfield(phi0TextureOpts, 'step_phi0tile')
+        step_phi0tile = phi0TextureOpts.step_phi0tile ;
+    end
+
+    if isfield(phi0TextureOpts, 'width_phi0tile')
+        width_phi0tile = phi0TextureOpts.width_phi0tile ;
+    end
+    if isfield(phi0TextureOpts, 'potential_sigmay')
+        potential_sigmay = phi0TextureOpts.potential_sigmay ;
+    end
 end
 
 % Identify previous sphi pullback
-imfn_sp_prev = sprintf( QS.fullFileBase.im_sp, QS.currentTime - 1 ) ;
+if tubi.currentTime > tubi.t0
+    disp(['Comparing phi0 to phi0(u) of timepoint: ' num2str(tubi.currentTime - 1)])
+    imfn_sp_prev = sprintf( tubi.fullFileBase.im_sp, tubi.currentTime - 1 ) ;
+else
+    disp(['Comparing phi0 to phi0(u) of timepoint: ' num2str(tubi.currentTime + 1)])
+    imfn_sp_prev = sprintf( tubi.fullFileBase.im_sp, tubi.currentTime + 1 ) ;
+end
 
 % Load 3D data for coloring mesh pullback
-if isempty(QS.currentData.IV)
-    QS.xp.loadTime(tt);
-    QS.xp.rescaleStackToUnitAspect();
+if isempty(tubi.currentData.IV)
+    tubi.xp.loadTime(tt);
+    tubi.xp.rescaleStackToUnitAspect();
 
     % Raw stack data
-    IV = QS.xp.stack.image.apply();
+    IV = tubi.xp.stack.image.apply();
     IV = imadjustn(IV{1});         
-    QS.currentData.IV = IV ;
+    tubi.currentData.IV = IV ;
 else
     % Raw stack data
-    IV = QS.currentData.IV ;
+    IV = tubi.currentData.IV ;
 end
 
 % Unpack QS
-nU = QS.nU ;
-nV = QS.nV ;
-sphiDir = QS.dir.spcutMesh ;
-phi0fitBase = QS.fullFileBase.phi0fit ;
-fileNameBase = QS.fileBase.name ;
+nU = tubi.nU ;
+nV = tubi.nV ;
+sphiDir = tubi.dir.spcutMesh ;
+phi0fitBase = tubi.fullFileBase.phi0fit ;
+fileNameBase = tubi.fileBase.name ;
 
 % Texture patch options
 Options.PSize = 5;
 Options.EdgeColor = 'none';
 % Texture image options
-Options.imSize = ceil( 1000 .* [ 1 QS.a_fixed ] );
+Options.imSize = ceil( 1000 .* [ 1 tubi.a_fixed ] );
 Options.yLim = [0 1];
 
 % fit the shifts in the y direction
@@ -57,6 +85,8 @@ Options.yLim = [0 1];
 % it shouldn't make any difference at all.
 dmyk = 0 ;
 if nargin < 4
+    phi0_fit = zeros(size(uspace_ds_umax)) ;
+elseif isempty(phi0_fit)
     phi0_fit = zeros(size(uspace_ds_umax)) ;
 else
     phi0_fit = phi0_init ;
@@ -68,12 +98,12 @@ phiv_kk = (vspace .* ones(nU, nV))' - phi0_fit .* ones(nU, nV) ;
 ensureDir([sphiDir, '/phi0_correction/'])
 while any(phi0_fit_kk > 0.002) && dmyk < 6
     disp(['Iteration ' num2str(dmyk)])
-    plotfn = sprintf(phi0fitBase, QS.currentTime, dmyk);
+    plotfn = sprintf(phi0fitBase, tubi.currentTime, dmyk);
     
     % Load previous pullback
     debugFnPattern = fullfile([sphiDir, '/phi0_correction/', ...
                 fileNameBase, '_prephi0_' num2str(dmyk) '.tif']) ;
-    patchImFn = sprintf( debugFnPattern, QS.currentTime - 1 )  ;
+    patchImFn = sprintf( debugFnPattern, tubi.currentTime - 1 )  ;
     [phi0_fit_kk, phi0s_kk] = fitPhiOffsetsFromPrevPullback(IV, ...
         uvgrid3d, cutMesh.umax, uspace_ds_umax, phiv_kk, ...
         ringpath_ss, imfn_sp_prev, lowerboundy, upperboundy, ...

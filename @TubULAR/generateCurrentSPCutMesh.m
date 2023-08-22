@@ -1,6 +1,35 @@
 function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 % generateCurrentSPCutMesh(QS, cutMesh, spcutMeshOptions)
 %
+% Compute the parameterization (s(u'),phi) where s is the
+% circumferentially-averaged pathlenth along the surface from u=0 to u' and
+% phi = v + phi0(u) is the cicumferential coordinate twisted by an amount
+% phi0 relative to the uv conformal parameterization. phi0 is chosen for
+% each discrete value of u based on either:
+%   (1) [spcutMeshOptions.phiMethod=='3dcurves']
+%       the geometric position of the circumferential curve in 3d space
+%       relative to the previous timepoint (or next timepoint if tubi.t0 >
+%       t, where t is the current timepoint in question). In other words,
+%       we rotate each slice of the tube to more closely match the
+%       geometric position of the analogous slice in a timepoint closer to
+%       t0. 
+%   (2) [spcutMeshOptions.phiMethod=='texture']
+%       the optical correspondence of each slice in pullback space with a
+%       'nearby' slice in pullback space of a previous timepoint (later
+%       timepoint if t<tubi.t0). In other words, we match the material
+%       position in the circumferential coordinate of a timepoint closer to
+%       t0
+%   (2) [spcutMeshOptions.phiMethod=='combined']
+%       first based on the geometric position of the circumferential curve 
+%       in 3d space relative to the previous timepoint 
+%       (or next timepoint if t0 >t, where t is the current timepoint in 
+%       question), THEN additionally apply an optical matching. This is
+%       useful if there is a lot of jittery motion of the tissue. Note that
+%       you can pass 
+%       In other words, we rotate each slice of the tube to more closely 
+%       match the geometric position of the analogous slice in a timepoint
+%       closer to t0. 
+% 
 % Note that the only output in APDV (spaceUnits) coordinates are
 %   mss, mcline, avgpts, avgpts_ss
 %
@@ -49,6 +78,12 @@ function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 %       width of kernel for smoothing of phi0 that takes v->phi=v-phi0.
 %       Must be odd if smoothingMethod=='savgol', does not matter 
 %       if smoothingMethod=='none'
+%   phi0TextureOpts : struct with fields
+%        lowerboundy : float
+%        lowerboundy : float
+%        step_phi0tile : float
+%        width_phi0tile : float 
+%        potential_sigmay : 
 %       
 %
 % Returns
@@ -120,6 +155,9 @@ if nargin > 2
     end
     if isfield(spcutMeshOptions, 'smoothingOrder')
         smoothingOrder = spcutMeshOptions.smoothingOrder ;
+    end
+    if isfield(spcutMeshOptions, 'phi0TextureOpts')
+         phi0TextureOpts = spcutMeshOptions.phi0TextureOpts ;
     end
 end
 
@@ -627,8 +665,8 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             end
         elseif strcmp(phi_method, 'texture') 
             disp('Computing phi(v) via texture matching (physical method)')
-            error('adjust this method to use later timepoint if tt>t0_for_comparison')
-            phi0_fit = tubi.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace) ;
+            phi0_fit = tubi.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace, [], ...
+                phi0TextureOpts) ;
         else
             error(["Could not recognize phi_method: ", ...
                 "must be 'texture' or '3dcurves' or 'combined'"])
@@ -637,10 +675,9 @@ if ~exist(spcutMeshfn, 'file') || overwrite
         % If we use a combined method, use curves3d as initial guess for
         % texture method
         if strcmp(phi_method, 'combined') 
-            error('adjust this method to use later timepoint if tt>t0_for_comparison')
             disp('Refining phi(v) via texture matching (physical method)')
             phi0_fit = tubi.fitPhiOffsetsViaTexture(uspace_ds_umax, vspace,...
-                        phi0_fit) ;
+                        phi0_fit, phi0TextureOpts) ;
         end
         close all
 
