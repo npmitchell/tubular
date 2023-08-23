@@ -92,7 +92,7 @@ for t = tubi.xp.fileMeta.timePoints
         disp('done with cylindermesh cleaning')
 
         % View results --------------------------------------------------------
-        mesh3dfigfn = sprintf( cylinderMeshCleanFigBase, t ) ;
+        mesh3dfigfn = sprintfm( cylinderMeshCleanFigBase, t ) ;
         if save_ims
             close all
             fig = figure('visible', 'off') ;

@@ -94,7 +94,7 @@ elseif tt < t0
     prevTP = tubi.xp.fileMeta.timePoints(previous_tidx) ;
 end
 
-cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tt) ;
+cutMeshfn = sprintfm(tubi.fullFileBase.cutMesh, tt) ;
 tubi.getCleanFastMarchingCenterlines() ;
 
 % Used to save time if mesh is loaded, but this can lead to problems
@@ -248,12 +248,12 @@ else
     % If a previous Twist is not held in RAM, compute it
     % if ~exist('prevTw', 'var')
     % Load previous mesh and previous cutP
-    prevcylmeshfn = sprintf( cylinderMeshCleanBase, prevTP) ;
+    prevcylmeshfn = sprintfm( cylinderMeshCleanBase, prevTP) ;
     disp(['Loading previous cylinderMeshClean: ' prevcylmeshfn])
     prevmesh = read_ply_mod( prevcylmeshfn ); 
     
-    disp(['Loading previous cutPath: ' sprintf(outcutfn, prevTP)])
-    prevcutP = dlmread(sprintf(outcutfn, prevTP), ',', 1, 0) ;
+    disp(['Loading previous cutPath: ' sprintfm(outcutfn, prevTP)])
+    prevcutP = dlmread(sprintfm(outcutfn, prevTP), ',', 1, 0) ;
     previousP = prevmesh.v(prevcutP, :) ;
     % Load previous centerline in raw units
     prevcline = cleanCntrlines{tubi.xp.tIdx(prevTP)} ; % use previous CORRECTED centerline (non-anomalous)
@@ -269,9 +269,9 @@ else
 
     % Which path to match this one to: choose previous timepoint
     % Load previous mesh and previous cutP
-    prevcylmeshfn = sprintf( cylinderMeshCleanBase, prevTP) ;
+    prevcylmeshfn = sprintfm( cylinderMeshCleanBase, prevTP) ;
     prevmesh = read_ply_mod( prevcylmeshfn ); 
-    prevcutP = dlmread(sprintf(outcutfn, prevTP), ',', 1, 0) ;
+    prevcutP = dlmread(sprintfm(outcutfn, prevTP), ',', 1, 0) ;
     previousP = prevmesh.v(prevcutP, :) ;
 
     % Current centerline: chop off ss to make Nx3
@@ -303,7 +303,7 @@ fprintf('Done with generating initial 3D CutMesh with cutPath\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Save the cutPath to txt file
 header = 'cutP (path of cut), indexing into vertices' ;
-write_txt_with_header(sprintf(outcutfn, tt), cutP, header)  
+write_txt_with_header(sprintfm(outcutfn, tt), cutP, header)  
 clearvars header
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -133,7 +133,7 @@ green = tubi.plotting.colors(4, :) ;
 redo_piv3d = overwrite ; 
 ii = 1 ;
 while ~redo_piv3d && ii < length(timePoints)
-    redo_piv3d = ~exist(sprintf(piv3dfn, timePoints(ii)), 'file') ;
+    redo_piv3d = ~exist(sprintfm(piv3dfn, timePoints(ii)), 'file') ;
     ii = ii + 1 ;
 end
 
@@ -145,7 +145,7 @@ if ~redo_piv3d
         if mod(timePoints(ii), 10) == 0
             disp(['loading piv3d for time t=' num2str(timePoints(ii))])
         end
-        load(sprintf(piv3dfn, timePoints(ii)), 'piv3dstruct')
+        load(sprintfm(piv3dfn, timePoints(ii)), 'piv3dstruct')
         piv3d{ii} = piv3dstruct ;
     end
 else
@@ -164,15 +164,15 @@ else
     % Iterate over all images with flow fields ----------------------------
     for ii=1:(ntps - 1)
         % Get timing
-        timestr = sprintf('%03d', (timePoints(ii) - t0) * tubi.timeInterval) ;
+        timestr = sprintfm('%03d', (timePoints(ii) - t0) * tubi.timeInterval) ;
         disp(['t = ' timestr])
         tp = timePoints(ii) ;
         dt = (timePoints(ii + 1) - tp) * tubi.timeInterval ;
         
         % Get scale of image
         if strcmp(pivimCoords, 'sp_sme') || strcmp(pivimCoords, 'spsme') 
-            im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
-            im1 = imread(sprintf(tubi.fullFileBase.im_sp_sme, timePoints(ii+1))) ;
+            im0 = imread(sprintfm(tubi.fullFileBase.im_sp_sme, tp)) ;
+            im1 = imread(sprintfm(tubi.fullFileBase.im_sp_sme, timePoints(ii+1))) ;
             
             doubleCovered = true ;
         else
@@ -191,14 +191,14 @@ else
         Ysz1 = size(im1, 1) ;
         
         % Load spcutMesh 
-        mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSm, ...
+        mesh0 = load(sprintfm(tubi.fullFileBase.spcutMeshSm, ...
             timePoints(ii)), 'spcutMeshSm') ;
         mesh0 = mesh0.spcutMeshSm ;
         umax0 = max(mesh0.u(:, 1)) ;
         vmax0 = max(mesh0.u(:, 2)) ;
         
         % Load next timepoint's spcutMesh
-        mesh1 = load(sprintf(tubi.fullFileBase.spcutMeshSm, ...
+        mesh1 = load(sprintfm(tubi.fullFileBase.spcutMeshSm, ...
             timePoints(ii + 1)), 'spcutMeshSm') ;
         mesh1 = mesh1.spcutMeshSm ;
         umax1 = max(mesh1.u(:, 1)) ;
@@ -599,7 +599,7 @@ else
             %     if mod(time(i), 10) == 0
             %         disp(['loading piv3d for time t=' num2str(time(i))])
             %     end
-            %     load(sprintf(piv3dfn, time(i)), 'piv3dstruct')
+            %     load(sprintfm(piv3dfn, time(i)), 'piv3dstruct')
             %     piv3d{i} = piv3dstruct ;
             % end
         end
@@ -816,8 +816,8 @@ else
         end
         
         % check if figure output exists already
-        outimfn_n = fullfile(vndir2d, sprintf([tubi.fileBase.name '.png'], tp)) ;
-        outimfn_t = fullfile(vtdir2d, sprintf([tubi.fileBase.name '.png'], tp)) ;
+        outimfn_n = fullfile(vndir2d, sprintfm([tubi.fileBase.name '.png'], tp)) ;
+        outimfn_t = fullfile(vtdir2d, sprintfm([tubi.fileBase.name '.png'], tp)) ;
         if save_ims && (~exist(outimfn_n, 'file') || overwrite)
             washout2d = 0.5 ;
             % Load the image to put flow on top
@@ -960,9 +960,9 @@ else
         clear datstruct
         
         % Save this timepoint's piv3d
-        disp(['Saving to file: ' sprintf(piv3dfn, timePoints(ii))])
+        disp(['Saving to file: ' sprintfm(piv3dfn, timePoints(ii))])
         piv3dstruct = piv3d{ii} ;
-        save(sprintf(piv3dfn, timePoints(ii)), 'piv3dstruct')
+        save(sprintfm(piv3dfn, timePoints(ii)), 'piv3dstruct')
         
     end 
 end

@@ -164,7 +164,7 @@ end
 tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0 ;
 
 % Output directory is inside metricKinematics dir
-mKPDir = sprintf(tubi.dir.strainRate.pathline.root, t0Pathline) ;
+mKPDir = sprintfm(tubi.dir.strainRate.pathline.root, t0Pathline) ;
 datdir = fullfile(mKPDir, 'measurements') ;
 % Data for kinematics on meshes (defined on vertices) [not needed here]
 % mdatdir = fullfile(mKDir, 'measurements') ;

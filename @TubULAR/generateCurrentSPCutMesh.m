@@ -172,7 +172,7 @@ nU = tubi.nU ;
 nV = tubi.nV ;
 a_fixed = tubi.a_fixed ;
 phi_method = tubi.phiMethod ;
-spcutMeshfn = sprintf(tubi.fullFileBase.spcutMesh, tt) ;
+spcutMeshfn = sprintfm(tubi.fullFileBase.spcutMesh, tt) ;
 fileNameBase = tubi.fileBase.name ; 
 phi0fitBase = tubi.fullFileBase.phi0fit ;
 spcutMeshBase = tubi.fullFileBase.spcutMesh ;
@@ -387,7 +387,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
     clearvars dsuphi ringpath_ds
 
     % Save new centerline in rotated translated units
-    fn = sprintf(clineDVhoopBase, tt) ;
+    fn = sprintfm(clineDVhoopBase, tt) ;
     disp(['Saving new centerline to ' fn])
     save(fn, 'mss', 'mcline', 'avgpts', 'avgpts_ss')
 
@@ -454,7 +454,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             disp('Computing phi(v) via 3dcurve matching (geometric method)')
             % Load the previous spcutMesh and call it prev3d_sphi
             % Also note the previous spcutMesh pullback image's fn
-            tmp = load(sprintf(spcutMeshBase, ...
+            tmp = load(sprintfm(spcutMeshBase, ...
                 tp_for_comparison), 'spcutMesh') ;
             prevf = tmp.spcutMesh.f ;
             prev3d_sphi = reshape(tmp.spcutMesh.v, [nU, nV, 3]) ; 
@@ -478,7 +478,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             end
             
             %% Obtain previous avgpts to use for hoop matching
-            % fn_prev_mcline = sprintf(clineDVhoopBase, tt - 1) ;
+            % fn_prev_mcline = sprintfm(clineDVhoopBase, tt - 1) ;
             disp('Grabbing previous centerline')
             % prev_avgpts = load(fn_prev_mcline, 'avgpts') ;
             % prev_avgpts = prev_avgpts.avgpts ;
@@ -487,7 +487,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             
             %% Obtain previous pullback image
             % prev2d_uphi = reshape(tmp.spcutMesh.uphi, [nU, nV, 2]) ;
-            imfn_sp_prev = sprintf( tubi.fullFileBase.im_sp, tp_for_comparison) ;
+            imfn_sp_prev = sprintfm( tubi.fullFileBase.im_sp, tp_for_comparison) ;
 
             % fit the shifts in the v direction as a curv along the u
             % direction.
@@ -509,7 +509,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                     do_iteration = false ;
                 end
                 disp(['Fitting phi0 to minimize motion in 3D of parameterization: Iteration ' num2str(dmyk)])
-                plotfn = sprintf(phi0fitBase, tt, dmyk);
+                plotfn = sprintfm(phi0fitBase, tt, dmyk);
 
                 % Pass phiOptions to allow sliding along AP
                 % passed to phiOffsetsFromPrevMesh
@@ -529,15 +529,15 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                         % first pass --> vvals4plot is same as vvals
                         phi4plot = (vspace .* ones(nU, nV))' ;
                     end
-                    patchImFn = sprintf( ...
+                    patchImFn = sprintfm( ...
                         fullfile(sphiDir, 'phi0_correction',...
                         [fileNameBase, '_prephi0_' num2str(dmyk) '.tif']), ...
                         tp_for_comparison)  ;
-                    patchImFnRes = sprintf( ...
+                    patchImFnRes = sprintfm( ...
                         fullfile(sphiDir, 'phi0_correction',...
                         [fileNameBase, '_phi0residual_' num2str(dmyk) '.tif']), ...
                         tp_for_comparison)  ;
-                    geomImFn = sprintf( ...
+                    geomImFn = sprintfm( ...
                         fullfile(sphiDir, 'phi0_correction', ...
                         ['3d' fileNameBase '_prephi0_' num2str(dmyk) '.tif']), ...
                         tp_for_comparison)  ;
@@ -832,7 +832,7 @@ else
     % QS.currentData.IVloaded = false ;
 
     % Load new centerline
-    fn = sprintf(clineDVhoopBase, tt) ;
+    fn = sprintfm(clineDVhoopBase, tt) ;
     disp(['Loading new centerline from ' fn])
     load(fn, 'mss', 'mcline', 'avgpts', 'avgpts_ss')
 end

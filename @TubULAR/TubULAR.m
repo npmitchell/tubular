@@ -1385,9 +1385,10 @@ classdef TubULAR < handle
             if nargin < 2
                 maxIter = 200 ;
             end
-            ricciMeshfn = replace(tubi.fullFileBase.ricciMesh, ...
-                tubi.fileBase.ricciMesh, ...
-                sprintf(tubi.fileBase.ricciMesh, maxIter, tubi.currentTime)) ;
+            % ricciMeshfn = replace(tubi.fullFileBase.ricciMesh, ...
+            %     tubi.fileBase.ricciMesh, ...
+            %     sprintf(tubi.fileBase.ricciMesh, maxIter, tubi.currentTime)) ;
+            ricciMeshfn = sprintfm(tubi.fullFileBase.ricciMesh, maxIter, tubi.currentTime) ;
             load(ricciMeshfn, 'ricciMesh') ;
             tubi.currentMesh.ricciMesh = ricciMesh ;
         end
@@ -1419,7 +1420,7 @@ classdef TubULAR < handle
             else
                 % this should be identical as the above, but including the
                 % Unix version since it is easier to read.
-                fn = sprintf(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
+                fn = sprintfm(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
             end
             tubi.pathlines.beltrami = load(fn)  ;
             if nargout > 0 

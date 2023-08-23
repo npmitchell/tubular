@@ -1,5 +1,5 @@
 function plotPathlineStrain(tubi, options)
-% plotPathlineStrain(QS, options)
+% plotPathlineStrain(tubi, options)
 %   Plot the strain (from piv pathlines) along pathlines as kymographs and 
 %   correlation plots. These are computed via finite differencing of 
 %   pathline mesh metrics. That is, vertices are advected along piv flow 
@@ -9,7 +9,7 @@ function plotPathlineStrain(tubi, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : QuapSlap class instance
 % options : struct with fields
 %   plot_kymographs         : bool
 %   plot_kymographs_cumsum  : bool
@@ -111,7 +111,7 @@ else
     error("Could not parse samplingResolution: set to '1x' ")
 end
 
-%% Unpack QS
+%% Unpack tubi
 tubi.getXYZLims ;
 xyzlim = tubi.plotting.xyzlim_um ;
 
@@ -143,7 +143,7 @@ Hposcolor = greencolor ;
 Hnegcolor = purplecolor ;
 Hsz = 3 ;  % size of scatter markers for mean curvature
 
-%% load from QS
+%% load from tubi
 if doubleResolution
     nU = tubi.nU * 2 - 1 ;
     nV = tubi.nV * 2 - 1 ;
@@ -157,7 +157,7 @@ end
 tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0 ;
 
 % Output directory is inside piv/pathlines/t0_XXXX dir
-mKPDir = sprintf(tubi.dir.pathlines.strain, t0Pathline) ;
+mKPDir = sprintfm(tubi.dir.pathlines.strain, t0Pathline) ;
 datdir = mKPDir ;
 % Data for kinematics on meshes (defined on vertices) [not needed here]
 % mdatdir = fullfile(mKDir, 'measurements') ;
@@ -179,7 +179,7 @@ if plot_strain3d
         tp = tubi.xp.fileMeta.timePoints(tidx) ;
         tubi.setTime(tp) ;
         
-        outfn = fullfile(sprintf(tubi.dir.pathlines.strain_images, t0Pathline),...
+        outfn = fullfile(sprintfm(tubi.dir.pathlines.strain_images, t0Pathline),...
             sprintf('smoothing_example_strain_%06d.png', tp)) ;
         
         strain = tubi.getCurrentPathlineStrain(tubi.t0, 'strain') ;

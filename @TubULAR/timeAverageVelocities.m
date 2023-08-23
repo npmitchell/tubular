@@ -8,7 +8,7 @@ function timeAverageVelocities(tubi, options)
 %
 % Parameters
 % ----------
-% tubi : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields 
 %   twidth : average over (t-twidth, t+twidth) timepoints
 %   XYkernel : float
@@ -218,22 +218,22 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         [XXpath, YYpath] = tubi.pullbackPathlines(piv3d.x0, piv3d.y0, tp, popts) ;
         % face pathlines
         if strcmp(tubi.piv.imCoords, 'sp_sme')
-            im0 = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
-            mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
+            im0 = imread(sprintfm(tubi.fullFileBase.im_sp_sme, tp)) ;
+            mesh0 = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
             mesh0 = mesh0.spcutMeshSmRS ;
             umax = max(mesh0.u(:, 1)) ;
             vmax = max(mesh0.u(:, 2)) ;
             mXY = tubi.uv2XY(im0, mesh0.u, doubleCovered, umax, vmax) ;
         elseif strcmpi(tubi.piv.imCoords, 'sp')
-            im0 = imread(sprintf(tubi.fullFileBase.im_uv, tp)) ;
-            mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMesh') ;
+            im0 = imread(sprintfm(tubi.fullFileBase.im_uv, tp)) ;
+            mesh0 = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMesh') ;
             mesh0 = mesh0.spcutMesh ;
             umax = max(mesh0.sphi(:, 1)) ;
             vmax = max(mesh0.sphi(:, 2)) ;
             mXY = tubi.uv2XY(im0, mesh0.sphi, doubleCovered, umax, vmax) ;  
         elseif strcmpi(tubi.piv.imCoords, 'uv')
-            im0 = imread(sprintf(tubi.fullFileBase.im_uv, tp)) ;
-            mesh0 = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMesh') ;
+            im0 = imread(sprintfm(tubi.fullFileBase.im_uv, tp)) ;
+            mesh0 = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMesh') ;
             mesh0 = mesh0.spcutMesh ;
             umax = max(mesh0.uv(:, 1)) ;
             vmax = max(mesh0.uv(:, 2)) ;
@@ -394,7 +394,7 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
             %     yy = tubi.piv.raw.y{tidx}(:, 1) ;
             %     % Load the image to put flow on top
             %     if strcmp(pivimCoords, 'sp_sme')
-            %         im = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
+            %         im = imread(sprintfm(tubi.fullFileBase.im_sp_sme, tp)) ;
             %         ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
             %     else
             %         error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])

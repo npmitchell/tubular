@@ -1,5 +1,5 @@
-function plotMetricKinematics(QS, options)
-% plotMetricKinematics(QS, options)
+function plotMetricKinematics(tubi, options)
+% plotMetricKinematics(tubi, options)
 %   Plot the metric Kinematics as kymographs and correlation plots
 %   Out-of-plane motion is v_n * 2H, where v_n is normal velocity and H is
 %   mean curvature.
@@ -11,7 +11,7 @@ function plotMetricKinematics(QS, options)
 % 
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields
 %   plot_kymographs : bool
 %   plot_kymographs_cumsum : bool
@@ -36,11 +36,11 @@ plot_factors = true ;
 plot_Hgdot = false ;
 
 %% Parameter options
-lambda = QS.smoothing.lambda ; 
-lambda_err = QS.smoothing.lambda_err ;
-lambda_mesh = QS.smoothing.lambda_mesh ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ; 
+lambda_err = tubi.smoothing.lambda_err ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 climit = 0.2 ;
 climit_err = 0.2 ;
 climit_veln = climit * 10 ;
@@ -142,11 +142,11 @@ else
 end
 
 %% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
-mKDir = fullfile(QS.dir.metricKinematics.root, ...
+mKDir = fullfile(tubi.dir.metricKinematics.root, ...
     strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02d'], ...
     lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 
@@ -159,25 +159,25 @@ caxis([-1, 1])
 bwr256 = colormap(brewermap(256, '*RdBu'));
 
 %% Load time offset for first fold, t0
-QS.t0set() ;
-t0 = QS.t0 ;
+tubi.t0set() ;
+t0 = tubi.t0 ;
 
 %% load from QS
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 %% Test incompressibility of the flow on the evolving surface
 % We relate the normal velocities to the divergence / 2 * H.
-tps = (QS.xp.fileMeta.timePoints(1:end-1) - t0) * QS.timeInterval ;
-vtimePoints = QS.xp.fileMeta.timePoints(1:end-1) ;
+tps = (tubi.xp.fileMeta.timePoints(1:end-1) - t0) * tubi.timeInterval ;
+vtimePoints = tubi.xp.fileMeta.timePoints(1:end-1) ;
 
 % preallocate for cumulative error
-ntps = length(QS.xp.fileMeta.timePoints(1:end-1)) ;
+ntps = length(tubi.xp.fileMeta.timePoints(1:end-1)) ;
 HH_apM   = zeros(ntps, nU) ;   % dv averaged
 divv_apM = zeros(ntps, nU) ;
 veln_apM = zeros(ntps, nU) ;
@@ -211,16 +211,16 @@ if ~exist(outdir, 'dir')
 end
 
 % Unit definitions for axis labels
-unitstr = [ '[1/' QS.timeUnits ']' ];
-Hunitstr = [ '[1/' QS.spaceUnits ']' ];
-vunitstr = [ '[' QS.spaceUnits '/' QS.timeUnits ']' ];
-runitstr = [ '[' QS.spaceUnits ']' ] ;
+unitstr = [ '[1/' tubi.timeUnits ']' ];
+Hunitstr = [ '[1/' tubi.spaceUnits ']' ];
+vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
+runitstr = [ '[' tubi.spaceUnits ']' ] ;
     
 % Compute or load all timepoints
-for tp = QS.xp.fileMeta.timePoints(1:end-1)
+for tp = tubi.xp.fileMeta.timePoints(1:end-1)
     close all
     disp(['t = ' num2str(tp)])
-    tidx = QS.xp.tIdx(tp) ;
+    tidx = tubi.xp.tIdx(tp) ;
 
     % Check for timepoint measurement on disk
     Hfn = fullfile(outdir, sprintf('HH_vertices_%06d.mat', tp))   ;
@@ -283,7 +283,7 @@ for tp = QS.xp.fileMeta.timePoints(1:end-1)
     pOptions.climit_err = climit ;
     pOptions.climit_veln = climit_veln ;
     pOptions.climit_H = climit_H ;
-    QS.plotMetricKinematicsTimePoint(tp, pOptions)
+    tubi.plotMetricKinematicsTimePoint(tp, pOptions)
     
     %% Store in matrices
     HH_M(tidx, :, :) = HH_filt ;
@@ -402,7 +402,7 @@ if plot_kymographs
 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+                ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
                 xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
                 cb = colorbar() ;
                 ylabel(cb, labels{pp}, 'Interpreter', 'Latex')  
@@ -463,23 +463,23 @@ if plot_spaceMaps && (~files_exist || overwrite)
         fnout = outputFileNames{tspanIdx} ;
         timeSpan_i = timeSpans{tspanIdx} ;
         
-        minTP = max(min(timeSpan_i(1)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        maxTP = max(min(timeSpan_i(end)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        minTidx = QS.xp.tIdx(minTP) ;
-        maxTidx = QS.xp.tIdx(maxTP) ;
-        tidx_i = QS.xp.tIdx(minTP):QS.xp.tIdx(maxTP) ;
+        minTP = max(min(timeSpan_i(1)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        maxTP = max(min(timeSpan_i(end)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        minTidx = tubi.xp.tIdx(minTP) ;
+        maxTidx = tubi.xp.tIdx(maxTP) ;
+        tidx_i = tubi.xp.tIdx(minTP):tubi.xp.tIdx(maxTP) ;
         displayTidx = minTidx + round((maxTidx - minTidx) * displayTimepointInRange) ;
-        tidx2plot = min(displayTidx, length(QS.xp.fileMeta.timePoints)) ;
+        tidx2plot = min(displayTidx, length(tubi.xp.fileMeta.timePoints)) ;
         close all
         
         % Get middle mesh for this time range if not ALLTime
         if tspanIdx == 1
-            QS.setTime(QS.t0set()) ;
-            mesh = QS.getCurrentSPCutMeshSmRS ;
+            tubi.setTime(tubi.t0set()) ;
+            mesh = tubi.getCurrentSPCutMeshSmRS ;
         else
             % Match displayTimepointRange in range
-            QS.setTime(QS.xp.fileMeta.timePoints(tidx2plot)) ;
-            mesh = QS.getCurrentSPCutMeshSmRS ;
+            tubi.setTime(tubi.xp.fileMeta.timePoints(tidx2plot)) ;
+            mesh = tubi.getCurrentSPCutMeshSmRS ;
         end
         m2d = mesh ;
         m2d.v = m2d.u ;
@@ -547,7 +547,7 @@ if plot_spaceMaps && (~files_exist || overwrite)
         if tspanIdx > 1
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
                 num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-                ' ' QS.timeUnits corrString], ...
+                ' ' tubi.timeUnits corrString], ...
                 'Interpreter', 'Latex') ;
         else
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$' corrString], ...
@@ -607,9 +607,9 @@ if plot_raw_correlations && (~files_exist || overwrite)
     for tspanIdx = 1:length(timeSpans)
         fnout = outputFileNames{tspanIdx} ;
         timeSpan_i = timeSpans{tspanIdx} ;
-        minTP = max(min(timeSpan_i(1)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        maxTP = max(min(timeSpan_i(end)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        tidx_i = QS.xp.tIdx(minTP):QS.xp.tIdx(maxTP) ;
+        minTP = max(min(timeSpan_i(1)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        maxTP = max(min(timeSpan_i(end)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        tidx_i = tubi.xp.tIdx(minTP):tubi.xp.tIdx(maxTP) ;
         
         % ntspan = length(timeSpan_i) ;
         titles = {'left lateral', 'right lateral', 'dorsal', 'ventral'} ;
@@ -713,7 +713,7 @@ if plot_raw_correlations && (~files_exist || overwrite)
         if tspanIdx > 1
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
                 num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-                ' ' QS.timeUnits], ...
+                ' ' tubi.timeUnits], ...
                 'Interpreter', 'Latex') ;
         else
             sgtitle('$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$', ...
@@ -773,13 +773,13 @@ if plot_raw_scatter_correlations && (~files_exist || overwrite)
         fnout = outputFileNames{tspanIdx} ;
         timeSpan_i = timeSpans{tspanIdx} ;
         
-        minTP = max(min(timeSpan_i(1)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        maxTP = max(min(timeSpan_i(end)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        tidx_i = QS.xp.tIdx(minTP):QS.xp.tIdx(maxTP) ;
+        minTP = max(min(timeSpan_i(1)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        maxTP = max(min(timeSpan_i(end)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        tidx_i = tubi.xp.tIdx(minTP):tubi.xp.tIdx(maxTP) ;
         
         ntspan = length(timeSpan_i) ;
         titles = {'left lateral', 'right lateral', 'dorsal', 'ventral'} ;
-        markers = QS.plotting.markers ;
+        markers = tubi.plotting.markers ;
         colors = mapValueToColor(1:ntspan, [1, ntspan], cmap) ;
         close all
         sphCollection = cell(4, 1) ;
@@ -879,7 +879,7 @@ if plot_raw_scatter_correlations && (~files_exist || overwrite)
         if tspanIdx > 1
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
                 num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-                ' ' QS.timeUnits], ...
+                ' ' tubi.timeUnits], ...
                 'Interpreter', 'Latex') ;
         else
             sgtitle('$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$', ...
@@ -901,7 +901,7 @@ if plot_raw_scatter_correlations && (~files_exist || overwrite)
         % Update the color data with the new transparency information
         c.Face.Texture.CData = cdata;
         c.Label.Interpreter = 'Latex' ;
-        c.Label.String = ['time [' QS.timeUnits ']'] ;
+        c.Label.String = ['time [' tubi.timeUnits ']'] ;
         c.Ticks = [0, 1] ;
         c.TickLabels = [min(timeSpan_i), max(timeSpan_i)] ;
 
@@ -943,11 +943,11 @@ if plot_correlations && (~files_exist || overwrite)
         fnout = outputFileNames{tspanIdx} ;
         timeSpan_i = timeSpans{tspanIdx} ;
         
-        minTP = max(min(timeSpan_i(1)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        maxTP = max(min(timeSpan_i(end)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        tidx_i = QS.xp.tIdx(minTP):QS.xp.tIdx(maxTP) ;
+        minTP = max(min(timeSpan_i(1)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        maxTP = max(min(timeSpan_i(end)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        tidx_i = tubi.xp.tIdx(minTP):tubi.xp.tIdx(maxTP) ;
         
-        markers = QS.plotting.markers ;
+        markers = tubi.plotting.markers ;
         colors = mapValueToColor(1:5, [1, 5], cmap) ;
         close all
         allX = [] ;
@@ -1014,7 +1014,7 @@ if plot_correlations && (~files_exist || overwrite)
         
         sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
             num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-            ' ' QS.timeUnits corrString], ...
+            ' ' tubi.timeUnits corrString], ...
             'Interpreter', 'Latex') ;
 
         % Save figure
@@ -1061,11 +1061,11 @@ if plot_correlations && (~files_exist || overwrite)
         fnout = outputFileNames{tspanIdx} ;
         timeSpan_i = timeSpans{tspanIdx} ;
         
-        minTP = max(min(timeSpan_i(1)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        maxTP = max(min(timeSpan_i(end)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        tidx_i = QS.xp.tIdx(minTP):QS.xp.tIdx(maxTP) ;
+        minTP = max(min(timeSpan_i(1)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        maxTP = max(min(timeSpan_i(end)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        tidx_i = tubi.xp.tIdx(minTP):tubi.xp.tIdx(maxTP) ;
         
-        markers = QS.plotting.markers ;
+        markers = tubi.plotting.markers ;
         colors = mapValueToColor(1:5, [1, 5], cmap) ;
         close all
         allX = [] ;
@@ -1132,7 +1132,7 @@ if plot_correlations && (~files_exist || overwrite)
         
         sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
             num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-            ' ' QS.timeUnits corrString], ...
+            ' ' tubi.timeUnits corrString], ...
             'Interpreter', 'Latex') ;
 
         % Save figure
@@ -1182,12 +1182,12 @@ if plot_correlations && (~files_exist || overwrite)
         timeSpan_i = timeSpans{tspanIdx} ;
         ntspan = length(timeSpan_i) ;
         
-        minTP = max(min(timeSpan_i(1)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        maxTP = max(min(timeSpan_i(end)/QS.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
-        tidx_i = QS.xp.tIdx(minTP):QS.xp.tIdx(maxTP) ;
+        minTP = max(min(timeSpan_i(1)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        maxTP = max(min(timeSpan_i(end)/tubi.timeInterval+t0, max(vtimePoints)), min(vtimePoints)) ;
+        tidx_i = tubi.xp.tIdx(minTP):tubi.xp.tIdx(maxTP) ;
         
         titles = {'left lateral', 'right lateral', 'dorsal', 'ventral'} ;
-        markers = QS.plotting.markers ;
+        markers = tubi.plotting.markers ;
         colors = mapValueToColor(1:ntspan, [1, ntspan], cmap) ;
         close all
         sphCollection = cell(4, 1) ;
@@ -1267,10 +1267,10 @@ if plot_correlations && (~files_exist || overwrite)
             title(titles{qq}, 'Interpreter', 'Latex')
 
             figure(2)
-            ylabel(['time [' QS.timeUnits, ']'], 'Interpreter', 'Latex') ;
+            ylabel(['time [' tubi.timeUnits, ']'], 'Interpreter', 'Latex') ;
             title(titles{qq}, 'Interpreter', 'Latex')
             figure(3)
-            ylabel(['time [' QS.timeUnits, ']'], 'Interpreter', 'Latex') ;
+            ylabel(['time [' tubi.timeUnits, ']'], 'Interpreter', 'Latex') ;
             title(titles{qq}, 'Interpreter', 'Latex')
 
             % Grab axis position
@@ -1310,7 +1310,7 @@ if plot_correlations && (~files_exist || overwrite)
         % Update the color data with the new transparency information
         c.Face.Texture.CData = cdata;
         c.Label.Interpreter = 'Latex' ;
-        c.Label.String = ['time [' QS.timeUnits ']'] ;
+        c.Label.String = ['time [' tubi.timeUnits ']'] ;
         c.Ticks = [0, 1] ;
         c.TickLabels = [tps(1), max(timeSpan_i)] ;
 
@@ -1324,7 +1324,7 @@ if plot_correlations && (~files_exist || overwrite)
         if tspanIdx > 1
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
                 num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-                ' ' QS.timeUnits corrString], ...
+                ' ' tubi.timeUnits corrString], ...
                 'Interpreter', 'Latex') ;
         else
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$ ' corrString], ...
@@ -1336,7 +1336,7 @@ if plot_correlations && (~files_exist || overwrite)
         if tspanIdx > 1
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
                 num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-                ' ' QS.timeUnits], ...
+                ' ' tubi.timeUnits], ...
                 'Interpreter', 'Latex') ;
         else
             sgtitle('$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$', ...
@@ -1347,7 +1347,7 @@ if plot_correlations && (~files_exist || overwrite)
         if tspanIdx > 1
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ', ...
                 num2str(min(timeSpan_i)) '$<t<$' num2str(max(timeSpan_i)) ...
-                ' ' QS.timeUnits], ...
+                ' ' tubi.timeUnits], ...
                 'Interpreter', 'Latex') ;
         else
             sgtitle('$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$', ...
@@ -1385,7 +1385,7 @@ if plot_gdot_decomp
     
     %% Plot as 1d Curve
     plot(tps, isogrowth); 
-    xlabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+    xlabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
     ylabel('Isotropic component of growth') 
     saveas(gcf, fullfile(odir, 'average_growth.png'))  
     
@@ -1427,7 +1427,7 @@ if plot_gdot_decomp
                 colormap(bwr256)
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+                ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
                 xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
                 cb = colorbar() ;
                 ylabel(cb, labels{pp}, 'Interpreter', 'Latex')  

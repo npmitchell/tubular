@@ -1,5 +1,5 @@
 function measurePathlineStrain(tubi, options)
-% measurePathlineStrain(QS, options)
+% measurePathlineStrain(tubi, options)
 %   Compute strain from integrated pathlines deforming mesh vertices.
 %   Measurements are taken with respect to fixed Lagrangian frame. 
 %   Plot results in 2d and/or 3d for each timepoint.
@@ -7,7 +7,7 @@ function measurePathlineStrain(tubi, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : QuapSlap class instance
 % options : struct with fields
 %   overwrite : bool, overwrite data on disk
 %   overwriteImages : bool, overwrite images of results on disk
@@ -99,7 +99,7 @@ else
     error("Could not parse samplingResolution: set to '1x'")
 end
 
-%% Unpack QS
+%% Unpack tubi
 tubi.getXYZLims ;
 xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
@@ -115,7 +115,7 @@ bwr256 = bluewhitered(256) ;
 bbr256 = blueblackred(256) ;
 close all
 
-%% load from QS
+%% load from tubi
 if doubleResolution
     nU = tubi.nU * 2 - 1 ;
     nV = tubi.nV * 2 - 1 ;
@@ -149,8 +149,8 @@ Xpiv = tubi.piv.raw.x ;
 Ypiv = tubi.piv.raw.y ;
 
 % Also need velocities to advect mesh
-% QS.loadVelocityAverage('vv')
-% vPIV = QS.velocityAverage.vv ;
+% tubi.loadVelocityAverage('vv')
+% vPIV = tubi.velocityAverage.vv ;
 
 % Discern if piv measurements are done on a double covering or the meshes
 if strcmp(tubi.piv.imCoords(end), 'e')
@@ -160,8 +160,8 @@ end
 %% INTEGRATE STRAINRATE INTO STRAIN ON PATHLINES
 % Compute or load all timepoints
 pb = tubi.getPullbackPathlines([], 'vertexPathlines3d') ;
-% load(sprintf(tubi.fileName.pathlines.v3d, t0), 'v3dPathlines')
-% load(sprintf(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
+% load(sprintfm(tubi.fileName.pathlines.v3d, t0), 'v3dPathlines')
+% load(sprintfm(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
 vX3rs = pb.vertices3d.vXrs ;
 vY3rs = pb.vertices3d.vYrs ;
 vZ3rs = pb.vertices3d.vZrs ;
@@ -173,7 +173,7 @@ if ~all(isfinite(vX3rs(:)))
 end
 
 % Define reference mesh
-refMeshFn = fullfile(sprintf(tubi.dir.pathlines.data, t0Pathline), ...
+refMeshFn = fullfile(sprintfm(tubi.dir.pathlines.data, t0Pathline), ...
         'refMesh.mat') ;
 if exist(refMeshFn, 'file') || overwrite
     load(refMeshFn, 'refMesh')
@@ -214,15 +214,15 @@ for tidx = tidx2do
     tp = tubi.xp.fileMeta.timePoints(tidx) ;
     
     % Do the fund forms for the lagrangian frame already exist?
-    % ffn = sprintf(QS.fullFileBase.pathline.fundForms, t0, tp) ;
+    % ffn = sprintfm(tubi.fullFileBase.pathline.fundForms, t0, tp) ;
     
-    ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0, tp) ;
+    ffn = sprintfm(tubi.fullFileBase.pathlines.strain, t0, tp) ;
     if ~exist(ffn, 'file') || overwrite 
         disp(['t = ' num2str(tp)])
         tubi.setTime(tp) ;
 
         % Load Lagrangian advected vertices as mesh for this timepoint
-        % load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
+        % load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
         xx = vX3rs(tidx, :) ;
         yy = vY3rs(tidx, :) ;
         zz = vZ3rs(tidx, :) ;

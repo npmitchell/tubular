@@ -338,7 +338,7 @@ for tp = tubi.xp.fileMeta.timePoints(1:end-1)
         disp('strainRate already on disk')
         % Load mesh
         % disp('Loading mesh')
-        % tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
+        % tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
         % mesh1 = tmp.spcutMeshSmRS ;
         % clearvars tmp
         % % Normalize the zeta to fixed aspect ratio (ar=aspectratio relaxed)

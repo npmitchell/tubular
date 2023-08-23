@@ -69,17 +69,17 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
         % Figure out which images to compare (First ask: which coordinate 
         % system are the images painted into? Perhaps spsme?)
         if strcmpi(strrep(coordSys, '_', ''), 'spsme')
-            im1 = imread(sprintf(tubi.fullFileBase.im_sp_sme, timePoints(tidx))) ;
-            im2 = imread(sprintf(tubi.fullFileBase.im_sp_sme, timePoints(tidx+1))) ;
+            im1 = imread(sprintfm(tubi.fullFileBase.im_sp_sme, timePoints(tidx))) ;
+            im2 = imread(sprintfm(tubi.fullFileBase.im_sp_sme, timePoints(tidx+1))) ;
         elseif strcmpi(strrep(coordSys, '_', ''), 'spsm')
-            im1 = imread(sprintf(tubi.fullFileBase.im_sp_sm, timePoints(tidx))) ;
-            im2 = imread(sprintf(tubi.fullFileBase.im_sp_sm, timePoints(tidx+1))) ;
+            im1 = imread(sprintfm(tubi.fullFileBase.im_sp_sm, timePoints(tidx))) ;
+            im2 = imread(sprintfm(tubi.fullFileBase.im_sp_sm, timePoints(tidx+1))) ;
         elseif strcmpi(strrep(coordSys, '_', ''), 'spe')
-            im1 = imread(sprintf(tubi.fullFileBase.im_spe, timePoints(tidx))) ;
-            im2 = imread(sprintf(tubi.fullFileBase.im_spe, timePoints(tidx+1))) ;
+            im1 = imread(sprintfm(tubi.fullFileBase.im_spe, timePoints(tidx))) ;
+            im2 = imread(sprintfm(tubi.fullFileBase.im_spe, timePoints(tidx+1))) ;
         elseif strcmpi(strrep(coordSys, '_', ''), 'uv')
-            im1 = imread(sprintf(tubi.fullFileBase.im_uv, timePoints(tidx))) ;
-            im2 = imread(sprintf(tubi.fullFileBase.im_uv, timePoints(tidx+1))) ;
+            im1 = imread(sprintfm(tubi.fullFileBase.im_uv, timePoints(tidx))) ;
+            im2 = imread(sprintfm(tubi.fullFileBase.im_uv, timePoints(tidx+1))) ;
         else
             error('did not recognize coordSys (image coordinate specifier for piv)')
         end

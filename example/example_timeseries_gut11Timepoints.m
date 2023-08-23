@@ -375,8 +375,8 @@ for tt = tubi.xp.fileMeta.timePoints
     %----------------------------------------------------------------------
     % Create the Cut Mesh
     %----------------------------------------------------------------------
-    cutMeshfn = sprintf(tubi.fullFileBase.cutMesh, tt) ;
-    cutPathfn = sprintf(tubi.fullFileBase.cutPath, tt) ;
+    cutMeshfn = sprintfm(tubi.fullFileBase.cutMesh, tt) ;
+    cutPathfn = sprintfm(tubi.fullFileBase.cutPath, tt) ;
     if ~exist(cutMeshfn, 'file') || ~exist(cutPathfn, 'file') || overwrite
         if exist(cutMeshfn, 'file')
             disp('Overwriting cutMesh...') ;

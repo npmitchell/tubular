@@ -1,5 +1,5 @@
 function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
-    alignMeshesAPDV(QS, opts)
+    alignMeshesAPDV(tubi, opts)
 % ALIGNMESHESAPDV(opts) 
 % Uses anterior, posterior, and dorsal training in ilastik h5 output to
 % align meshes along APDV coordinate system with global rotation matrix 
@@ -16,6 +16,7 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 %
 % Parameters
 % ----------
+% tubi : TubULAR class instance
 % opts : struct with fields
 %   overwrite     : bool
 %   overwrite_ims : bool
@@ -83,17 +84,17 @@ function [rot, trans, xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
 % NPMitchell 2020
 
 % Unpack QS
-timePoints = QS.xp.fileMeta.timePoints ;
-meshDir = QS.dir.mesh ;
-resolution = QS.APDV.resolution ;
-[apt_sm, ppt_sm] = QS.getAPpointsSm() ;
+timePoints = tubi.xp.fileMeta.timePoints ;
+meshDir = tubi.dir.mesh ;
+resolution = tubi.APDV.resolution ;
+[apt_sm, ppt_sm] = tubi.getAPpointsSm() ;
 
 % Default options
 overwrite = false ;
 preview = false ;
 plot_buffer = 20 ;
-ssfactor = QS.ssfactor ;
-flipy = QS.flipy ; 
+ssfactor = tubi.ssfactor ;
+flipy = tubi.flipy ; 
 forceEndpointsInside = false ;
 
 % Booleans & floats
@@ -132,23 +133,23 @@ if isfield(opts, 'timeunits')
 end
 
 % Data file names
-rotname = QS.fileName.rot ;
-transname = QS.fileName.trans ;
-xyzlimname_raw = QS.fileName.xyzlim_raw ;
-xyzlimname_pix = QS.fileName.xyzlim_pix ;
-xyzlimname_um = QS.fileName.xyzlim_um ;
-xyzlimname_um_buff = QS.fileName.xyzlim_um_buff ;
+rotname = tubi.fileName.rot ;
+transname = tubi.fileName.trans ;
+xyzlimname_raw = tubi.fileName.xyzlim_raw ;
+xyzlimname_pix = tubi.fileName.xyzlim_pix ;
+xyzlimname_um = tubi.fileName.xyzlim_um ;
+xyzlimname_um_buff = tubi.fileName.xyzlim_um_buff ;
 % Name output directory for apdv info
-apdvoutdir = QS.dir.cntrline ;
+apdvoutdir = tubi.dir.cntrline ;
 outapdvname = fullfile(apdvoutdir, 'apdv_pts_rs.h5') ;
 outstartendptname = fullfile(apdvoutdir, 'startendpt.h5') ;
 % Name the directory for outputting aligned_meshes
-alignedMeshDir = QS.dir.alignedMesh ;
-meshFileName = QS.fullFileBase.mesh ;
-alignedMeshBase = QS.fullFileBase.alignedMesh ;
-alignedMeshXYFigBaseName = [QS.fileBase.alignedMesh '_xy.png'] ;
-alignedMeshXZFigBaseName = [QS.fileBase.alignedMesh '_xz.png'] ;
-alignedMeshYZFigBaseName = [QS.fileBase.alignedMesh '_yz.png'] ;
+alignedMeshDir = tubi.dir.alignedMesh ;
+meshFileName = tubi.fullFileBase.mesh ;
+alignedMeshBase = tubi.fullFileBase.alignedMesh ;
+alignedMeshXYFigBaseName = [tubi.fileBase.alignedMesh '_xy.png'] ;
+alignedMeshXZFigBaseName = [tubi.fileBase.alignedMesh '_xz.png'] ;
+alignedMeshYZFigBaseName = [tubi.fileBase.alignedMesh '_yz.png'] ;
 % Note: used to define fn = QS.fileBase.name ;
 
 % rotname
@@ -195,9 +196,9 @@ green = colors(5, :) ;
 % Ensure that PLY files exist
 for tidx = 1:length(timePoints)
     tt = timePoints(tidx) ;
-    if ~exist(sprintf(meshFileName, tt), 'file')
+    if ~exist(sprintfm(meshFileName, tt), 'file')
         msg = ['Found no matching PLY files ', ...
-                sprintf(meshFileName, tt), ' in ', meshDir ]; 
+                sprintfm(meshFileName, tt), ' in ', meshDir ]; 
         error(msg)
     end
 end
@@ -238,7 +239,7 @@ else
         tt = timePoints(tidx) ;
         disp(['tt = ', num2str(tt)])
         % Get the timestamp string from the name of the mesh
-        mesh = read_ply_mod(sprintf(meshFileName, tt)) ;
+        mesh = read_ply_mod(sprintfm(meshFileName, tt)) ;
 
         minx = min(mesh.v) ;
         maxx = max(mesh.v) ;
@@ -281,12 +282,12 @@ for tidx = 1:length(timePoints)
     ppt = ppt_sm(tidx, :) ; 
     
     %% Name the output centerline
-    fig1outname = fullfile(fig1outdir, sprintf(alignedMeshXYFigBaseName, tt)) ;
-    fig2outname = fullfile(fig2outdir, sprintf(alignedMeshXZFigBaseName, tt)) ;
-    fig3outname = fullfile(fig3outdir, sprintf(alignedMeshYZFigBaseName, tt)) ; 
+    fig1outname = fullfile(fig1outdir, sprintfm(alignedMeshXYFigBaseName, tt)) ;
+    fig2outname = fullfile(fig2outdir, sprintfm(alignedMeshXZFigBaseName, tt)) ;
+    fig3outname = fullfile(fig3outdir, sprintfm(alignedMeshYZFigBaseName, tt)) ; 
         
     %% Read the mesh  
-    meshfn = sprintf(meshFileName, tt) ;
+    meshfn = sprintfm(meshFileName, tt) ;
     disp(['Loading mesh ' meshfn])
     mesh = read_ply_mod(meshfn );
     vtx_sub = mesh.v / ssfactor ;
@@ -294,7 +295,7 @@ for tidx = 1:length(timePoints)
     fvsub = struct('faces', mesh.f, 'vertices', vtx_sub, 'normals', vn) ;
     
     %% Does the output aligned mesh exist?
-    alignedmeshfn = sprintf(alignedMeshBase, tt) ;
+    alignedmeshfn = sprintfm(alignedMeshBase, tt) ;
     meshfn_exist = exist(alignedmeshfn, 'file') ;    
     
     % Check normals
@@ -327,7 +328,7 @@ for tidx = 1:length(timePoints)
     % If aligned mesh doesn't exist, redo point-matching
     if meshfn_exist
         try
-            name = sprintf(QS.fileBase.name, tt) ;
+            name = sprintfm(tubi.fileBase.name, tt) ;
             spt = h5read(outstartendptname, ['/' name '/spt']) ;
             ept = h5read(outstartendptname, ['/' name '/ept']) ;
             if any(spt) && any(ept)
@@ -452,7 +453,7 @@ for tidx = 1:length(timePoints)
     %% Rotate and translate (and mirror) apt, ppt, dpt
     try 
         apdpts_rs_exist = true ;
-        name = sprintf(QS.fileBase.name, tt) ;
+        name = sprintfm(tubi.fileBase.name, tt) ;
         apt_rs = h5read(outapdvname, ['/' name '/apt_rs']) ;
         ppt_rs = h5read(outapdvname, ['/' name '/ppt_rs']) ;
         dpt_rs = h5read(outapdvname, ['/' name '/dpt_rs']) ;
@@ -524,7 +525,7 @@ for tidx = 1:length(timePoints)
     if tidx == 1 
         % Check if already saved, and load or reptpute
         % fntmp = xyzlimname_um ;
-        [~, ~, ~, xyzlim_um_buff] = QS.getXYZLims() ;
+        [~, ~, ~, xyzlim_um_buff] = tubi.getXYZLims() ;
         % Expand xyzlimits for plots
         xminrs_plot = xyzlim_um_buff(1,1) - plot_buffer ;
         yminrs_plot = xyzlim_um_buff(2,1) - plot_buffer ;
@@ -723,7 +724,7 @@ for tidx = 1:length(timePoints)
     
     % Save apt, ppt and their aligned counterparts as attributes in an
     % hdf5 file            
-    name = sprintf(QS.fileBase.name, tt) ;
+    name = sprintfm(tubi.fileBase.name, tt) ;
     % Save if overwrite
     if overwrite || ~apdpts_rs_exist
         try
@@ -771,7 +772,7 @@ for tidx = 1:length(timePoints)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Save apt, ppt and their aligned counterparts as attributes in an
     % hdf5 file -- these are mesh-dependent since point-matched to vertices
-    name = sprintf(QS.fileBase.name, tt) ;
+    name = sprintfm(tubi.fileBase.name, tt) ;
     
     if overwrite || ~spt_ept_exist || overwrite_startendpts
         disp('Saving the startpt/endpt...')

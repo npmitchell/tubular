@@ -227,7 +227,7 @@ for tidx = tidx2do
     disp(['t = ', num2str(tp)])
     
     % DEC data filename to save
-    decDataFn = sprintf(decFnBase, tp) ;
+    decDataFn = sprintfm(decFnBase, tp) ;
     
     % Prepare filenames
     % pullback view of divergence
@@ -273,7 +273,7 @@ for tidx = tidx2do
         end
         
         % Load piv3d
-        piv3d = load(sprintf(piv3dFileBase, tp)) ;
+        piv3d = load(sprintfm(piv3dFileBase, tp)) ;
         piv3d = piv3d.piv3dstruct ;
     
         % Obtain smoothed velocities on all faces
@@ -352,7 +352,7 @@ for tidx = tidx2do
         load(decDataFn, 'divs', 'rots', 'lapvs')
     
         % Load piv3d
-        piv3d = load(sprintf(piv3dFileBase, tp)) ;
+        piv3d = load(sprintfm(piv3dFileBase, tp)) ;
         piv3d = piv3d.piv3dstruct ;
 
         % Obtain smoothed velocities on all faces
@@ -379,7 +379,7 @@ for tidx = tidx2do
         close all
         set(gcf, 'visible', 'off')
         if strcmp(pivimCoords, 'sp_sme')
-            im = imread(sprintf(QS.fullFileBase.im_sp_sme, tp)) ;
+            im = imread(sprintfm(QS.fullFileBase.im_sp_sme, tp)) ;
             ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
         else
             error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])
@@ -420,7 +420,7 @@ for tidx = tidx2do
         close all
         set(gcf, 'visible', 'off')
         if strcmp(pivimCoords, 'sp_sme')
-            im = imread(sprintf(QS.fullFileBase.im_sp_sme, tp)) ;
+            im = imread(sprintfm(QS.fullFileBase.im_sp_sme, tp)) ;
             ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
         else
             error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])

@@ -124,7 +124,7 @@ for tp = tp2do
     tidx = tubi.xp.tIdx(tp) ;
 
     % Load current mesh
-    tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
+    tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
     mesh = tmp.spcutMeshSmRSC ;
     
     % DEBUG

@@ -1,12 +1,12 @@
-function plotStrainRate3DFiltered(QS, options)
-%plotStrainRate3DFiltered(QS, options)
+function plotStrainRate3DFiltered(tubi, options)
+%plotStrainRate3DFiltered(tubi, options)
 %   load spatially-smoothed 
 %   epsilon = 1/2 (\nabla_i v_j + \nabla_j v_i) - vN b_{ij} from disk,
 %   smooth with time filter and plot in 3d
 %   
 % Parameters
 % ----------
-% QS : QuapSlap class object instance
+% tubi : QuapSlap class object instance
 % options : struct with fields
 %   lambda : float
 %   lambda_mesh : float
@@ -32,8 +32,8 @@ lambda_mesh = 0.0 ;
 overwrite = false ;
 preview = true ;
 averagingStyle = 'Lagrangian' ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
 debug = false ;
@@ -80,14 +80,14 @@ if isfield(options, 'clim_deviatoric')
 end
 
 %% Unpack QS
-nU = QS.nU ;
-nV = QS.nV ;
-t0 = QS.t0set() ;
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+nU = tubi.nU ;
+nV = tubi.nV ;
+t0 = tubi.t0set() ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 % Output directory
-egImDir = strrep(sprintf( ...
-    QS.dir.strainRate.smoothing, lambda, lambda_mesh, nmodes, zwidth), '.', 'p') ;
+egImDir = strrep(sprintfm( ...
+    tubi.dir.strainRate.smoothing, lambda, lambda_mesh, nmodes, zwidth), '.', 'p') ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 
@@ -103,16 +103,16 @@ else
 end
 
 % Pre-assign timepoints with velocities
-tpts = QS.xp.fileMeta.timePoints(1:end-1) ;
+tpts = tubi.xp.fileMeta.timePoints(1:end-1) ;
 tp2do = [tpts(1:20:end), setdiff(tpts, tpts(1:50:end))] ;
 
 % Build metric from mesh
 for tp = tp2do
     disp(['t = ' num2str(tp)])
 
-    tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
+    tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
     mesh = tmp.spcutMeshSmRSC ;
-    tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp)) ;
+    tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
     cutMesh = tmp.spcutMeshSmRS ;
 
     % DEBUG
@@ -126,17 +126,17 @@ for tp = tp2do
     % Load current mesh +/- nTimePoints
     first = true ;
     tp2doFilter = tp-nTimePoints:tp+nTimePoints ;
-    tp2doFilter = intersect(tp2doFilter, QS.xp.fileMeta.timePoints) ;
+    tp2doFilter = intersect(tp2doFilter, tubi.xp.fileMeta.timePoints) ;
     for tpsFilter = tp2doFilter
-        tpj = min(max(tpsFilter, QS.xp.fileMeta.timePoints(1)), ...
-            QS.xp.fileMeta.timePoints(end-1)) ;
-        tidx = QS.xp.tIdx(tpj) ;
+        tpj = min(max(tpsFilter, tubi.xp.fileMeta.timePoints(1)), ...
+            tubi.xp.fileMeta.timePoints(end-1)) ;
+        tidx = tubi.xp.tIdx(tpj) ;
         
         %% load the metric strain
         % Define metric strain filename        
-        estrainFn = fullfile(strrep(sprintf(QS.dir.strainRate.measurements, ...
+        estrainFn = fullfile(strrep(sprintfm(tubi.dir.strainRate.measurements, ...
             lambda, lambda_mesh), '.', 'p'), ...
-            sprintf(QS.fileBase.strainRate, tpj)) ;
+            sprintfm(tubi.fileBase.strainRate, tpj)) ;
         disp(['Loading strainrate results from disk: ' estrainFn])
         % save(estrainFn, 'strainrate', 'tre', 'dev', 'theta', 'theta_pb', ...
         %     'dvij', 'gg', 'bb', 'lambda', 'lambda_mesh', 'readme', ...
@@ -165,7 +165,7 @@ for tp = tp2do
     % average over time
     tre = mean(tres, 2) ;
     % Note that this is not actually dv averaging: averaging over time
-    [dev, theta] = QS.dvAverageNematic(devs, thetas) ;
+    [dev, theta] = tubi.dvAverageNematic(devs, thetas) ;
     
     % Transfer to vertices
     [V2F, F2V] = meshAveragingOperators(mesh.f, mesh.u) ;
@@ -218,11 +218,11 @@ for tp = tp2do
     % NOTE: \varepsilon --> ${\boldmath${\varepsilon}$}$
     labels = {'$\frac{1}{2}\mathrm{Tr} [\bf{g}^{-1}\varepsilon] $', ...
         '$||\varepsilon-\frac{1}{2}$Tr$\left[\mathbf{g}^{-1}\varepsilon\right]\bf{g}||$'} ;
-    time_in_units = (tp - t0) * QS.timeInterval ;
-    tstr = [': $t=$', sprintf('%03d', time_in_units), ' ', QS.timeUnits ];
+    time_in_units = (tp - t0) * tubi.timeInterval ;
+    tstr = [': $t=$', sprintf('%03d', time_in_units), ' ', tubi.timeUnits ];
 
     %% consider each metric element & plot in 3d
-    fn = fullfile(egImDir, 'strainRate3d_filtered', sprintf([QS.fileBase.spcutMeshSmRSC '.png'], tp));
+    fn = fullfile(egImDir, 'strainRate3d_filtered', sprintfm([tubi.fileBase.spcutMeshSmRSC '.png'], tp));
     if ~exist(fn, 'file') || overwrite
         clf
         set(gcf, 'visible', 'off') ;
@@ -303,7 +303,7 @@ for tp = tp2do
     close all
     set(gcf, 'visible', 'off') ;
     fn = fullfile(egImDir, 'strainRate2d_filtered', ...
-            sprintf([QS.fileBase.spcutMeshSm '.png'], tp));
+            sprintfm([tubi.fileBase.spcutMeshSm '.png'], tp));
     if ~exist(fn, 'file') || overwrite
         % Panel 1
         subplot(1, 2, 1) ;
