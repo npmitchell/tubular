@@ -642,32 +642,6 @@ if dynamic
    
 end
 
-%% Cells segmentation / nuclei
-% tubi.fullFileBase.segmentation = ...
-%      fullfile(tubi.dir.segmentation, ...
-%      [tubi.fileBase.name, '_Probabilities.h5']) ;
-% tubi.fileBase.segmentation2d = [tubi.fileBase.name, '_segmentation2d'] ;
-% tubi.fileBase.segmentation3d = [tubi.fileBase.name, '_segmentation3d'] ;
-% tubi.fullFileBase.segmentation2d = fullfile(tubi.dir.segmentation, 'seg2d', ...
-%      [tubi.fileBase.segmentation2d '.mat']) ;
-% tubi.fullFileBase.segmentation3d = fullfile(tubi.dir.segmentation, 'seg3d', ...
-%      [tubi.fileBase.segmentation3d '.mat']) ;
-%  
-% % corrected segmentations
-% tubi.fullFileBase.segmentation2dCorrected = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
-%      [tubi.fileBase.segmentation2d '.mat']) ;
-% tubi.fullFileBase.segmentation3dCorrected = fullfile(tubi.dir.segmentation, 'seg3d_corrected', ...
-%     [tubi.fileBase.segmentation3d '.mat']) ;
-% tubi.fullFileBase.segmentation2dCorrectedBinary = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
-%      'binary_maps', [tubi.fileBase.segmentation2d '_binary_map.png']) ;
-%  
-% % nuclei only for voronoi measurement (may be identified through membrane training as non-membrane regions)
-% tubi.fullFileBase.cellProbabilities = ...
-%      fullfile(tubi.dir.cellProbabilities, ...
-%      [tubi.fileBase.name, '_pbrsme_Probabilities.h5']) ;
-% tubi.fileBase.cellID = [tubi.fileBase.name, '_pbrsme_cells'] ;
-% tubi.fullFileBase.cellID = fullfile(tubi.dir.cellID, ...
-%      [tubi.fileBase.cellID '.mat']) ;
 
 %% DYNAMICS
 if dynamic
@@ -866,7 +840,16 @@ tubi.fullFileBase.segmentation3dCorrected = fullfile(tubi.dir.segmentation, 'seg
     [tubi.fileBase.segmentation3d '.mat']) ;
 tubi.fullFileBase.segmentation2dCorrectedBinary = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
      'binary_maps', [tubi.fileBase.segmentation2d '_binary_map.png']) ;
- 
+
+% % nuclei only for voronoi measurement (may be identified through membrane training as non-membrane regions)
+% tubi.fullFileBase.cellProbabilities = ...
+%      fullfile(tubi.dir.cellProbabilities, ...
+%      [tubi.fileBase.name, '_pbrsme_Probabilities.h5']) ;
+% tubi.fileBase.cellID = [tubi.fileBase.name, '_pbrsme_cells'] ;
+% tubi.fullFileBase.cellID = fullfile(tubi.dir.cellID, ...
+%      [tubi.fileBase.cellID '.mat']) ;
+
+
 
 %% Save t0 if supplied
 if t0supplied_in_opts

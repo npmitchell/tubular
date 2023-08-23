@@ -1414,14 +1414,13 @@ classdef TubULAR < handle
             end
             % To define the filename in an operating-system dependent way,
             % we here must do some gymnastics
-            if ispc
-                fn = replace(tubi.fileName.pathlines.quasiconformal, ...
-                    't0_%04d', sprintf('t0_%04d', t0Pathlines)) ;
-            else
-                % this should be identical as the above, but including the
-                % Unix version since it is easier to read.
-                fn = sprintfm(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
-            end
+            % if ispc
+            %     fn = replace(tubi.fileName.pathlines.quasiconformal, ...
+            %         't0_%04d', sprintf('t0_%04d', t0Pathlines)) ;
+            % else
+            % This should be identical as the above, but easier to read
+            fn = sprintfm(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
+            
             tubi.pathlines.beltrami = load(fn)  ;
             if nargout > 0 
                 beltrami = tubi.pathlines.beltrami ;
@@ -1786,31 +1785,18 @@ classdef TubULAR < handle
             % Obtain the cell segmentation in 3D pullback space
             if isempty(tubi.currentSegmentation.seg2dCorrected)
                 try
-                    if ispc
-                        % OS-independent file path:
-                        tubi.currentSegmentation.seg2dCorrected = ...
-                            load(fullfile(tubi.dir.segmentation, ...
-                            sprintf('seg2d_corrected_%s', coordSys), ...
-                            sprintf(tubi.fileName.seg2dCorrected, tubi.currentTime))) ;
-                    else
-                        % Unix file path:
-                        tubi.currentSegmentation.seg2dCorrected = ...
-                           load(sprintf(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
-                    end
+                    % Unix file path:
+                    tubi.currentSegmentation.seg2dCorrected = ...
+                       load(sprintfm(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
+                
                 catch
                     options.timePoints = [tubi.currentTime] ;
                     tubi.processCorrectedCellSegmentation2D(options) ;
-                    if ispc
-                        % OS-independent file path:
-                        tubi.currentSegmentation.seg2dCorrected = ...
-                            load(fullfile(tubi.dir.segmentation, ...
-                            sprintf('seg2d_corrected_%s', coordSys), ...
-                            sprintf(tubi.fileName.seg2dCorrected, tubi.currentTime))) ;
-                    else
-                        % Unix file path:
-                        tubi.currentSegmentation.seg2dCorrected = ...
-                           load(sprintf(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
-                    end
+                    
+                    % Unix file path:
+                    tubi.currentSegmentation.seg2dCorrected = ...
+                       load(sprintfm(tubi.fullFileBase.segmentation2dCorrected, coordSys, tubi.currentTime)) ;
+                
                 end
             end
             % if requested, return segmentation as output
@@ -1839,34 +1825,19 @@ classdef TubULAR < handle
             % Obtain the cell segmentation in 3D pullback space
             if isempty(tubi.currentSegmentation.seg3dCorrected)
                 try
-                    if ispc
-                        % OS-independent file path:
-                        tubi.currentSegmentation.seg3dCorrected = ...
-                            load(fullfile(tubi.dir.segmentation, ...
-                            sprintf('seg2d_corrected_%s', coordSys), ...
-                            sprintf(tubi.fileName.seg3dCorrected, tubi.currentTime))) ;
-                    else
-                        % Unix file path:
-                        tubi.currentSegmentation.seg3dCorrected = ...
-                           load(sprintf(tubi.fullFileBase.segmentation3dCorrected, ...
-                           coordSys, tubi.currentTime)) ;
-                    end
+                    tubi.currentSegmentation.seg3dCorrected = ...
+                       load(sprintfm(tubi.fullFileBase.segmentation3dCorrected, ...
+                       coordSys, tubi.currentTime)) ;
+                
                 catch
                     options.timePoints = [tubi.currentTime] ;
                     options.corrected = true ;
                     tubi.processCorrectedCellSegmentation3D(options) ;
-                    if ispc
-                        % OS-independent file path:
-                        tubi.currentSegmentation.seg3dCorrected = ...
-                            load(fullfile(tubi.dir.segmentation, ...
-                            sprintf('seg2d_corrected_%s', coordSys), ...
-                            sprintf(tubi.fileName.seg3dCorrected, tubi.currentTime))) ;
-                    else
-                        % Unix file path:
-                        tubi.currentSegmentation.seg3dCorrected = ...
-                           load(sprintf(tubi.fullFileBase.segmentation3dCorrected, ...
-                           coordSys, tubi.currentTime)) ;
-                    end
+                   
+                    tubi.currentSegmentation.seg3dCorrected = ...
+                       load(sprintfm(tubi.fullFileBase.segmentation3dCorrected, ...
+                       coordSys, tubi.currentTime)) ;
+                
                 end
             end
             % if requested, return segmentation as output
@@ -2284,14 +2255,9 @@ classdef TubULAR < handle
                     'facePathlines'} ;
             end
             if any(contains(varargin, 'pivPathlines'))
-                if ispc
-                    % OS-independent path building
-                    xyfn = replace(tubi.fileName.pathlines.XY, 't0_%04d', ...
-                        sprintf('t0_%04d', t0)) ;
-                else
-                    % Unix-only equivalent
-                    xyfn = sprintf(tubi.fileName.pathlines.XY, t0) ;
-                end    
+                
+                xyfn = sprintfm(tubi.fileName.pathlines.XY, t0) ;
+        
                 load(xyfn, 'pivPathlines')
                 tubi.pathlines.piv = pivPathlines ;
             end
@@ -2507,10 +2473,10 @@ classdef TubULAR < handle
             tubi.currentStrain.pathline.t0Pathlines = t0Pathlines ;
             if any(contains(varargin, 'strain'))
                 % OS-independent file path definition
-                ffn = replace(replace(tubi.fullFileBase.pathlines.strain, ...
-                    't0_%04d', sprintf('t0_%04d', t0Pathlines)), ...
-                    tubi.fileBase.strain, sprintf(tubi.fileBase.strain, tubi.currentTime));
-                % ffn = sprintf(tubi.fullFileBase.pathlines.strain, t0Pathlines, tubi.currentTime) ;
+                % ffn = replace(replace(tubi.fullFileBase.pathlines.strain, ...
+                %     't0_%04d', sprintf('t0_%04d', t0Pathlines)), ...
+                %     tubi.fileBase.strain, sprintf(tubi.fileBase.strain, tubi.currentTime));
+                ffn = sprintfm(tubi.fullFileBase.pathlines.strain, t0Pathlines, tubi.currentTime) ;
                 tubi.currentStrain.pathline.strain = load(ffn) ;
             end
 

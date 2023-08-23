@@ -1,9 +1,14 @@
 function [xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = ...
-    measureXYZLims(QS, options)
+    measureXYZLims(tubi, options)
+%[xyzlim_raw, xyzlim, xyzlim_um, xyzlim_um_buff] = measureXYZLims(tubi, options)
 % Redo calculation of XYZ limits
 %
 % Parameters
 % ----------
+% tubi: 
+% options: struct with fields
+%   overwrite : bool 
+%       overwrite previous XYZlimits on disk
 % 
 %
 % NPMitchell 2020
@@ -17,13 +22,13 @@ if nargin > 1
 end
 
 %% Unpack QS
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 % Data file names
-xyzlimname_raw = QS.fileName.xyzlim_raw ;
-xyzlimname_pix = QS.fileName.xyzlim_pix ;
-xyzlimname_um = QS.fileName.xyzlim_um ;
-xyzlimname_um_buff = QS.fileName.xyzlim_um_buff ;
+xyzlimname_raw = tubi.fileName.xyzlim_raw ;
+xyzlimname_pix = tubi.fileName.xyzlim_pix ;
+xyzlimname_um = tubi.fileName.xyzlim_um ;
+xyzlimname_um_buff = tubi.fileName.xyzlim_um_buff ;
 
 % on_disk = exist(xyzlimname_raw, 'file') && ...
 %      exist(xyzlimname_pix, 'file') &&  exist(xyzlimname_um, 'file') && ...
@@ -38,7 +43,7 @@ for tidx = 1:length(timePoints)
     end
     
     % Get the timestamp string from the name of the mesh
-    mesh = read_ply_mod(sprintf(QS.fullFileBase.mesh, tt)) ;
+    mesh = read_ply_mod(sprintfm(tubi.fullFileBase.mesh, tt)) ;
     
     % Could load APDV from disk
     % meshAPDVfn = sprintf(QS.fullFileBase.alignedMesh, tt) ; 
@@ -50,7 +55,7 @@ for tidx = 1:length(timePoints)
     % Option 2: rotate/scale/translate in-place
     meshAPDV = struct() ;
     meshAPDV.f = mesh.f ;
-    meshAPDV.v = QS.xyz2APDV(mesh.v) ;
+    meshAPDV.v = tubi.xyz2APDV(mesh.v) ;
     
     % Check 
     % trisurf(mesh.f, mesh.v(:, 1), mesh.v(:, 2), ...
@@ -110,7 +115,7 @@ else
 end
 
 % Save xyzlimits 
-resolution = QS.APDV.resolution ;
+resolution = tubi.APDV.resolution ;
 if overwrite || ~exist(xyzlimname_pix, 'file')
     disp('Saving rot/trans mesh xyzlimits for plotting')
     header = 'xyzlimits for rotated translated meshes in units of full resolution pixels' ;
@@ -135,8 +140,8 @@ if overwrite || ~exist(xyzlimname_um_buff, 'file')
     disp('Saving rot/trans mesh xyzlimits for plotting, in microns')
     header = 'xyzlimits for rotated translated meshes in microns, with padding (buffered)' ;
     xyzlim_um = [xminrs, xmaxrs; yminrs, ymaxrs; zminrs, zmaxrs] ;
-    xyzlim_um_buff = xyzlim_um + 2 * abs(QS.normalShift) * resolution * [-1, 1] ;
+    xyzlim_um_buff = xyzlim_um + 2 * abs(tubi.normalShift) * resolution * [-1, 1] ;
     write_txt_with_header(xyzlimname_um_buff, xyzlim_um_buff, header) ;
 else
-    xyzlim_um_buff = xyzlim_um + 2 * abs(QS.normalShift) * resolution * [-1, 1] ;
+    xyzlim_um_buff = xyzlim_um + 2 * abs(tubi.normalShift) * resolution * [-1, 1] ;
 end
