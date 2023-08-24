@@ -200,8 +200,6 @@ disp('done')
 %% Now we have 3d data volumes and surfaces. Define a TubULAR object. 
 % To visualize data on these surfaces and compute how these surfaces deform
 % we now define TubULAR object.
-nU = masterSettings.nU ;
-nV = masterSettings.nV ;
 opts = struct() ;
 opts.meshDir = mslsDir ;        % Directory where meshes reside
 opts.flipy = flipy ;            % Set to true if data volume axes are inverted in chirality wrt physical lab coordinates
@@ -234,7 +232,7 @@ disp('done defining TubULAR instance')
 tubi.prepareIlastik() ;
 
 %% Extract the surfaces
-tubi.xp.detectOptions.preview = true ;
+tubi.xp.detectOptions.preview = false ;
 tubi.getMeshes()
 
 % Inspect the meshes
