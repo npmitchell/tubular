@@ -15,7 +15,7 @@ function dat2crop = cropToMatchSize(dat2crop, dataRef)
 %
 % NPMitchell 2023
 
-    if ~all(size(dat2crop) == size(data))
+    if ~all(size(dat2crop) == size(dataRef))
 
         % crop or pad dim 1
         aa = size(dat2crop, 1) ;
