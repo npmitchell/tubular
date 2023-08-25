@@ -57,24 +57,20 @@ Updates to the code are installed by running the following command from the ``tu
 
 So now your tubular is definitely up-to-date. 
 
-Just FYI, there are two linked repositories that are not pulled with this line: upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories within TubULAR, were pulled only because we used the ``--recursive`` option before. These two repositories are available here: https://github.com/DillonCislo/DEC and https://github.com/npmitchell/TexturePatch. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch, so be sure to clone with the ``--recursive'' option and make sure their contents sit in those directories. To update them, run:
+Just FYI, there are two linked repositories that are not pulled with this line: upon cloning TubULAR on your local machine, DECLab and TexturePatch, which are linked repositories within TubULAR, were pulled only because we used the ``--recursive`` option before. These two repositories are available here: https://github.com/DillonCislo/DEC and https://github.com/npmitchell/TexturePatch. Note that the example scripts expect these repositories to be populated in the folders called DECLab and TexturePatch, so be sure to clone with the ``--recursive'' option and make sure their contents sit in those directories. To update them, run::
 
 
 	cd TexturePatch
-	
 	git pull
-	
 	cd ../DECLab
-	
 	git pull
 
 We have tried to keep dependencies to a minimum. One package that TubULAR will try to use if your surfaces are so "prickly" that they would cause potential issues is gptoolbox. This is a *MATLAB* package, but it has some mex files, which are *MATLAB*'s way of interfacing with custom *C++* code. If that sounds complicated, don't worry -- all you need to do is additionally download a copy of gptoolbox and compile it by typing a few lines in a *Terminal* window. You can also skip this step, go straight to the examples section further down on this page and deal with any potential issues by tweaking TubULAR's surface extraction parameters.
 
-Now that you've cloned TubULAR, **gptoolbox** is found inside this TubULAR repository, and we need to compile one function in there. Let's navigate there: 
+Now that you've cloned TubULAR, **gptoolbox** is found inside this TubULAR repository, and we need to compile one function in there. Let's navigate there::
 	 
 
-	cd tubular/external/gptoolbox/external/toolbox_fast_marching/
-	
+	cd tubular/external/gptoolbox/external/toolbox_fast_marching/	
 	compile_mex
 	
 In other words, open MATLAB, then open the script in ``tubular/external/gptoolbox/external/toolbox_fast_marching/compile_mex.m``. Change the current working directory to the parent directory of this file (which is ```tubular/external/gptoolbox/external/toolbox_fast_marching/''), then run the file. In our hands, this works on Linux and Mac operating systems. For Windows machines, you will need a supported compiler -- see https://www.mathworks.com/support/requirements/supported-compilers.html. If these functions compile, then we're good to go with **gptoolbox**. If this compilation fails, you might get an error when running a TubULAR script like ``Undefined function 'perform_front_propagation_3d' for input arguments of type 'double'.``
@@ -112,7 +108,7 @@ We first will define metadata in three forms: there is ``expMeta`` for experimen
 
 We note that the user can choose to crease ``xp`` as an instance of ImSAnE's Experiment class instead of as a simple struct. In that case, it also contains fileMeta, expMeta, and detectOptions information already.
 
-The next step is to define the surface meshes (if they don't already exist in the output meshDir). By default, we do this by creating downsampled h5 files of the data, loading them into iLastik, training on the boundary surface that you want to capture, and then using a 3D active contour. To create the downsampled h5 files, run
+The next step is to define the surface meshes (if they don't already exist in the output meshDir). By default, we do this by creating downsampled h5 files of the data, loading them into iLastik, training on the boundary surface that you want to capture, and then using a 3D active contour. To create the downsampled h5 files, run::
 
 
 	tubi.prepareIlastik() ;
@@ -158,7 +154,7 @@ Triangles of the mesh triangulation near the endpoints need to have vertices wit
 
 	tubi.cleanCylMeshes();
 
-Finally, we can create pullbacks to the plane for each timepoint:
+Finally, we can create pullbacks to the plane for each timepoint::
 
 
 	for tt = tubi.xp.fileMeta.timePoints    
@@ -184,7 +180,7 @@ Finally, we can create pullbacks to the plane for each timepoint:
 	    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 	end
 
-Now that we have a partially stabilized parameterization, we can smooth the (s,phi) grid meshes in time, if desired. A width of 0 will result in no smoothing. We find this smoothing step helps with the subsequent PIV stabilization.
+Now that we have a partially stabilized parameterization, we can smooth the (s,phi) grid meshes in time, if desired. A width of 0 will result in no smoothing. We find this smoothing step helps with the subsequent PIV stabilization::
 
 
 	options = struct() ;
@@ -207,10 +203,10 @@ Now that we have a partially stabilized parameterization, we can smooth the (s,p
 	    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 	end
 
-We are in a position to stabilize any residual motion in the pullback plane using PIV to modify the parameterization of the curved surfaces. To avoid artifacts near the edges of the pullback image, we "double cover" the surface by tiling the pullback image along the periodic dimension. Note that measuring these 2D velocities immediately gives us 3D velocities of the material by connecting material points in meshes across timepoints.
+We are in a position to stabilize any residual motion in the pullback plane using PIV to modify the parameterization of the curved surfaces. To avoid artifacts near the edges of the pullback image, we "double cover" the surface by tiling the pullback image along the periodic dimension. Note that measuring these 2D velocities immediately gives us 3D velocities of the material by connecting material points in meshes across timepoints::
 
 
-	% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE
+	%% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE
 	options = struct() ;
 	options.coordsys = 'spsm' ;
 	tubi.doubleCoverPullbackImages(options)
@@ -225,7 +221,7 @@ We are in a position to stabilize any residual motion in the pullback plane usin
 	% Make map from pixel to xyz to compute velocities in 3d for smoothed meshes
 	tubi.measurePIV3d() ;
 
-You might want to smooth the velocities a bit
+You might want to smooth the velocities a bit::
 
 	% Time-averaging of velocities along pullback pathlines
 	options = struct() ;
@@ -243,13 +239,13 @@ At this point, we encourage you to explore the analysis methods available, depen
 
 	tubi.helmholtzHodge() ;
 
-and compute the rate of area change
+and compute the rate of area change::
 
 
 	tubi.measureMetricKinematics() ;
 	tubi.plotMetricKinematics() ;
 
-We can save and plot the material pathlines and render the data in the stabilized frame. Note that if there are residual errors in the stabilization, they will compound over time.
+We can save and plot the material pathlines and render the data in the stabilized frame. Note that if there are residual errors in the stabilization, they will compound over time::
 
 	tubi.measurePullbackPathlines() ;
 
