@@ -231,7 +231,9 @@ classdef TubULAR < handle
        currentSegmentation = struct(...
            'seg2d', [], ...                 % polygonal segmentation of cells in 2D pullback space
            'seg2dCorrected', [], ...        % polygonal segmentation of cells in 2D pullback space with manual corrections
-           'seg3d', [])                     % polygonal segmentation of cells in 3D space
+           'seg3d', [], ...                 % polygonal segmentation of cells in 3D space
+           'seg3dCorrected', []);           % polygonal segmentation of cells in 3D space with manual corrections
+           
        currentStrain = struct(...           % strain from pathline measurements at current timepoint
             'pathline', ...                 % strain from pathlines
             struct('t0Pathlines', [], ...   % t=0 timepoint for pathlines in question
@@ -321,6 +323,10 @@ classdef TubULAR < handle
             tubi.currentData.adjustlow = 0 ;
             tubi.currentData.adjusthigh = 0 ;
             tubi.currentVelocity.piv3d = struct() ;
+            tubi.currentSegmentation.seg2d = struct() ;
+            tubi.currentSegmentation.seg2dCorrected = struct() ;
+            tubi.currentSegmentation.seg3d = struct() ;
+            tubi.currentSegmentation.seg3dCorrected = struct() ;
         end
         
         function t0 = t0set(tubi, t0)
@@ -1783,7 +1789,8 @@ classdef TubULAR < handle
             end
                 
             % Obtain the cell segmentation in 3D pullback space
-            if isempty(tubi.currentSegmentation.seg2dCorrected)
+            if isempty(tubi.currentSegmentation.seg2dCorrected) || ...
+                isempty(fieldnames(tubi.currentSegmentation.seg2dCorrected))
                 try
                     % Unix file path:
                     tubi.currentSegmentation.seg2dCorrected = ...
@@ -1823,11 +1830,18 @@ classdef TubULAR < handle
         end
         function seg3dCorr = getCurrentSegmentation3DCorrected(tubi, options)
             % Obtain the cell segmentation in 3D pullback space
-            if isempty(tubi.currentSegmentation.seg3dCorrected)
+            % Note: this is assumed to be coordinate-system independent (ie
+            % we do not store what 2D coordsys was used to generate this 3D
+            % segmentation.
+            if nargin < 2
+                options = struct() ;
+            end
+            if isempty(tubi.currentSegmentation.seg3dCorrected) || ...
+                    isempty(fieldnames(tubi.currentSegmentation.seg3dCorrected))
                 try
                     tubi.currentSegmentation.seg3dCorrected = ...
                        load(sprintfm(tubi.fullFileBase.segmentation3dCorrected, ...
-                       coordSys, tubi.currentTime)) ;
+                       tubi.currentTime)) ;
                 
                 catch
                     options.timePoints = [tubi.currentTime] ;
@@ -1836,7 +1850,7 @@ classdef TubULAR < handle
                    
                     tubi.currentSegmentation.seg3dCorrected = ...
                        load(sprintfm(tubi.fullFileBase.segmentation3dCorrected, ...
-                       coordSys, tubi.currentTime)) ;
+                       tubi.currentTime)) ;
                 
                 end
             end

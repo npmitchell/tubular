@@ -35,8 +35,9 @@ addpath(fullfile('../utility','plotting'))
 % go back to the data
 cd(dataDir)
 
+%% Load settings from disk
 if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
-    %% DEFINE NEW MASTER SETTINGS
+    % DEFINE NEW MASTER SETTINGS
     if ~exist('./masterSettings.mat', 'file')
         % Metadata about the experiment
         stackResolution = [.2619 .2619 .2619] ;  % resolution in spaceUnits per pixel
@@ -107,7 +108,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     dir16bit = fullfile(dataDir) ;
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% PART 1: Define the metadata for the project
+    % PART 1: Define the metadata for the project
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     cd(dir16bit)
@@ -175,7 +176,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     expMeta.fitTime             = fileMeta.timePoints(first_tp);
 
 
-    %% SET DETECTION OPTIONS ==================================================
+    % SET DETECTION OPTIONS ==================================================
     % Load/define the surface detection parameters
     msls_detOpts_fn = fullfile(projectDir, 'msls_detectOpts.mat') ;
     if exist(msls_detOpts_fn, 'file')
@@ -254,7 +255,7 @@ if ~exist(fullfile(dataDir, 'xp.mat'), 'file')
     % Overwrite certain parameters for script structure
     mslsDir = detectOptions.mslsDir ;
 
-    %% Define Experiment as struct
+    % Define Experiment as struct
     xp = struct('fileMeta', fileMeta, ...
         'expMeta', expMeta, 'detectOptions', detectOptions) ;
     disp('done')

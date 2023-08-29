@@ -298,7 +298,7 @@ end
 for t = xp.fileMeta.timePoints
     
     prepFileName = fullfile( projectDir, sprintf( [ 'prepFiles/' ...
-        masterSettings.fn ], t ) );
+        masterSettings.fn '.h5'], t ) );
     
     if ~exist(prepFileName, 'file')
         
@@ -320,7 +320,7 @@ clear prepFileName
 %% Batch Creation of Ilastik Prediction ===================================
 % At this point the user should switch to Ilastik and train to create a
 % pixel probability map using the sub-sampled prep files.  Don't work too
-% hard here! You dont have to train on every single time point.  Training
+% hard here! You don't have to train on every single time point.  Training
 % can be performed on a subset of the time series (or even on a single time
 % point if you're bold) and used to batch process the rest!
 %

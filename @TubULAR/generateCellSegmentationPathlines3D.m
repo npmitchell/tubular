@@ -1,5 +1,5 @@
-function generateCellSegmentationPathlines3D(QS, options)
-% generateCellSegmentation3D(QS, options)
+function generateCellSegmentationPathlines3D(tubi, options)
+% generateCellSegmentation3D(tubi, options)
 % 
 %  Load segmentation results from a timepoint t0Pathlines, advect the cell
 %  polygons along pathlines from PIV, measure the segmentation properties
@@ -10,16 +10,21 @@ function generateCellSegmentationPathlines3D(QS, options)
 
 
 % Unpack options
-timePoints = QS.xp.fileMeta.timePoints ;
+if nargin < 2
+    options = struct() ;
+end
+
+timePoints = tubi.xp.fileMeta.timePoints ;
 maxCellSize = Inf ;  % maximum size allowed to include a cell
 overwrite = false ;
-overwriteImages = true ;
+overwritePathlines = false ;
+overwriteImages = false ;
 useCorrected = true ;
 debug = false ;
 preview = false ;
 
-[~, ~, ~, xyzlims] = QS.getXYZLims() ;
-t0 = QS.t0set() ;
+[~, ~, ~, xyzlims] = tubi.getXYZLims() ;
+t0 = tubi.t0set() ;
 
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
@@ -58,28 +63,28 @@ else
 end
 
 % Directory preparation
-imdir = fullfile(QS.dir.segmentation, 'pathlines', 'images') ;
+imdir = fullfile(tubi.dir.segmentation, 'pathlines', 'images') ;
 if ~exist(imdir, 'dir')
     mkdir(imdir)
 end
 
 % Prep for dicing data by lobes
-features = QS.getFeatures() ;
+features = tubi.getFeatures() ;
 folds = features.folds ;
 nLobes = size(folds, 2) + 1 ;
 
 %% Create synthetic pathlines for cells from t=0
 % synethetic cell vertex pathlines in pullback space
-if ~exist(fullfile(QS.dir.segmentation, 'pathlines'), 'dir')
-    mkdir(fullfile(QS.dir.segmentation, 'pathlines'))
+if ~exist(fullfile(tubi.dir.segmentation, 'pathlines'), 'dir')
+    mkdir(fullfile(tubi.dir.segmentation, 'pathlines'))
 end
-cellVertexPathlineFn = fullfile(QS.dir.segmentation, 'pathlines', ...
+cellVertexPathlineFn = fullfile(tubi.dir.segmentation, 'pathlines', ...
     sprintf('cellVertexPathlines_%06dt0.mat', t0)) ;
 if ~exist(cellVertexPathlineFn, 'file') || overwritePathlines 
     disp('Creating vertex pathlines from scratch...')
-    QS.setTime(t0) ;
+    tubi.setTime(t0) ;
     if useCorrected
-        seg2d = getCurrentSegmentation2DCorrected(QS) ;
+        seg2d = getCurrentSegmentation2DCorrected(tubi) ;
         cellV0 = [] ;
         cellIDs = [] ;
         for cellID = 1:length(seg2d.seg2d.cdat.polygons)
@@ -90,13 +95,13 @@ if ~exist(cellVertexPathlineFn, 'file') || overwritePathlines
             end
         end
     else
-        seg2d = getCurrentSegmentation2D(QS) ;
+        seg2d = getCurrentSegmentation2D(tubi) ;
         cellV0 = seg2d.seg2d.vdat.v ;
         cellIDs = 1:length(seg2d.seg2d.cdat.polygons) ;
     end
     opts = struct('preview', true) ;
     [segVertexPathlines2D, segVertexPathlines3D] = ...
-        QS.samplePullbackPathlines(cellV0, opts) ;
+        tubi.samplePullbackPathlines(cellV0, opts) ;
     save(cellVertexPathlineFn, 'segVertexPathlines2D', ...
         'segVertexPathlines3D', 'cellIDs')
 else
@@ -107,12 +112,14 @@ else
     end
 end
 
+nCells_inTissueAdvectedSegmentation = numel(unique(cellIDs)) ;
+
 % Load cell segmentation 2d at t0
-QS.setTime(t0) ;
+tubi.setTime(t0) ;
 if useCorrected
-    seg02d = QS.getCurrentSegmentation2DCorrected() ;
+    seg02d = tubi.getCurrentSegmentation2DCorrected() ;
 else
-    seg02d = QS.getCurrentSegmentation2D() ;
+    seg02d = tubi.getCurrentSegmentation2D() ;
 end
 
 % Setting the current timepoint clears non-timepoint segmentations
@@ -202,11 +209,11 @@ meanQELobeThetaStes = zeros(nLobes, length(timePoints)) ;
 
 for tp = timePoints
     sprintf(['t = ' num2str(tp)])
-    QS.setTime(tp)
-    tidx = QS.xp.tIdx(tp) ;
+    tubi.setTime(tp)
+    tidx = tubi.xp.tIdx(tp) ;
     
-    outfn = fullfile(QS.dir.segmentation, 'pathlines', ...
-        sprintf([QS.fileBase.segmentation3d '.mat'], QS.currentTime)) ;
+    outfn = fullfile(tubi.dir.segmentation, 'pathlines', ...
+        sprintf([tubi.fileBase.segmentation3d '.mat'], tubi.currentTime)) ;
     if ~exist(outfn, 'file') || overwrite 
 
         % Obtain the segmentation in 2d --> use reference segmentation
@@ -261,7 +268,7 @@ for tp = timePoints
         
         % obtain the current cut mesh in APDV coordinates -->
         % 2d coordinates in plane of MESH
-        cutMesh = QS.getCurrentSPCutMeshSmRS() ;
+        cutMesh = tubi.getCurrentSPCutMeshSmRS() ;
 
         % Normalize the u coordinate
         cutMesh.u(:, 1) = cutMesh.u(:, 1) / max(cutMesh.u(:, 1)) ;
@@ -288,10 +295,10 @@ for tp = timePoints
         % uv coordinates of the cell vertices
         umax = max(cutMesh.u(:, 1)) ;
         vmax = max(cutMesh.u(:, 2)) ;
-        uv = QS.XY2uv([Lx, Ly], XY, doubleCovered, umax, vmax) ;
+        uv = tubi.XY2uv([Lx, Ly], XY, doubleCovered, umax, vmax) ;
 
         % Centroids in uv coordinates
-        cntrds = QS.XY2uv([Lx, Ly], centroids, doubleCovered, umax, vmax) ;
+        cntrds = tubi.XY2uv([Lx, Ly], centroids, doubleCovered, umax, vmax) ;
 
         
         %% COULD USE THIS LINE INSTEAD OF BELOW!
@@ -536,16 +543,16 @@ for tp = timePoints
         seg3d.qualities.mInertia = moinertia ;
         seg3d.qualities.cellQ2d = cellQ2d ;
         seg3d.qualities.readme = struct(...
-            'areas', ['area of each cell in squared ' QS.spaceUnits], ...
-            'perim', ['perimeter of each cell in ' QS.spaceUnits], ...
+            'areas', ['area of each cell in squared ' tubi.spaceUnits], ...
+            'perim', ['perimeter of each cell in ' tubi.spaceUnits], ...
             'moment1', ['smaller moment of inertia (about long axis) ', ...
-                'in density * squared ' QS.spaceUnits], ...
+                'in density * squared ' tubi.spaceUnits], ...
             'moment2', ['larger moment of inertia (about short axis) ', ...
-                'in density * squared ' QS.spaceUnits], ...
+                'in density * squared ' tubi.spaceUnits], ...
             'mInertia', ['centroidal moment of inertia in coordSys ', ...
                 'coords Iuu Iuv Ivv, with uv parallel with XY but ', ...
                 'offset to centroid, in density * squared ', ...
-                QS.spaceUnits], ...
+                tubi.spaceUnits], ...
             'ang1', 'angle of long axis in coordSys, in radians', ...
             'ang2', 'angle of long axis in coordSys, in radians', ...
             'cellQ2d', ['quasi-2d cell polygon from embedding space, ', ...
@@ -614,7 +621,7 @@ for tp = timePoints
         
 
         % Statistics on Q tensors
-        nU = QS.nU ;
+        nU = tubi.nU ;
         fold0 = double(folds(tidx, :)) / double(nU) ;
         nLobes = length(fold0(:)) + 1 ;
         foldt = [0; fold0(:); 1] ;
@@ -634,7 +641,7 @@ for tp = timePoints
         seg3d.statistics.meanMoITheta = meanMOIAng1 ;
 
         %% SAVE seg3d with stats
-        disp(['Saving seg3d now with statistics to: ' outfn])
+        disp(['Saving seg3d from pathlines now with statistics to: ' outfn])
         save(outfn, 'seg3d', 'coordSys')
     else
         % seg3d = QS.loadCurrentSegmentation3D() ;
@@ -649,6 +656,15 @@ for tp = timePoints
    
     %% Store for later plotting
     % Collate for later plotting -- raw stats and meanQs (global)
+
+    % Count the number of "cells" (advected segmentation cells) used
+    nCells(dmy) = numel(unique(keep)) ;
+    try 
+        assert(nCells(dmy) == nCells_inTissueAdvectedSegmentation)
+    catch
+        disp(['Warning: number of advected cells kept in calculation is: ' num2str(nCells(dmy))])
+        disp([' --> original number was ' num2str(nCells_inTissueAdvectedSegmentation)])
+    end
     
     % shorthands for some vars
     % meanQAWB = seg3d.statistics.meanQ.aspectWeighted.meanQWeightBounded ;
@@ -777,13 +793,13 @@ for tp = timePoints
     mid_ap = seg3d.statistics.apStats.aspectWeighted.apBins ;
     
     %% Plot this timepoint's segmentation in 3d    
-    glueMesh = QS.getCurrentSPCutMeshSmRSC() ;
-    if ~QS.flipy
+    glueMesh = tubi.getCurrentSPCutMeshSmRSC() ;
+    if ~tubi.flipy
         glueMesh.vn = -glueMesh.vn ;
     end
-    glueMesh.v = glueMesh.v + glueMesh.vn .* 6*QS.APDV.resolution ;
+    glueMesh.v = glueMesh.v + glueMesh.vn .* 6*tubi.APDV.resolution ;
     
-    aux_plotCellSegmentation3D(QS, tp, seg3d, imdir, ...
+    aux_plotCellSegmentation3D(tubi, tp, seg3d, imdir, ...
         overwriteImages, xyzlims, ~useCorrected, glueMesh)
     
     %% Plot as histogram
@@ -810,6 +826,9 @@ aux_plotCellSegmentation3DStats
 
 
 %% Compare to true segmentation GLOBALLY -- nematic strength and direction 
+
+figW = 9 ;
+figH = 4.5 ;
 timeList = {timePoints, timePoints(timePoints < t0 + 75 & timePoints > -30)} ;
 timeStr = {'', '_tlimit'} ;
 stdsteStr = {'_std', '_ste'};
@@ -820,7 +839,7 @@ for std_ste = 1:2
         time2do = timeList{pp} ;
         pInds = ismember(timePoints, time2do) ;
 
-        imfn = fullfile(QS.dir.segmentation, 'pathlines', ...
+        imfn = fullfile(tubi.dir.segmentation, 'pathlines', ...
             ['cell_anisotropy_global_signed_COMPARE', timeStr{pp}]) ;
         % Collate results
         kk = 1;
@@ -828,12 +847,13 @@ for std_ste = 1:2
         meanQAspectStdsTrue = zeros(length(time2do), 1) ;
         meanQAspectStesTrue = zeros(length(time2do), 1) ;
         meanQThetasTrue = meanQAspectsTrue ;
+        nCellsTrue = meanQThetasTrue ;
         for tp = time2do
-            QS.setTime(tp) ;
+            tubi.setTime(tp) ;
             if useCorrected     
-                seg3d = QS.getCurrentSegmentation3DCorrected() ; 
+                seg3d = tubi.getCurrentSegmentation3DCorrected() ; 
             else
-                seg3d = QS.getCurrentSegmentation3D() ; 
+                seg3d = tubi.getCurrentSegmentation3D() ; 
             end
             meanQAspectsTrue(kk) = seg3d.seg3d.statistics.meanQ.aspectWeighted.meanQAspect ;
             meanQAspectStdsTrue(kk) = seg3d.seg3d.statistics.meanQ.aspectWeighted.meanQAspectStd ;
@@ -841,6 +861,7 @@ for std_ste = 1:2
             meanQThetasTrue(kk) = seg3d.seg3d.statistics.meanQ.aspectWeighted.meanQTheta ;
             meanQThetaStdsTrue(kk) = seg3d.seg3d.statistics.meanQ.aspectWeighted.meanQThetaStd ;
             meanQThetaStesTrue(kk) = seg3d.seg3d.statistics.meanQ.aspectWeighted.meanQThetaSte ;
+            nCellsTrue(kk) = length(seg3d.seg3d.statistics.keep) ;
             kk = kk + 1;
         end
 
@@ -883,11 +904,11 @@ for std_ste = 1:2
 
 
         timestamps = timePoints - t0 ;
-        if contains(QS.timeUnits, 'min')
+        if contains(tubi.timeUnits, 'min')
             timestamps = timestamps / 60 ;
             timeunits = 'hr';
         else
-            timeunits = QS.timeUnits ;
+            timeunits = tubi.timeUnits ;
         end
 
         % Transformation (flip sign or subtract initial value)
@@ -1018,6 +1039,30 @@ for std_ste = 1:2
         diffLine = (midline(:) - trueLine(:)) ;
         diffStds = sqrt(stds(:).^2 + trueStds(:).^2) ;
         diffStes = sqrt(stes(:).^2 + trueStes(:).^2) ;
+
+        dataPlotted_raw = struct('nCellsTrue', nCellsTrue, ...
+            'nCells_inTissueAdvectedSegmentation', nCells, ...
+            'tissueShear', midline(:),...
+            'cellShear', trueLine(:), ...
+            'intercalations', diffLine(:), ...
+            'std_tissueShear', stds(:), ...
+            'std_cellShear', trueStds(:), ...
+            'std_intercalations', diffStds(:), ...
+            'ste_tissueShear', stes(:), ...
+            'ste_cellShear', trueStes(:), ...
+            'ste_intercalations', diffStes(:)) ;
+        dataPlotted_movmean = struct('nCellsTrue', nCellsTrue, ...
+            'nCells_inTissueAdvectedSegmentation', nCells, ...
+            'tissueShear', movmean(midline(:), 3) , ...
+            'cellShear', movmean(trueLine(:), 3), ...
+            'intercalations', movmean(diffLine(:), 3), ...
+            'std_tissueShear', movmean(stds(:), 3) , ...
+            'std_cellShear', movmean(trueStds(:), 3), ...
+            'std_intercalations', movmean(diffStds(:), 3), ...
+            'ste_tissueShear', movmean(stes(:), 3) , ...
+            'ste_cellShear', movmean(trueStes(:), 3), ...
+            'ste_intercalations', movmean(diffStes(:), 3)) ;
+        dataPlotted = struct('raw', dataPlotted_raw, 'movmean', dataPlotted_movmean) ;
         if std_ste == 1
             % hs2 = errorbar(timestamps(pInds), trueLine(:),trueStds(:)) ;
             % hold on;
@@ -1074,6 +1119,7 @@ for std_ste = 1:2
         xlim([-0.25, Inf])
         saveas(gcf, [imfn, stdsteStr{std_ste}, '_diff2_movmean_semilog_tx.png'])
         saveas(gcf, [imfn, stdsteStr{std_ste}, '_diff2_movmean_semilog_tx.pdf'])
+        save([imfn, stdsteStr{std_ste}, '_diff2_movmean_DATA.mat'], 'dataPlotted')
         
         %% Global curves and difference over time, relative to t0, with moving mean -- shaded ste or shaded std
         clf
@@ -1149,7 +1195,7 @@ for std_ste = 1:2
         xlim([0, Inf])
         saveas(gcf, [imfn, stdsteStr{std_ste}, '_diff2_movmean_semilog_t0x.png'])
         saveas(gcf, [imfn, stdsteStr{std_ste}, '_diff2_movmean_semilog_t0x.pdf'])
-        save([imfn, stdsteStr{std_ste}, '_diff2_movmean_DATA.mat'], 'dataPlotted')
+        save([imfn, stdsteStr{std_ste}, '_diff2_movmean_t0_DATA.mat'], 'dataPlotted')
         
         
         %% Global curves and difference over time divided by first entry RATIO -- shaded ste or shaded std
@@ -1258,7 +1304,7 @@ for std_ste = 1:2
         time2do = timeList{pp} ;
         pInds = ismember(timePoints, time2do) ;
 
-        imfn = fullfile(QS.dir.segmentation, 'pathlines', ...
+        imfn = fullfile(tubi.dir.segmentation, 'pathlines', ...
             ['cell_anisotropy_lobes_signed_COMPARE', timeStr{pp}]) ;
         % Collate results
         kk = 1;
@@ -1267,11 +1313,11 @@ for std_ste = 1:2
         meanQLobeAspectStesTrue = zeros(nLobes, length(time2do)) ;
         meanQLobeThetasTrue = meanQLobeAspectsTrue ;
         for tp = time2do
-            QS.setTime(tp) ;
+            tubi.setTime(tp) ;
             if useCorrected     
-                seg3d = QS.getCurrentSegmentation3DCorrected() ; 
+                seg3d = tubi.getCurrentSegmentation3DCorrected() ; 
             else
-                seg3d = QS.getCurrentSegmentation3D() ; 
+                seg3d = tubi.getCurrentSegmentation3D() ; 
             end
             meanQLobeAspectsTrue(:, kk) = seg3d.seg3d.statistics.lobes.aspectWeighted.meanQLobeAspect ;
             meanQLobeAspectStdsTrue(:, kk) = seg3d.seg3d.statistics.lobes.aspectWeighted.meanQLobeAspectStd ;
@@ -1324,11 +1370,11 @@ for std_ste = 1:2
                        
             
             timestamps = timePoints - t0 ;
-            if contains(QS.timeUnits, 'min')
+            if contains(tubi.timeUnits, 'min')
                 timestamps = timestamps / 60 ;
                 timeunits = 'hr';
             else
-                timeunits = QS.timeUnits ;
+                timeunits = tubi.timeUnits ;
             end
 
             % Transformation (flip sign or subtract initial value)
