@@ -34,7 +34,7 @@ TubULAR is written in MATLAB. There are example scripts in the Tubular repositor
 
 Installation (Let's get going!)
 -------------------------------
-We have tested TubULAR in Linux and Mac platforms. We don't currently guarantee that everything will work on a Windows machine. Here, we will walk through the installation, but if anything goes awry, check the FAQ page here:
+We have tested TubULAR in Linux, Mac OS 11, and Windows 10 operating systems. Here, we will walk through the installation, but if anything goes awry, check the FAQ page here:
 
 .. toctree::
   :maxdepth: 1
@@ -104,36 +104,69 @@ A typical **Tubular** pipeline uses several self-contained packages that we have
 
 Overview of a TubULAR script
 ----------------------------
+1. The TubULAR workflow assumes individual TIFF files for each timepoint matching a common naming convention. For example, Timepoint_000000.tif, Timepoint_000001.tif, etc would be found in the same directory. If the dataset has multiple channels, all channels to be used should be found within the same file for a given timepoint, and the metadata instructs TubULAR how to interpret the axis order. 
+
+
 We first will define metadata in three forms: there is ``expMeta`` for experiment metadata, ``fileMeta`` for information on the filenames and formats, and ``opts`` for options for how TubULAR will handle the data. For example, the resolution (in microns per pixel, for ex) is in ``expMeta``, ``channelsUsed`` specifies which channels (ex, GFP) are used in ``fileMeta``, and ``phiMethod`` selecting how to stabilize motion along the circumferential axis is stored in ``opts``. For organizational homology with ImSAnE, we also define ``detectOptions`` specifying how to detect the surface, and we place this struct inside a struct ``xp`` along with ``expMeta`` and ``fileMeta``. We then define an instance of the TubULAR class by passing ``xp`` and ``opts``. Creating the TubULAR instance will define some folders to store the output in ``opts.meshDir``. 
 
-We note that the user can choose to crease ``xp`` as an instance of ImSAnE's Experiment class instead of as a simple struct. In that case, it also contains fileMeta, expMeta, and detectOptions information already.
+We note that the user can choose to create ``xp`` as an instance of ImSAnE's Experiment class instead of as a simple struct. In that case, ```xp``` contains fileMeta, expMeta, and detectOptions information already.
 
-The next step is to define the surface meshes (if they don't already exist in the output meshDir). By default, we do this by creating downsampled h5 files of the data, loading them into iLastik, training on the boundary surface that you want to capture, and then using a 3D active contour. To create the downsampled h5 files, run::
+
+An output directory for the data will be generated upon instantiation of the TubULAR class::
+
+
+    xp = struct('fileMeta', fileMeta, 'expMeta', expMeta, 'detectOptions', detectOptions) ;
+	opts = struct('meshDir', '/path/to/output/' ;        % Directory where meshes reside
+	    'timeInterval', 1 ; % Spacing between adjacent timepoints in units of timeUnits
+	    'timeUnits', 'min', ...  % units of time, so that adjacent timepoints are timeUnits * timeInterval apart
+	    'spaceUnits', 'um', ...  % Units of space in LaTeX, for ex '$mu$m' for micron
+	    'nU', 100, ...           % How many points along the longitudinal axis to sample surface
+	    'nV', 100, ...                % How many points along the circumferential axis to sample surface
+	    'normalShift', 10, ...       % Additional dilation acting on surface for texture mapping, in pixels
+	    'a_fixed', 1.0, ...          % Fixed aspect ratio of pullback images. Setting to 1.0 is most conformal mapping option.
+	    'phiMethod', 'curves3d', ... % Method for following surface in surface-Lagrangian mapping [(s,phi) coordinates] ('curves3d' or 'texture' or 'combined')
+	    'lambda_mesh', 0.00, ...     % Smoothing applied to the mesh before DEC measurements
+	    'lambda', 0.0, ...           % Smoothing applied to computed values on the surface
+	    'zwidth', 2 ;			% How many longitudinal steps to average over in smoothing during deformation analysis 
+	    'nmodes', 7);				% How many lowest-order Fourier modes to keep in smoothing during deformation analysis 
+	tubi.TubULAR(xp, opts) ;
+
+
+The directory structure information for inputs and outputs of the class are stored in the ``dir`` property of the TubULAR class instance. While multiple surfaces per timepoint can be analyzed by separate class instances of TubULAR, the default workflow is designed for a single surface per timepoint. For example, if the user would like to analyze the relative motion between two concentric tissue layers, the user could obtain a surface that lies approximately in between the two layers. In this scheme, the output of one TubULAR class instance rendering tissue texture at some positive distance from the mesh surfaces could be compared against the output of another TubULAR class instance rendering tissue texture at some negative distance from the mesh surfaces. In such a scenario, the two instances could share the same mesh directory (and other properties) to ensure no differences in measured motion arose from differences in the constrained mapping procedure.
+
+
+2. The next step is to define the surface meshes (if they don't already exist in the output meshDir). By default, we do this by creating downsampled h5 files of the data, loading them into iLastik, training on the boundary surface that you want to capture, and then using a 3D active contour. To create the downsampled h5 files, run::
 
 
 	tubi.prepareIlastik() ;
 
-then to create the meshes we run 
+This generates h5 files for each timepoint, with a subsampling factor given by ssfactor in the metadata. Now, open up iLastik, create a Pixel Classification project file. See the iLastik website for a full demo: https://www.ilastik.org/. Load in some subset of your timepoints one-by-one. Depending on your metadata, the h5s may need to have their axis orders modified to be loaded in correctly. For instance, if you have a 2-color dataset and you see your data loaded in with one of the spatial dimensions (X, Y, or Z) being only two voxels thick, then you can right click on the file in the Input Data tab, click Edit Properties, and modify the 'Interpret axes as' field. Select all the features in the Feature Selection tab. Move to the Training tab and classify voxels as different Labels (colors). For example, identify tissue as Label 1 and voxels inside the tissue as Label 2. Use as few marks as you can while obtaining good results. Use the Live Update button to preview the classification, and toggle on/off different Labels in the Group Visibility window. If the training is running to slowly on your computer, select all the features at first, then use the "Suggest Features" option in the Training tab to reduce the computational load. Once you have a reasonable result for your sample timepoints, batch process all timepoints with your training. The next step in MATLAB will look for h5 files output from iLastik with the default naming, or you can customize the names and note this in the options struct passed to getMeshes():
 
 
-	tubi.getMeshes();
+	tubi.getMeshes() ;
 	
-We then define the coordinate frame in which we analyze the data, which we call APDV after 'anterior-posterior-dorsal-ventral'. In practice, this could just be the XYZ coordinate system of the data, or something else like a proximal-distal axis. Note that this is just to define the viewing frame and not yet to define anything about the true anterior and posterior end of the sample (or proximal and distal end, etc). This step can either use the data frame, the elongation axis of the surface mesh at the reference timepoint, or the output of iLastik training. If you choose to use iLastik, you would train on a blob near one 'anterior' end, a blob near another 'posterior' end, background, and a blob near the 'dorsal' side to define a coordinate system.
+This step loads in your prediction and runs a 3D active contour level sets approach to segment the surface of the organ tissue. Note that there are many options for how these meshes are extracted. See the documentation of getMeshes() for details. For instance, instead of the level sets approach, we could simply segment the training output via thresholding and compute from the volumetric segmentation via marching cubes. Later steps will keep only the largest connected component of the mesh triangulation, so small unconnected mesh surfaces far from the tissue will not impact the result. 
+
+For the level sets option (the default), the segmentation output of one timepoint will be used as the input 'guess' for the subsequent timepoint, and the level set will evolve to match the current timepoint given that initial guess. The ``detectOptions`` metadata are used to determine the parameters and details of the procedure.
+	
+3. We now turn to parameterizing the surface. For the first step here, we define the coordinate frame in which we analyze the data, which we call APDV after 'anterior-posterior-dorsal-ventral'. In practice, this could just be the XYZ coordinate system of the data, or something else like a proximal-distal axis. Note that this is just to define the viewing frame and not yet to define anything about the true anterior and posterior end of the sample (or proximal and distal end, etc). This step can either use the data frame, the elongation axis of the surface mesh at the reference timepoint, or the output of iLastik training. If you choose to use iLastik, you would train on a blob near one 'anterior' end, a blob near another 'posterior' end, background, and a blob near the 'dorsal' side to define a coordinate system.
 
 
 	tubi.computeAPDVCoords() ;
 	
-We then select the endcaps for the centerline computation (A and P) and a point along which we will form a branch cut for mapping to the plane (D). We call this D because we envision choosing the dorsal direction as the cut. Similarly to before, you can select these points by hand (point-and-click in a figure) or using iLastik to train on the particular endcaps and another blob elsewhere on the surface (in the dorsal direction). 
+We then select the endcaps for the centerline computation (A and P) and a point along which we will form a branch cut for mapping to the plane (D). We call this D because we envision choosing the dorsal direction as the cut. Similarly to before, you can select these points by hand (point-and-click in a figure) or using iLastik to train on the particular endcaps and another blob elsewhere on the surface (in the dorsal direction). See example scripts for details.
 
 
 	tubi.computeAPDpoints(apdvOpts); 
 
-At this point, you could choose to render the data on the surfaces that you've extracted using
+At this point, you may choose to render the data on the surfaces that you've extracted:
 
 
 	tubi.plotSeriesOnSurfaceTexturePatch() ;
 
-We then define centerlines, which are 1D curves in 3D that pass from the anterior point to the posterior point through the center of the mesh. 
+For meshes with many faces, this may be slow. This step is optional and does not impact future calculations.
+
+We then define centerlines, which are 1D curves in 3D that pass from the anterior point to the posterior point through the center of the volume enclosed by each mesh. These connect the anterior points (A) to the posterior points (P) by passing through the middle of the volume. Computationally, this is accomplished via fast-marching from one endpoint to the other through the distance transform of the data volume. The curve preferentially passes through voxels far from the mesh surface, as these are given higher weight by the distance transform. Physically, this is like finding the fastest path through the volume when the speed of passing through a given voxel is determined by the distance transform. 
 
 
 	tubi.generateFastMarchingCenterlines() ;
@@ -203,7 +236,7 @@ Now that we have a partially stabilized parameterization, we can smooth the (s,p
 	    tubi.generateCurrentPullbacks([], [], [], pbOptions) ;
 	end
 
-We are in a position to stabilize any residual motion in the pullback plane using PIV to modify the parameterization of the curved surfaces. To avoid artifacts near the edges of the pullback image, we "double cover" the surface by tiling the pullback image along the periodic dimension. Note that measuring these 2D velocities immediately gives us 3D velocities of the material by connecting material points in meshes across timepoints::
+4. We are in a position to measure 3D flow fields and then to stabilize any residual motion in the pullback plane, using PIV to modify the parameterization of the curved surfaces. To avoid artifacts near the edges of the pullback image, we "double cover" the surface by tiling the pullback image along the periodic dimension. Note that measuring these 2D velocities immediately gives us 3D velocities of the material by connecting material points in meshes across timepoints::
 
 
 	%% TILE/EXTEND SMOOTHED IMAGES IN Y AND RESAVE
@@ -221,7 +254,8 @@ We are in a position to stabilize any residual motion in the pullback plane usin
 	% Make map from pixel to xyz to compute velocities in 3d for smoothed meshes
 	tubi.measurePIV3d() ;
 
-You might want to smooth the velocities a bit::
+5. We then smooth the velocities over time by averaging velocities along pathlines of advected material points::
+
 
 	% Time-averaging of velocities along pullback pathlines
 	options = struct() ;
@@ -234,7 +268,7 @@ You might want to smooth the velocities a bit::
 	tubi.plotTimeAvgVelocities(options)
 
 
-At this point, we encourage you to explore the analysis methods available, depending on your goals. For example, we can compute divergence and curl of the velocity fields.
+6. We finally interpret the dynamics by computing signatures of motion and integrated deformation maps. This computations need not be performed in order. We compute divergence and curl of the velocity fields:
 
 
 	tubi.helmholtzHodge() ;
@@ -269,7 +303,7 @@ We can compute the material strain rate:
 
 	tubi.measureStrainRate() ;
 
-or compute PCA of the velocity field:
+or compute a principal component analysis of the velocity fields:
 
 	
 	tubi.getPCAoverTime(options);
