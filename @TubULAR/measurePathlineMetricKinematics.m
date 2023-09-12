@@ -121,7 +121,7 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
+%% Unpack tubi
 tubi.getXYZLims ;
 xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
@@ -136,7 +136,7 @@ else
         lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 end
 
-%% load from QS
+%% load from tubi
 if doubleResolution
     nU = tubi.nU * 2 - 1 ;
     nV = tubi.nV * 2 - 1 ;
@@ -218,13 +218,15 @@ for tp = tp2do
             H2vn = H2vn_filt ;
             radius = radius_filt ;
         catch
-            msg = 'Run QS.measureMetricKinematics() ' ;
-            msg = [msg 'with lambdas=(mesh,lambda,err)=('] ;
+            msg = 'Run tubi.measureMetricKinematics() ' ;
+            msg = [msg 'with lambdas=(mesh,lambda,err,modes,zwidth)=('] ;
             msg = [msg num2str(lambda_mesh) ','] ;
             msg = [msg num2str(lambda) ','] ;
             msg = [msg num2str(lambda_err) ')'] ;
+            msg = [msg num2str(modes) ','] ;
+            msg = [msg num2str(zwidth) ')'] ;
             msg = [msg ' before running ', ...
-                    'QS.measurePathlineMetricKinematics()'] ;
+                    'tubi.measurePathlineMetricKinematics()'] ;
             error(msg)
         end
         % Interpolate from vertices onto pathlines

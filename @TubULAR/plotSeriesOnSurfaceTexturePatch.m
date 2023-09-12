@@ -1,6 +1,6 @@
 function plotSeriesOnSurfaceTexturePatch(tubi,...
    options, TexturePatchOptions)
-% PLOTDATAONSURFACETEXTUREPATCH(xp, xyzlim, rot, trans)
+% PLOTDATAONSURFACETEXTUREPATCH(tubi, options, TexturePatchOptions)
 %   Plot intensity data timeseries on 3d mesh timeseries
 %
 % Parameters
@@ -365,8 +365,7 @@ for tidx = tidx_todo
         % Read in the mesh file -----------------------------------------------
         disp('Reading mesh...')
         % Specfiy the mesh file to load
-        meshfn = replace( meshFileBase, tubi.timeStampStringSpec, ...
-            num2str(tubi.timeStampStringSpec, tp ));
+        meshfn = sprintfm( meshFileBase, tp );
         mesh = read_ply_mod( meshfn );
 
         % If we smooth before pushing along the normal
@@ -520,11 +519,13 @@ for tidx = tidx_todo
         for ii = 1:length(fns)
             % Only plot this view if plot_view(ii) is true
             if plot_view(ii)
+
+                filename_tmp = replace(fns{ii}, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(tubi.timeStampStringSpec ,tp)) ;
+
                 if ii == 1
                     % dorsal
-                    filename_tmp = replace(fns{ii}, ...
-                        tubi.timeStampStringSpec, ...
-                        num2str(tubi.timeStampStringSpec ,tp)) ;
                     disp(['saving dorsal image: ' filename_tmp])
                     view(0, 90)
                 elseif ii == 2

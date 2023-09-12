@@ -918,10 +918,11 @@ classdef TubULAR < handle
             end
             
             no_vsm = ~isfield(tubi.currentVelocity.average, 'v2d') ...
-                || isempty(fieldnames(tubi.currentVelocity.average.v2d)) ;
+                || isempty(fieldnames(tubi.currentVelocity.average)) ;
             if (do_all || contains(varargin, 'average')) && no_vsm
                 try
                     vsm = loadVelocityAverage(tubi, varargin) ;
+                    assert(~isempty(vsm.vv))
                 catch
                     disp('WARNING: Could not load Lagrangian-averaged velocites. Returning only raw, piv-based velocities.')
                 end
@@ -2348,7 +2349,7 @@ classdef TubULAR < handle
             % residual motion in the pullback plane.
             
             % Load and pack into struct
-            if isempty(varargin)
+            if isempty(varargin) || all(cellfun(@isempty,varargin))
                 varargin = {'v3d', 'v2dum', 'v2d', 'vn', 'vf', 'vv'};
             end
             if any(strcmp(varargin, 'v3d'))

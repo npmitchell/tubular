@@ -260,7 +260,15 @@ for tp = tp2do
                 lambda_mesh, 'implicit', mesh.v) ;
         end
         DEC = DiscreteExteriorCalculus(mesh.f, mesh.v) ;
-        H3d = sum(mesh.vn .* DEC.laplacian(mesh.v), 2) * 0.5 ;
+
+        % Edit 2023-09-05--> now we do laplacian component by component
+        % old version:
+        % H3d = sum(mesh.vn .* DEC.laplacian(mesh.v), 2) * 0.5 ;
+        % new version: 
+        lapX = DEC.laplacian(mesh.v(:,1)) ;
+        lapY = DEC.laplacian(mesh.v(:,2)) ;
+        lapZ = DEC.laplacian(mesh.v(:,3)) ;
+        H3d = sum(mesh.vn .* [lapX, lapY, lapZ], 2) * 0.5 ;
         
         %% Test that this measurement of H is correct using sphere
         % [mesh] = sphericalTriangulation('numIterations', 5) ;

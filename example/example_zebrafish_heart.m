@@ -557,7 +557,8 @@ for t = xp.fileMeta.timePoints()
     end
     
     if ~exist(meshFileName, 'file')
-        
+        disp('Mesh does not exist on disk. generating mesh from pt cloud')
+
         %------------------------------------------------------------------
         % Generate Mesh From Point Cloud
         %------------------------------------------------------------------
@@ -881,7 +882,7 @@ if ~exist('TubULAR_Results', 'dir')
         
         outputMeshFile = fullfile( projectDir, ...
             sprintf(['TubULAR_Results/'...
-            detectOptions.ofn_smoothply '%06d.ply'], t) );
+            detectOptions.ofn_smoothply '%03d.ply'], t) );
         
         if ~exist(outputMeshFile, 'file') || overwrite        
 
@@ -1431,9 +1432,12 @@ options.plot_dzdp = false ;
 tubi.measurePathlineStrainRate(options)
 
 %% Measure divergence and out-of-plane deformation along pathlines
-tubi.measurePathlineMetricKinematics()
+options = struct() ;
+options.zwidth = 3 ;
+options.nmodes = 5 ;
+tubi.measurePathlineMetricKinematics(options)
 
-% Pathline strain rate plots
+%% Pathline strain rate plots
 options = struct() ;
 options.climit = 0.05 ;
 options.climitWide = 1.0 ;

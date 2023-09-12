@@ -17,7 +17,7 @@ fid = fopen(fn, 'wt');
 try
     fprintf(fid, [header '\n']);  
 catch
-    fprintf(fid, [header "\n"]); 
+    fprintf(fid, strcat(header, "\n")); 
 end
 fclose(fid);
 dlmwrite(fn, dat, '-append')

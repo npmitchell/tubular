@@ -1,5 +1,5 @@
-function plotPathlineMetricKinematics(QS, options)
-% plotPathlineMetricKinematics(QS, options)
+function plotPathlineMetricKinematics(tubi, options)
+% plotPathlineMetricKinematics(tubi, options)
 %   Plot the metric Kinematics along pathlines as kymographs and 
 %   correlation plots.
 %   Out-of-plane motion is v_n * 2H, where v_n is normal velocity and H is
@@ -13,7 +13,7 @@ function plotPathlineMetricKinematics(QS, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields
 %   plot_kymographs         : bool
 %   plot_kymographs_cumsum  : bool
@@ -43,15 +43,15 @@ plot_dorsal = true ;
 plot_ventral = true ;
 maxWFrac = 0.03 ;
 % Load time offset for first fold, t0
-t0 = QS.t0set() ;  
-t0Pathline = QS.t0 ;
+t0 = tubi.t0set() ;  
+t0Pathline = tubi.t0 ;
 
 %% Parameter options
-lambda = QS.smoothing.lambda ;
-lambda_mesh = QS.smoothing.lambda_mesh ;
-lambda_err = QS.smoothing.lambda_err ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+lambda_err = tubi.smoothing.lambda_err ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 climit = 0.2 ;
 % Sampling resolution: whether to use a double-density mesh
 samplingResolution = '1x'; 
@@ -163,28 +163,28 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+%% Unpack tubi
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
-mKDir = fullfile(QS.dir.metricKinematics.root, ...
+mKDir = fullfile(tubi.dir.metricKinematics.root, ...
     strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02d'], ...
     lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 
 %% Get fold locations for pathlines
-fons = t0 - QS.xp.fileMeta.timePoints(1) ;
+fons = t0 - tubi.xp.fileMeta.timePoints(1) ;
 
 %% Colormap
 % bwr256 = bluewhitered(256) ;
 bwr256 = colormap(brewermap(256, '*RdBu')) ;
-bluecolor = QS.plotting.colors(1, :) ;
-orangecolor = QS.plotting.colors(2, :) ;
-yellowcolor = QS.plotting.colors(3, :) ;
-purplecolor = QS.plotting.colors(4, :) ;
-greencolor = QS.plotting.colors(5, :) ;
-graycolor = QS.plotting.colors(8, :) ;
-browncolor = QS.plotting.colors(9, :) ;
+bluecolor = tubi.plotting.colors(1, :) ;
+orangecolor = tubi.plotting.colors(2, :) ;
+yellowcolor = tubi.plotting.colors(3, :) ;
+purplecolor = tubi.plotting.colors(4, :) ;
+greencolor = tubi.plotting.colors(5, :) ;
+graycolor = tubi.plotting.colors(8, :) ;
+browncolor = tubi.plotting.colors(9, :) ;
 
 %% Choose colors
 divvcolor = bluecolor ;
@@ -194,21 +194,21 @@ Hposcolor = greencolor ;
 Hnegcolor = purplecolor ;
 Hsz = 3 ;  % size of scatter markers for mean curvature
 
-%% load from QS
+%% load from tubi
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 %% Test incompressibility of the flow on the evolving surface
 % We relate the normal velocities to the divergence / 2 * H.
-tps = QS.xp.fileMeta.timePoints(1:end-1) - t0;
+tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0;
 
 % preallocate for cumulative error
-ntps = length(QS.xp.fileMeta.timePoints(1:end-1)) ;
+ntps = length(tubi.xp.fileMeta.timePoints(1:end-1)) ;
 HH_apM   = zeros(ntps, nU) ;   % dv averaged
 divv_apM = zeros(ntps, nU) ;
 veln_apM = zeros(ntps, nU) ;
@@ -242,9 +242,9 @@ datdir = fullfile(mKPDir, 'measurements') ;
 % mdatdir = fullfile(mKDir, 'measurements') ;
 
 % Unit definitions for axis labels
-unitstr = [ '[1/' QS.timeUnits ']' ];
-Hunitstr = [ '[1/' QS.spaceUnits ']' ];
-vunitstr = [ '[' QS.spaceUnits '/' QS.timeUnits ']' ];
+unitstr = [ '[1/' tubi.timeUnits ']' ];
+Hunitstr = [ '[1/' tubi.spaceUnits ']' ];
+vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
 
 % colormap prep    
 close all
@@ -275,10 +275,10 @@ if files_exist
         'H2vn_vM', 'radius_vM')
 else
     disp('Collating data into kymographs')
-    for tp = QS.xp.fileMeta.timePoints(1:end-1)
+    for tp = tubi.xp.fileMeta.timePoints(1:end-1)
         close all
         disp(['t = ' num2str(tp)])
-        tidx = QS.xp.tIdx(tp) ;
+        tidx = tubi.xp.tIdx(tp) ;
 
         % Check for timepoint measurement on disk
         Hfn = fullfile(datdir, sprintf('HH_series_%06d.mat', tp))   ;
@@ -395,7 +395,7 @@ if plot_kymographs
             ['$\nabla \cdot \mathbf{v}$ ' unitstr], ...
             ['normal velocity, $v_n$ ' vunitstr] , ...
             ['normal motion, $v_n 2 H $ ' unitstr], ...
-            ['radius [' QS.spaceUnits ']']} ;
+            ['radius [' tubi.spaceUnits ']']} ;
         names = {'gdot', 'HH', 'divv', 'veln', 'H2vn', 'radi'} ;
         climits = [climit, climit_H, climit, climit_veln, climit_err, climit_radius] ;
 
@@ -417,7 +417,7 @@ if plot_kymographs
                 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+                ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
                 xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
                 cb = colorbar() ;
                 ylabel(cb, labels{pp}, 'Interpreter', 'Latex')  
@@ -482,7 +482,7 @@ if plot_kymographs_cumsum
                 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+                ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
                 xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
                 cb = colorbar() ;
                 ylabel(cb, labels{pp}, 'Interpreter', 'Latex')  
@@ -541,7 +541,7 @@ if plot_kymographs_cumprod
 
                 % title and save
                 title([titles{pp}, titleadd{qq}], 'Interpreter', 'Latex')
-                ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+                ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
                 xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
                 cb = colorbar() ;
                 ylabel(cb, labels{pp}, 'Interpreter', 'Latex')  
@@ -582,7 +582,7 @@ if plot_correlations
             fnout = outputFileName ;
             ntspan = length(tps) ;
             titles = {'left lateral', 'right lateral', 'dorsal', 'ventral'} ;
-            markers = QS.plotting.markers ;
+            markers = tubi.plotting.markers ;
             colors = mapValueToColor(1:ntspan, [1, ntspan], cmap) ;
             close all
             sphCollection = cell(4, 1) ;
@@ -651,10 +651,10 @@ if plot_correlations
                 title(titles{qq}, 'Interpreter', 'Latex')
 
                 figure(2)
-                ylabel(['time [' QS.timeUnits, ']'], 'Interpreter', 'Latex') ;
+                ylabel(['time [' tubi.timeUnits, ']'], 'Interpreter', 'Latex') ;
                 title(titles{qq}, 'Interpreter', 'Latex')
                 figure(3)
-                ylabel(['time [' QS.timeUnits, ']'], 'Interpreter', 'Latex') ;
+                ylabel(['time [' tubi.timeUnits, ']'], 'Interpreter', 'Latex') ;
                 title(titles{qq}, 'Interpreter', 'Latex')
 
                 % Grab axis position
@@ -694,16 +694,16 @@ if plot_correlations
             % master titles (suptitles)
             figure(1) ;
             sgtitle(['$2Hv_n$ vs $\nabla \cdot \bf{v}_\parallel$, ',...
-                '$\sigma=$', num2str(sigma), ' ', QS.timeUnits], ...
+                '$\sigma=$', num2str(sigma), ' ', tubi.timeUnits], ...
                 'Interpreter', 'Latex') ;
 
             figure(2) ;
             sgtitle(['$\nabla \cdot \bf{v}_\parallel,$ $\sigma=$', ...
-                num2str(sigma), ' ', QS.timeUnits], ...
+                num2str(sigma), ' ', tubi.timeUnits], ...
                     'Interpreter', 'Latex') ;
             figure(3) ;
             sgtitle(['$2Hv_n$ $\sigma=$', ...
-                num2str(sigma), ' ', QS.timeUnits], 'Interpreter', 'Latex') ;
+                num2str(sigma), ' ', tubi.timeUnits], 'Interpreter', 'Latex') ;
 
             % Add colorbar
             figure(1) ;
@@ -721,7 +721,7 @@ if plot_correlations
             % Update the color data with the new transparency information
             c.Face.Texture.CData = cdata;
             c.Label.Interpreter = 'Latex' ;
-            c.Label.String = ['time [' QS.timeUnits ']'] ;
+            c.Label.String = ['time [' tubi.timeUnits ']'] ;
             c.Ticks = [0, 1] ;
             c.TickLabels = [tps(1), max(tps)] ;
 

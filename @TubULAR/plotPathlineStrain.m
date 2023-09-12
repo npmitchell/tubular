@@ -60,6 +60,13 @@ end
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
 end
+
+if isfield(options, 'viewAngles')
+    viewAngles = options.viewAngles ;
+elseif isfield(options, 'viewAngle')
+    viewAngles = options.viewAngle ;
+end
+
 %% parameter options
 if isfield(options, 't0Pathline')
     t0Pathline = options.t0Pathline ;
@@ -175,7 +182,7 @@ if plot_strain3d
     refMesh.v = refMesh.vrs ;
     fa = doublearea(refMesh.vrs, refMesh.f) * 0.5 ;
     
-    for tidx =  [1,6] %:length(tps)
+    for tidx =  1:length(tps)
         tp = tubi.xp.fileMeta.timePoints(tidx) ;
         tubi.setTime(tp) ;
         
@@ -228,7 +235,6 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
-        view([0,0])
         
         ax2 = subtightplot(2, 2, 2) ;
         trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', fra, 'edgecolor', 'none')
@@ -242,7 +248,6 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
-        view([0,0])
         
         ax3 = subtightplot(2, 2, 3) ;
         trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', dev2, 'edgecolor', 'none')
@@ -255,7 +260,6 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
-        view([0,0])
         
         ax4 = subtightplot(2, 2, 4) ;
         trisurf(triangulation(mesh.f, mesh.v), 'facevertexcdata', dev, 'edgecolor', 'none')
@@ -268,7 +272,6 @@ if plot_strain3d
         xlim(xyzlim(1, :))
         ylim(xyzlim(2, :))
         zlim(xyzlim(3, :))
-        view([0,0])
         
         set(gcf, 'color', 'w')
         export_fig(outfn, '-nocrop', '-r600')

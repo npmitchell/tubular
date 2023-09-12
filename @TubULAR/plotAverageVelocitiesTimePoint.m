@@ -1,9 +1,9 @@
-function plotAverageVelocitiesTimePoint(QS, tp, options)
-% plotTimeAvgVelocitiesTimePoint(QS, tp, options)
+function plotAverageVelocitiesTimePoint(tubi, tp, options)
+% plotTimeAvgVelocitiesTimePoint(tubi, tp, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : optional struct with fields 
 %   vnsm    : 
 %   v2dsmum : 
@@ -13,7 +13,7 @@ function plotAverageVelocitiesTimePoint(QS, tp, options)
 %       view intermediate results
 %   timePoints : numeric 1D array
 %       the timepoints to consider for the measurement. For ex, could
-%       choose subset of the QS experiment timePoints
+%       choose subset of the tubi experiment timePoints
 %   alphaVal : float
 %       the opacity of the heatmap to overlay
 %   invertImage : bool
@@ -31,7 +31,7 @@ alphaVal = 0.7 ;                % alpha for normal velocity heatmap
 invertImage = false ;           % invert the data underneath velocity heatmaps
 washout2d = 0.5 ;               % lightening factor for data if < 1
 qsubsample = 10 ;               % quiver subsampling in pullback space 
-pivimCoords = QS.piv.imCoords ; % coordinate system of the pullback images used in PIV
+pivimCoords = tubi.piv.imCoords ; % coordinate system of the pullback images used in PIV
 averagingStyle = 'Lagrangian' ; % Lagrangian or simple, how velocities are averaged over time
 samplingResolution = '1x' ;     % 1x or 2x, resolution of 
 v2dsmum_ii = options.v2dsmum ;
@@ -97,35 +97,35 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
-tidx = QS.xp.tIdx(tp) ;
+%% Unpack tubi
+tidx = tubi.xp.tIdx(tp) ;
 
 %% Load piv results
 disp('Obtaining raw piv to get field size')
-QS.getPIV(options) ;
-piv = QS.piv.raw ;
+tubi.getPIV(options) ;
+piv = tubi.piv.raw ;
 % get size of images to make
-gridsz = size(QS.piv.raw.x{1}) ;
+gridsz = size(tubi.piv.raw.x{1}) ;
 % Define Nx1 and Mx1 float arrays for xspace and yspace
-xx = QS.piv.raw.x{tidx}(1, :) ;
-yy = QS.piv.raw.y{tidx}(:, 1) ;
+xx = tubi.piv.raw.x{tidx}(1, :) ;
+yy = tubi.piv.raw.y{tidx}(:, 1) ;
 
 %% Prepare for plots
-t0 = QS.t0set() ;
-tunit = [' ' QS.timeUnits] ;
+t0 = tubi.t0set() ;
+tunit = [' ' tubi.timeUnits] ;
 
 %% Figure out which averaging style directory to direct to
 if strcmp(averagingStyle, 'Lagrangian')
     if doubleResolution
-        pivDir = QS.dir.piv.avg2x ;
+        pivDir = tubi.dir.piv.avg2x ;
     else
-        pivDir = QS.dir.piv.avg ;
+        pivDir = tubi.dir.piv.avg ;
     end
 elseif strcmp(averagingStyle, 'simple')
     if doubleResolution
-        pivDir = QS.dir.pivSimAvg2x ;
+        pivDir = tubi.dir.pivSimAvg2x ;
     else
-        pivDir = QS.dir.pivSimAvg ;
+        pivDir = tubi.dir.pivSimAvg ;
     end    
 end
 
@@ -137,7 +137,7 @@ pivImGDir = fullfile(pivDir, 'vtG ') ;  % Gaussian smoothed in space
 pivImSDir = fullfile(pivDir, 'vmag') ;  % speed |v_3D|
 pivImNDir = fullfile(pivDir, 'vn') ;    % normal velocity
 pivImGNDir = fullfile(pivDir, 'vtG_vn') ; % Combined smoothed tangential, plus normal vel
-pivDir = QS.dir.piv.root ;
+pivDir = tubi.dir.piv.root ;
 dilDir = fullfile(pivDir, 'dilation') ;
 vxyorigDir = fullfile(pivDir, 'vxyorig') ;
 % if plot_vxyz
@@ -152,16 +152,16 @@ for pp = 1:length(dirs2make)
 end
 
 %% Check if normal velocity plot exists
-vnfn = fullfile(pivImNDir, [sprintf(QS.fileBase.name, tp) '.png']) ;
-vthfn = fullfile(pivImTDir, [sprintf(QS.fileBase.name, tp) '.png']) ;
-vtgfn = fullfile(pivImGDir, [sprintf(QS.fileBase.name, tp) '.png']) ;
-vtgvnfn = fullfile(pivImGNDir, [sprintf(QS.fileBase.name, tp) '.png']) ;
-vxyorigfn = fullfile(vxyorigDir, [sprintf(QS.fileBase.name, tp) '.png']) ;
-speedfn = fullfile(pivImSDir, [sprintf(QS.fileBase.name, tp) '.png']) ;
+vnfn = fullfile(pivImNDir, [sprintf(tubi.fileBase.name, tp) '.png']) ;
+vthfn = fullfile(pivImTDir, [sprintf(tubi.fileBase.name, tp) '.png']) ;
+vtgfn = fullfile(pivImGDir, [sprintf(tubi.fileBase.name, tp) '.png']) ;
+vtgvnfn = fullfile(pivImGNDir, [sprintf(tubi.fileBase.name, tp) '.png']) ;
+vxyorigfn = fullfile(vxyorigDir, [sprintf(tubi.fileBase.name, tp) '.png']) ;
+speedfn = fullfile(pivImSDir, [sprintf(tubi.fileBase.name, tp) '.png']) ;
 
 % Load the image to put flow on top
 if strcmp(pivimCoords, 'sp_sme')
-    im = imread(sprintf(QS.fullFileBase.im_sp_sme, tp)) ;
+    im = imread(sprintf(tubi.fullFileBase.im_sp_sme, tp)) ;
     ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
 else
     error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])
