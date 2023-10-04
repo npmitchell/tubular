@@ -155,7 +155,9 @@ else
     if ~all([xmax ymax zmax] > 0)
         disp('xyz limits are invalid, computing from mesh series')
         for tt = timePoints
-            meshfn = sprintf(meshFileName, tt) ;
+            % build the filename of the mesh to read in
+            meshfn = replace(meshFileName, tubi.timeStampStringSpec, ...
+                num2str(tt, tubi.timeStampStringSpec)) ;
             mesh = read_ply_mod(meshfn) ;
             vv = mesh.v ;
             xmax = max(xmax, max(vv(:, 1))) ;
@@ -218,8 +220,10 @@ extenstr = ['_exp' expstr '_res' resstr] ;
 
 for tt = timePoints
     % input filename mesh ending in 'ply'
-    name = sprintf(tubi.fileBase.mesh, tt) ;
-    meshfn = sprintf(tubi.fullFileBase.mesh, tt) ;
+    name = replace(tubi.fileBase.mesh, tubi.timeStampStringSpec, ...
+        num2str(tt, tubi.timeStampStringSpec)) ;
+    meshfn = replace(tubi.fullFileBase.mesh, tubi.timeStampStringSpec, ...
+        num2str(tt, tubi.timeStampStringSpec)) ;
     disp(['Seeking centerline for mesh: ' meshfn])
     assert(exist(meshfn, 'file') > 0)
     
@@ -244,7 +248,7 @@ for tt = timePoints
             disp(['Overwriting centerline for t=' num2str(tt)])
         end
         % Load startpoint and endpoint
-        tifname = sprintf(fn, tt) ;
+        tifname = replace(fn, tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec)) ;
         disp(['loading /' tifname '/spt,ept,dpt from ' startendptH5FileName])
         startpt = h5read(startendptH5FileName, ['/' tifname '/spt' ]) ;
         endpt = h5read(startendptH5FileName, ['/' tifname '/ept' ]) ;
@@ -550,9 +554,12 @@ for tt = timePoints
     
     % Check for existing figures of this timepoint centerline, but of ANY
     % resolution
-    fig1s = ~isempty(dir(sprintf(fig1anyres_fn, tt))) ;
-    fig2s = ~isempty(dir(sprintf(fig2anyres_fn, tt))) ;
-    fig3s = ~isempty(dir(sprintf(fig3anyres_fn, tt))) ;
+    fig1s = ~isempty(dir(replace(fig1anyres_fn, tubi.timeStampStringSpec, ...
+        num2str(tt, tubi.timeStampStringSpec)))) ;
+    fig2s = ~isempty(dir(replace(fig2anyres_fn, tubi.timeStampStringSpec, ...
+        num2str(tt, tubi.timeStampStringSpec)))) ;
+    fig3s = ~isempty(dir(replace(fig3anyres_fn, tubi.timeStampStringSpec, ...
+        num2str(tt, tubi.timeStampStringSpec)))) ;
     fig_saved = fig1s && fig2s && fig3s ;
     if result_exists && (result_changed || ~fig_saved || overwrite_ims) && saveImages
         %% Plot and save
@@ -566,7 +573,8 @@ for tt = timePoints
         ssskelrs = importdata(skeloutfn) ;
         skelrs = ssskelrs(:, 2:4) ;
         % Load start, end, and dorsal points in APDV coord system
-        tifname = sprintf(fn, tt) ;
+        tifname = replace(fn, tubi.timeStampStringSpec, ...
+            num2str(tt, tubi.timeStampStringSpec)) ;
         sptrs = h5read(startendptH5FileName, ['/' tifname '/sptrs' ]) ;
         eptrs = h5read(startendptH5FileName, ['/' tifname '/eptrs' ]) ;
         dptrs = h5read(startendptH5FileName, ['/' tifname '/dptrs' ]) ;
@@ -577,8 +585,10 @@ for tt = timePoints
         close all
         % Load rotated mesh
         % if useSavedAPDVMeshes
-        disp(['Loading ' sprintf(meshAPDVFileName, tt)])
-        mesh = read_ply_mod(sprintf(meshAPDVFileName, tt)) ;
+        apdvfilename_tt = replace(meshAPDVFileName, ...
+            tubi.timeStampStringSpec, num2str(tt, tubi.timeStampStringSpec)) ;
+        disp(['Loading ' apdvfilename_tt])
+        mesh = read_ply_mod(apdvfilename_tt) ;
         xyzrs = mesh.v ;
         % If we are plotting the mesh, reverse the triangle ordering
         % for ambient occlusion to work properly, but the APDV mesh
@@ -630,7 +640,9 @@ for tt = timePoints
         zlim(xyzlim_um(3, :)) ;
         set(gcf, 'PaperUnits', 'centimeters');
         set(gcf, 'PaperPosition', [0 0 xwidth ywidth]);
-        saveas(fig, sprintf(fig1outname, tt))
+        saveas(fig, replace(fig1outname, ...
+            tubi.timeStampStringSpec, ...
+            num2str(tt, tubi.timeStampStringSpec)));
         % yz
         disp('Saving rotated & translated figure (yz)...')    
         view(90, 0);
@@ -639,7 +651,9 @@ for tt = timePoints
         zlim(xyzlim_um(3, :)) ;
         set(gcf, 'PaperUnits', 'centimeters');
         set(gcf, 'PaperPosition', [0 0 xwidth ywidth]); %x_width=10cm y_width=15cm
-        saveas(fig, sprintf(fig2outname, tt))
+        saveas(fig, replace(fig2outname, ...
+            tubi.timeStampStringSpec, ...
+            num2str(tt, tubi.timeStampStringSpec)))
         % xz
         disp('Saving rotated & translated figure (xz)...')  
         view(0, 0)    
@@ -648,7 +662,9 @@ for tt = timePoints
         zlim(xyzlim_um(3, :)) ;
         set(gcf, 'PaperUnits', 'centimeters');
         set(gcf, 'PaperPosition', [0 0 xwidth ywidth]); %x_width=10cm y_width=15cm
-        saveas(fig, sprintf(fig3outname, tt))
+        saveas(fig, replace(fig3outname, ...
+            tubi.timeStampStringSpec, ...
+            num2str(tt, tubi.timeStampStringSpec)))
         close all
     end
     

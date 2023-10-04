@@ -257,10 +257,11 @@ for ii=todo
     
     %% Name the output mesh filename
     name = sprintf(tubi.fileBase.mesh, tt) ;
-    meshfn = sprintf(tubi.fullFileBase.mesh, tt) ;
-    outfn = sprintf(tubi.fullFileBase.cylinderMesh, tt) ;
-    keepfn = sprintf(tubi.fullFileBase.cylinderKeep, tt) ; 
-    boundaryfn = sprintf(tubi.fullFileBase.apBoundary, tt) ;
+    meshfn = sprintfm(tubi.fullFileBase.mesh, tt) ;
+    outfn = sprintfm(tubi.fullFileBase.cylinderMesh, tt) ;
+    keepfn = sprintfm(tubi.fullFileBase.cylinderKeep, tt) ; 
+    boundaryfn = sprintfm(tubi.fullFileBase.apBoundary, tt) ;
+    
     outapd_boundaryfn = tubi.fileName.apBoundaryDorsalPts ;  % not a base name
     
     %% Read the mesh

@@ -213,7 +213,12 @@ function data = loadStackBioformats(tubi, varargin)
 
     % update stack size in metadata 
     tubi.xp.fileMeta.stackSize = [xSize, ySize, zSize];
-    assert(tubi.xp.fileMeta.nChannels == nChannels) ;
+    try
+        assert(tubi.xp.fileMeta.nChannels == nChannels) ;
+    catch
+        disp(['Assertion failed! tubi.xp.fileMeta.nChannels=' num2str(tubi.xp.fileMeta.nChannels) ' but nChannels=' num2str(nChannels)])
+        assert(tubi.xp.fileMeta.nChannels == nChannels) ;
+    end
 
     % if only reading stack size, stop here-----------------------
     if justMeta

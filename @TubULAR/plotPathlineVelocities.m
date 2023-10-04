@@ -1,17 +1,17 @@
-function plotPathlineVelocities(QS, options)
-%plotPathlineVelocities(QS, options)
+function plotPathlineVelocities(tubi, options)
+%plotPathlineVelocities(tubi, options)
 %   Use pathlines of optical flow in pullback space to query velocities
 %   and average along pathlines.
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields 
 %   overwrite : bool, default=false
 %       overwrite previous results
 %   preview : bool, default=false
 %       view intermediate results
-%   t0 : int, default=QS.t0set()
+%   t0 : int, default=tubi.t0set()
 %       timestamp at which the pathlines form a grid onto mesh vertices, 
 %       mesh face barycenters, or PIV evaluation points
 %
@@ -20,13 +20,13 @@ function plotPathlineVelocities(QS, options)
 
 %% Default options
 overwrite = false ;
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 samplingResolution = '1x' ;
 
 %% Unpack options
 % Default values for options are to use sphi smoothed extended coords
 % as PIV reference coord sys
-pivimCoords = QS.piv.imCoords ;
+pivimCoords = tubi.piv.imCoords ;
 
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
@@ -45,7 +45,7 @@ end
 if isfield(options, 't0')
     t0 = options.t0 ;
 else
-    t0 = QS.t0set() ;
+    t0 = tubi.t0set() ;
 end
 
 %% Determine sampling Resolution from input -- either nUxnV or (2*nU-1)x(2*nV-1)
@@ -58,16 +58,16 @@ else
 end
 
 %% Unpack QS
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Perform/Load Lagrangian averaging along pathline
 disp('Loading simple averaging')
 % Create directories
-fileNames = QS.fileName.pathlines.velocities ;
+fileNames = tubi.fileName.pathlines.velocities ;
 % Apply t0 to fileNames
 fieldnames = fields(fileNames) ;
 for qq = 1:length(fieldnames)
-    fileNames.(fieldnames{qq}) = sprintf(fileNames.(fieldnames{qq}), t0) ;
+    fileNames.(fieldnames{qq}) = sprintfm(fileNames.(fieldnames{qq}), t0) ;
 end
 
 % Check if the time smoothed velocities exist already
@@ -81,20 +81,20 @@ end
 %% Build grids for averaging
 % Load lagrangian pathlines
 disp('Loading pathlines for plotting: XY')
-load(sprintf(QS.fileName.pathlines.XY, t0), 'pivPathlines')
-load(sprintf(QS.fileName.pathlines.vXY, t0), 'vertexPathlines')
-load(sprintf(QS.fileName.pathlines.fXY, t0), 'facePathlines')
+load(sprintfm(tubi.fileName.pathlines.XY, t0), 'pivPathlines')
+load(sprintfm(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
+load(sprintfm(tubi.fileName.pathlines.fXY, t0), 'facePathlines')
 
 ntps = length(timePoints)-1;
 
 %% Now load Lagrangian vels (along streamlines) & plot them
 disp('Saving images of time-smoothed velocities to disk')
-fvsmM   = sprintf(QS.fileName.pathlines.velocities.v3dsm, t0) ;
-fvfsmM  = sprintf(QS.fileName.pathlines.velocities.vfsm, t0) ;
-fvnsmM  = sprintf(QS.fileName.pathlines.velocities.vnsm, t0) ;
-fvvsmM  = sprintf(QS.fileName.pathlines.velocities.vvsm, t0) ;
-fv2dsmM = sprintf(QS.fileName.pathlines.velocities.v2dsm, t0) ;
-fv2dsmMum = sprintf(QS.fileName.pathlines.velocities.v2dsmum, t0) ;
+fvsmM   = sprintfm(tubi.fileName.pathlines.velocities.v3dsm, t0) ;
+fvfsmM  = sprintfm(tubi.fileName.pathlines.velocities.vfsm, t0) ;
+fvnsmM  = sprintfm(tubi.fileName.pathlines.velocities.vnsm, t0) ;
+fvvsmM  = sprintfm(tubi.fileName.pathlines.velocities.vvsm, t0) ;
+fv2dsmM = sprintfm(tubi.fileName.pathlines.velocities.v2dsm, t0) ;
+fv2dsmMum = sprintfm(tubi.fileName.pathlines.velocities.v2dsmum, t0) ;
 load(fvsmM, 'vsmM') ;          % in um/min
 load(fvvsmM, 'vvsmM') ;        % in um/min, rs
 load(fvfsmM, 'vfsmM') ;        % in um/min, rs
@@ -108,13 +108,13 @@ tp2doB = setdiff(1:ntps, tp2doA) ;
 tp2do = [tp2doA, tp2doB] ;
 
 % Predefine vector field subsampling for quiver
-QS.getPIV() ;
-xx = QS.piv.raw.x{1} ;
+tubi.getPIV() ;
+xx = tubi.piv.raw.x{1} ;
 nYpts = 30 ;
 if doubleCovered
-    yspacing = round(size(xx, 2) / nYpts * 0.5 * QS.a_fixed) ;
+    yspacing = round(size(xx, 2) / nYpts * 0.5 * tubi.a_fixed) ;
 else
-    yspacing = round(size(xx, 2) / nYpts * QS.a_fixed) ;
+    yspacing = round(size(xx, 2) / nYpts * tubi.a_fixed) ;
 end
 if any(diff(xx(1, :)) > 0)
     sampleIDx = [] ;
@@ -123,7 +123,7 @@ if any(diff(xx(1, :)) > 0)
         nn = length(sampleIDx) ;
         sampleIDx(nn+1:nn + length(qsrow)) = qsrow + qq * size(xx, 1) ;
     end
-elseif any(diff(QS.piv.raw.x{1}(:, 1)) < 0)
+elseif any(diff(tubi.piv.raw.x{1}(:, 1)) < 0)
     error('handle the case of transposed xgrid here')
 else
     error('Could not parse dimensions of piv xgrid')
@@ -148,7 +148,7 @@ for tidx = tp2do
     plotOptions.v2dsmum = squeeze(v2dsmMum(tidx, :, :)) ;
     plotOptions.overwrite = overwrite ;
     plotOptions.sampleIDx = sampleIDx ; 
-    QS.plotPathlineVelocitiesTimePoint(tp, plotOptions) ;
+    tubi.plotPathlineVelocitiesTimePoint(tp, plotOptions) ;
 end
 
 disp('done')

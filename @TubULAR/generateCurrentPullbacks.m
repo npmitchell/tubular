@@ -1,6 +1,6 @@
 function generateCurrentPullbacks(tubi, cutMesh, spcutMesh, ...
     spcutMeshSm, pbOptions)
-%GENERATECURRENTPULLBACKS(QS, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
+%GENERATECURRENTPULLBACKS(tubi, cutMesh, spcutMesh, spcutMeshSm, pbOptions)
 %   Generate 2D images of tissue mapped from 3D. If save_as_stack is true,
 %   then we generate a 3D stack of 2D images along the normal direction of
 %   the surface.
@@ -230,7 +230,7 @@ end
 
 if generate_pivPline
     % ensure the output dir exists
-    outDir_pivPline = sprintf(tubi.dir.im_pivPathlines, t0Pathlines) ;
+    outDir_pivPline = sprintfm(tubi.dir.im_pivPathlines, t0Pathlines) ;
     if ~exist(outDir_pivPline, 'dir')
         mkdir(outDir_pivPline)
     end
@@ -272,18 +272,18 @@ fprintf('Checking whether to create pullback \n');
 %--------------------------------------------------------------
 % Generate Output Image Files
 %--------------------------------------------------------------
-imfn_uv = sprintf( tubi.fullFileBase.im_uv, tt); 
-imfn_r = sprintf( tubi.fullFileBase.im_r, tt) ;
-imfn_sp = sprintf( tubi.fullFileBase.im_sp, tt) ;
-imfn_up = sprintf( tubi.fullFileBase.im_up, tt) ;
+imfn_uv = sprintfm( tubi.fullFileBase.im_uv, tt); 
+imfn_r = sprintfm( tubi.fullFileBase.im_r, tt) ;
+imfn_sp = sprintfm( tubi.fullFileBase.im_sp, tt) ;
+imfn_up = sprintfm( tubi.fullFileBase.im_up, tt) ;
 if tubi.dynamic
-    imfn_spsm = sprintf( tubi.fullFileBase.im_sp_sm, tt) ;
-    imfn_rsm = sprintf( tubi.fullFileBase.im_r_sm, tt) ;
-    imfn_pivPline = sprintf( tubi.fullFileBase.im_pivPathlines, t0Pathlines, tt) ;
+    imfn_spsm = sprintfm( tubi.fullFileBase.im_sp_sm, tt) ;
+    imfn_rsm = sprintfm( tubi.fullFileBase.im_r_sm, tt) ;
+    imfn_pivPline = sprintfm( tubi.fullFileBase.im_pivPathlines, t0Pathlines, tt) ;
 else
     imfn_pivPline = '' ;
 end
-imfn_ricci = sprintf( tubi.fullFileBase.im_ricci, tt) ;
+imfn_ricci = sprintfm( tubi.fullFileBase.im_ricci, tt) ;
 do_pb1 = ~exist(imfn_uv, 'file') && generate_uv ;
 do_pb2 = ~exist(imfn_r, 'file') && generate_relaxed ;
 do_pb3 = ~exist(imfn_sp, 'file') && generate_sphi ;

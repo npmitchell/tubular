@@ -1,12 +1,12 @@
-function plotSPCutMeshSmSeriesUtility(QS, coordsys, options)
-%plotSPCutMeshSmSeriesUtility(QS, coordsys, options)
+function plotSPCutMeshSmSeriesUtility(tubi, coordsys, options)
+%plotSPCutMeshSmSeriesUtility(tubi, coordsys, options)
 %   Using (s,phi) pullback cutmeshes, smooth coord system in time via
 %   simple triangular pulse averaging of positions in embedding space
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
-%   Current QuapSlap object
+% tubi : TubULAR class instance
+%   Current TubULAR object
 % coordsys : str specifier ('spcutMeshSm', 'spcutMeshSmRS', 'spcutMeshSmRSC')
 %   What kind of mesh to plot. 
 %   Any string without 'RS' or 'RSC' directs to plotting 'spcutMeshSmRSC'
@@ -21,10 +21,10 @@ function plotSPCutMeshSmSeriesUtility(QS, coordsys, options)
 % NPMitchell 2020
 
 %% Unpack QS
-nU = QS.nU ;
-nV = QS.nV ;
-[~, ~, ~, xyzlim] = QS.getXYZLims() ;
-timePoints = QS.xp.fileMeta.timePoints ;
+nU = tubi.nU ;
+nV = tubi.nV ;
+[~, ~, ~, xyzlim] = tubi.getXYZLims() ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Unpack options
 if nargin < 2
@@ -38,13 +38,13 @@ end
 
 %% Create plots
 if contains(coordsys, 'RS')
-    imDir = fullfile(QS.dir.spcutMeshSmRS, 'images') ;
+    imDir = fullfile(tubi.dir.spcutMeshSmRS, 'images') ;
     disp(['Output to SmRS dir: ' imDir])
 elseif contains(coordsys, 'RSC')
-    imDir = fullfile(QS.dir.spcutMeshSmRSC, 'images') ;
+    imDir = fullfile(tubi.dir.spcutMeshSmRSC, 'images') ;
     disp(['Output to SmRSC dir: ' imDir])
 else
-    imDir = fullfile(QS.dir.spcutMeshSm, 'images') ;
+    imDir = fullfile(tubi.dir.spcutMeshSm, 'images') ;
     disp(['Output to spcutMeshSm dir: ' imDir])
 end
 
@@ -75,17 +75,17 @@ for qq = 1:length(timePoints)
         % Load the spcutMesh for this timepoint
         
         if contains(coordsys, 'RS')
-            load(sprintf(QS.fullFileBase.spcutMeshSmRS, tt), 'spcutMeshSmRS') ;
+            load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tt), 'spcutMeshSmRS') ;
             vqq = spcutMeshSmRS.v ;
             nqq = spcutMeshSmRS.vn ;
             faces = spcutMeshSmRS.f ;
         elseif contains(coordsys, 'RSC')
-            load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tt), 'spcutMeshSmRSC') ;
+            load(sprintfm(tubi.fullFileBase.spcutMeshSmRSC, tt), 'spcutMeshSmRSC') ;
             vqq = spcutMeshSmRSC.v ;
             nqq = spcutMeshSmRSC.vn ;
             faces = spcutMeshSmRSC.f ;
         else
-            load(sprintf(QS.fullFileBase.spcutMeshSm, tt), 'spcutMeshSm') 
+            load(sprintfm(tubi.fullFileBase.spcutMeshSm, tt), 'spcutMeshSm') 
             vqq = spcutMeshSm.v ;
             nqq = spcutMeshSm.vn ;
             faces = spcutMeshSm.f ;

@@ -62,9 +62,9 @@ disp('Checking if smoothed meshes already exist on file')
 while ~redo_meshsmooth && qq < length(timePoints)
     tt = timePoints(qq) ;
     % Check that all meshes are saved--if not, declare that we must compute
-    smfn = sprintf(spcutMeshSmBase, tt) ;
-    smrsfn = sprintf(spcutMeshSmRSBase, tt) ;
-    smrscfn = sprintf(spcutMeshSmRSCBase, tt) ;
+    smfn = sprintfm(spcutMeshSmBase, tt) ;
+    smrsfn = sprintfm(spcutMeshSmRSBase, tt) ;
+    smrscfn = sprintfm(spcutMeshSmRSCBase, tt) ;
     if ~exist(smfn, 'file') || ~exist(smrsfn, 'file') || ~exist(smrscfn, 'file')
         redo_meshsmooth = true ;
     end
@@ -80,7 +80,7 @@ if redo_meshsmooth
         tt = timePoints(i) ;
         % Load the spcutMesh for this timepoint
         disp(['Loading spcutMesh from disk... [t = ' num2str(tt) ']'])
-        load(sprintf(spcutMeshBase, tt), 'spcutMesh') ;
+        load(sprintfm(spcutMeshBase, tt), 'spcutMesh') ;
         vM(i, :, :) = spcutMesh.v ;
     end
     disp('built v3d matrix')
@@ -105,7 +105,7 @@ if redo_meshsmooth
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     for qq = 1:length(timePoints)
         tt = timePoints(qq) ;
-        load(sprintf(spcutMeshBase, tt), 'spcutMesh') ;
+        load(sprintfm(spcutMeshBase, tt), 'spcutMesh') ;
 
         % First build normals from smoothed vertices as facenormals
         vqq = squeeze(v3dsmM(qq, :, :)) ;
@@ -120,9 +120,9 @@ if redo_meshsmooth
         nsmM(qq, :, :) = nqq ;
 
         % Next save the mesh
-        smfn = sprintf(spcutMeshSmBase, tt) ;
-        smrsfn = sprintf(spcutMeshSmRSBase, tt) ;
-        smrscfn = sprintf(spcutMeshSmRSCBase, tt) ;
+        smfn = sprintfm(spcutMeshSmBase, tt) ;
+        smrsfn = sprintfm(spcutMeshSmRSBase, tt) ;
+        smrscfn = sprintfm(spcutMeshSmRSCBase, tt) ;
         if ~exist(smfn, 'file') || ~exist(smrsfn, 'file') || ~exist(smrscfn, 'file') || overwrite
             vqq = squeeze(v3dsmM(qq, :, :)) ;
             nqq = squeeze(nsmM(qq, :, :)) ;
@@ -199,15 +199,15 @@ if redo_meshsmooth
             spcutMeshSm.ar = arspsm ;
 
             % Resave s,phi smoothed mesh and their 3D embedding
-            disp(['tp=' num2str(tt) ': Saving ' sprintf(spcutMeshSmBase, tt)])
-            save(sprintf(spcutMeshSmBase, tt), 'spcutMeshSm') ;
+            disp(['tp=' num2str(tt) ': Saving ' sprintfm(spcutMeshSmBase, tt)])
+            save(sprintfm(spcutMeshSmBase, tt), 'spcutMeshSm') ;
 
             % Also save rotated and scaled (RS) copy of the time-smoothed mesh
             spcutMeshSmRS = spcutMeshSm ;
             spcutMeshSmRS.v = vqqrs ;
             spcutMeshSmRS.vn = nqqrs ;
             % Resave s,phi and their 3D embedding
-            save(sprintf(spcutMeshSmRSBase, tt), 'spcutMeshSmRS') ;
+            save(sprintfm(spcutMeshSmRSBase, tt), 'spcutMeshSmRS') ;
             clearvars vqq vqqrs
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -217,7 +217,7 @@ if redo_meshsmooth
             tmp = spcutMeshSmRS ;
             tmp.u = spcutMesh.sphi ;
             spcutMeshSmRSC = glueCylinderCutMeshSeam(tmp) ;
-            save(sprintf(spcutMeshSmRSCBase, tt), 'spcutMeshSmRSC') ;
+            save(sprintfm(spcutMeshSmRSCBase, tt), 'spcutMeshSmRSC') ;
 
             % check it
             % fig = figure ;

@@ -1,14 +1,16 @@
-function [Wr, Wr_density, dWr, Length_t, clines_resampled] = measureWrithe(QS, options)
-%MEASUREWRITHE(QS, OPTIONS)
+function [Wr, Wr_density, dWr, Length_t, clines_resampled] = measureWrithe(tubi, options)
+%MEASUREWRITHE(TUBI, OPTIONS)
 %   Compute the centerline length and writhe and save to disk
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
-%   Current QuapSlap object
+% tubi : TubULAR class instance
+%   Current TubULAR object
 % options : struct with fields
 %   overwrite : bool, default=false
 %       overwrite results on disk
+%   overwriteFigs : bool, default=false
+%       overwrite figure results on disk
 %   preivew : bool, default=QS.plotting.preview
 %       display intermediate results
 %   Wr_style : str specifier, default='Levitt' ;
@@ -24,35 +26,40 @@ function [Wr, Wr_density, dWr, Length_t, clines_resampled] = measureWrithe(QS, o
 %
 % NPMitchell 2020
 
-%% Unpack QS
-lobeDir = QS.dir.lobe ;
-nU = QS.nU ;
-nV = QS.nV ;
+%% Unpack tubi
+nU = tubi.nU ;
+nV = tubi.nV ;
 dvexten = sprintf('_nU%04d_nV%04d', nU, nV) ;
-timePoints = QS.xp.fileMeta.timePoints ;
-timeInterval = QS.timeInterval ;
-timeUnits = QS.timeUnits ;
-spaceUnits = QS.spaceUnits ;
-preview = QS.plotting.preview ;
-[rot, trans] = QS.getRotTrans() ;
-resolution = QS.APDV.resolution ;
-clineDVhoopBase = QS.fullFileBase.clineDVhoop ;
-cylinderMeshCleanBase = QS.fullFileBase.cylinderMeshClean ;
-writheDir = QS.dir.writhe ;
+timePoints = tubi.xp.fileMeta.timePoints ;
+timeInterval = tubi.timeInterval ;
+timeUnits = tubi.timeUnits ;
+spaceUnits = tubi.spaceUnits ;
+preview = tubi.plotting.preview ;
+[rot, trans] = tubi.getRotTrans() ;
+resolution = tubi.APDV.resolution ;
+clineDVhoopBase = tubi.fullFileBase.clineDVhoop ;
+cylinderMeshCleanBase = tubi.fullFileBase.cylinderMeshClean ;
+writheDir = tubi.dir.writhe ;
 writheImDir = fullfile(writheDir, 'images') ;
 if ~exist(writheImDir, 'dir')
     mkdir(writheImDir)
 end
-meshDir = QS.dir.mesh ;
+meshDir = tubi.dir.mesh ;
 % get timestamps to indicate on writhe plot
-load(QS.fileName.fold, 'fold_onset') ;
-[~, ~, xyzlim] = getXYZLims(QS) ;
-flipy = QS.flipy ;
+try
+    load(tubi.fileName.fold, 'fold_onset') ;
+catch 
+    disp('no features to load')
+    fold_onset = [] ;
+end
+[~, ~, xyzlim] = getXYZLims(tubi) ;
+flipy = tubi.flipy ;
 flipy_centerline = false ;
-t0 = QS.t0set() ;
+t0 = tubi.t0set() ;
 if isempty(t0)
     t0 = 0 ;
 end
+timePoints = timePoints - t0 ; 
 
 %% Unpack options
 if nargin < 2
@@ -66,6 +73,11 @@ if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
 else
     overwrite = false ;
+end
+if isfield(options, 'overwriteFigs')
+    overwriteFigs = options.overwriteFigs ;
+else
+    overwriteFigs = false ;
 end
 if isfield(options, 'Wr_style')
     Wr_style = options.Wr_style ;
@@ -92,7 +104,7 @@ else
 end
 
 %% First compute Writhe using the avgpts (DVhoop mean positions)
-wrfn = QS.fileName.writhe ;
+wrfn = tubi.fileName.writhe ;
 if ~exist(wrfn, 'file') || overwrite
     disp('Computing length and writhe...')
 
@@ -109,14 +121,14 @@ end
 
 % Which writhe to plot is determined by Wr_style
 tmpfn = fullfile(writheImDir, ['writhe_' Wr_style '_vs_time_comparison_DVhoop.png']) ;
-if ~exist(tmpfn, 'file') || overwrite 
+if ~exist(tmpfn, 'file') || overwrite || overwriteFigs
     % Compute ringpath pathlength for results found using centerline
     area_volume_fn = fullfile(meshDir, 'surfacearea_volume_stab.mat') ;
-    aux_plot_writhe(timePoints, timeInterval, clines_resampled, ...
+    aux_plot_writhe(tubi, clines_resampled, ...
         Wr, Wr_density, dWr, Length_t, writheImDir, area_volume_fn, ...
-        fold_onset, Wr_style, xyzlim, clineDVhoopBase, ...
+        fold_onset, Wr_style, clineDVhoopBase, ...
         cylinderMeshCleanBase, rot, trans, resolution, flipy, ...
-        omit_endpts, false, t0, black_figs, timeUnits, spaceUnits)
+        omit_endpts, black_figs)
 end
 
 % Done with measuring writhe

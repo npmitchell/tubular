@@ -151,11 +151,22 @@ tubi.dir.cutMesh = fullfile(meshDir, 'cutMesh') ;
 tubi.dir.rawRicciMesh = fullfile(meshDir, 'rawRicciMesh') ;
 tubi.dir.cylinderMeshClean = fullfile(tubi.dir.cylinderMesh, 'cleaned') ;
 tubi.dir.texturePatchIm = fullfile(meshDir, 'images_texturepatch') ;
+tubi.dir.mip = fullfile(meshDir, 'mips', 'dim%d_pages%04dto%04d') ;
+
+% Mips
+tubi.fileBase.mip = ['mip_' tubi.timeStampStringSpec '.tif'] ;
+tubi.fullFileBase.mip = fullfile(tubi.dir.mip, ['mip_' tubi.timeStampStringSpec '.tif']) ;
 
 % After gridding into (u,v) / (zeta,phi) pullback coords
 uvDir = fullfile(tubi.dir.mesh, sprintf('gridCoords_nU%04d_nV%04d', tubi.nU, tubi.nV)) ;
 tubi.dir.uvCoord = uvDir ;
 
+%% Since Windows machines have issues with sprintf due to the presence of 
+% backslashes in filenames. We therefore use num2str() with the timestamp
+% format specifier. 
+timeStampFormatSpec = '%\d+[a-z]';
+tmp = regexp(tubi.fileBase.fn, timeStampFormatSpec, 'match');
+tubi.timeStampStringSpec = tmp{1};
 
 %% fileBases
 tubi.fileBase.name = xp.fileMeta.filenameFormat(1:end-4) ;
@@ -164,7 +175,7 @@ if ~strcmp(tubi.fullFileBase.name(end-4:end), '.tif') || ...
     ~strcmp(tubi.fullFileBase.name(end-5:end), '.tiff') 
     tubi.fullFileBase.name = [tubi.fullFileBase.name '.tif'] ;
 end
-% Note: default is tubi.fileBase.mesh = 'mesh_%06d.ply' ;
+% Note: default is of the form: tubi.fileBase.mesh = 'mesh_%06d.ply' ;
 try
     tubi.fileBase.mesh = xp.detector.options.ofn_smoothply ;
     if strcmpi(tubi.fileBase.mesh(end-3:end), '.ply')
@@ -172,7 +183,7 @@ try
     end
     if length(tubi.xp.fileMeta.timePoints) > 1
         if ~contains(tubi.fileBase.mesh, '%')
-            tubi.fileBase.mesh = [tubi.fileBase.mesh '%06d'] ;
+            tubi.fileBase.mesh = [tubi.fileBase.mesh tubi.timeStampStringSpec] ;
         end
     end
 catch
@@ -185,14 +196,13 @@ catch
         end
     else
         if contains(xp.detectOptions.ofn_smoothply, '.ply')
-            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply(1:end-4) '%06d'] ;
+            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply(1:end-4) tubi.timeStampStringSpec] ;
         else
-            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply '%06d'] ;
+            tubi.fileBase.mesh = [xp.detectOptions.ofn_smoothply tubi.timeStampStringSpec] ;
         end
             
     end
      
-         
 end
 tubi.fileBase.alignedMesh = ...
     [tubi.fileBase.mesh '_APDV_um'] ;
@@ -205,8 +215,8 @@ tubi.fileBase.centerlineAPDV = ...
     [tubi.fileBase.mesh '_centerline_scaled_exp1p0_res*.txt' ] ;
 tubi.fileBase.cylinderMesh = ...
     [tubi.fileBase.mesh '_cylindercut.ply'] ;
-tubi.fileBase.apBoundary = 'ap_boundary_indices_%06d.mat';
-tubi.fileBase.cylinderKeep = 'cylinderMesh_keep_indx_%06d.mat' ;
+tubi.fileBase.apBoundary = ['ap_boundary_indices_' tubi.timeStampStringSpec '.mat'];
+tubi.fileBase.cylinderKeep = ['cylinderMesh_keep_indx_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fileName.apBoundaryDorsalPts = 'ap_boundary_dorsalpts.h5' ;
 
 %% Metric
@@ -252,11 +262,14 @@ if dynamic
         fullfile(uvDir, 'metricKinematics', l_lmesh_lerr, 'measurements') ;
     tubi.fullFileBase.metricKinematics = struct() ;
     tubi.fullFileBase.metricKinematics.divv = ...
-        fullfile(tubi.dir.metricKinematics.measurements, 'divv_vertices_%06d') ;
+        fullfile(tubi.dir.metricKinematics.measurements, ['divv_vertices_' ...
+        tubi.timeStampStringSpec]) ;
     tubi.fullFileBase.metricKinematics.H2vn = ...
-        fullfile(tubi.dir.metricKinematics.measurements, 'H2vn_vertices_%06d') ;
+        fullfile(tubi.dir.metricKinematics.measurements, ['H2vn_vertices_' ...
+        tubi.timeStampStringSpec]) ;
     tubi.fullFileBase.metricKinematics.gdot = ...
-        fullfile(tubi.dir.metricKinematics.measurements, 'gdot_vertices_%06d') ;
+        fullfile(tubi.dir.metricKinematics.measurements, ['gdot_vertices_' ...
+        tubi.timeStampStringSpec]) ;
 
     % Metric Kinematics along pathlines
     tubi.dir.metricKinematics.pathline = struct() ;
@@ -265,11 +278,16 @@ if dynamic
     tubi.dir.metricKinematics.pathline.measurements = ...
         fullfile(tubi.dir.metricKinematics.pathline.root, 'measurements') ;
     tubi.fileBase.metricKinematics = struct() ;
-    tubi.fileBase.metricKinematics.pathline.Hfn = 'HH_pathline%04d_%06d.mat' ;
-    tubi.fileBase.metricKinematics.pathline.gdot = 'gdot_pathline%04d_%06d.mat' ;
-    tubi.fileBase.metricKinematics.pathline.divv = 'divv_pathline%04d_%06d.mat' ;
-    tubi.fileBase.metricKinematics.pathline.veln = 'veln_pathline%04d_%06d.mat' ;
-    tubi.fileBase.metricKinematics.pathline.radius = 'radius_pathline%04d_%06d.mat' ;
+    tubi.fileBase.metricKinematics.pathline.Hfn = ...
+        ['HH_pathline%04d_' tubi.timeStampStringSpec '.mat'] ;
+    tubi.fileBase.metricKinematics.pathline.gdot = ...
+        ['gdot_pathline%04d_' tubi.timeStampStringSpec '.mat'] ;
+    tubi.fileBase.metricKinematics.pathline.divv = ...
+        ['divv_pathline%04d_' tubi.timeStampStringSpec '.mat'] ;
+    tubi.fileBase.metricKinematics.pathline.veln = ...
+        ['veln_pathline%04d_' tubi.timeStampStringSpec '.mat'] ;
+    tubi.fileBase.metricKinematics.pathline.radius = ...
+        ['radius_pathline%04d_' tubi.timeStampStringSpec '.mat'] ;
     tubi.fileBase.metricKinematics.pathline.kymographs = struct() ;
     tubi.fileBase.metricKinematics.pathline.kymographs.ap = 'apKymographMetricKinematics.mat' ;
     tubi.fileBase.metricKinematics.pathline.kymographs.d = 'dKymographMetricKinematics.mat' ;
@@ -281,7 +299,7 @@ if dynamic
     tubi.dir.gstrain = fullfile(uvDir, 'metricStrain') ;
     tubi.dir.gstrainRate = fullfile(tubi.dir.gstrain, 'rateMetric') ;
     tubi.dir.gstrainRateIm = fullfile(tubi.dir.gstrainRate, 'images') ;
-    tubi.fileBase.gstrainRate = 'gstrainRate_%06d.mat' ;
+    tubi.fileBase.gstrainRate = ['gstrainRate_' tubi.timeStampStringSpec '.mat'] ;
     tubi.fullFileBase.gstrainRate = fullfile(tubi.dir.gstrainRate, ...
         tubi.fileBase.gstrainRate) ; 
 
@@ -291,7 +309,7 @@ if dynamic
     tubi.dir.strainRate.smoothing = fullfile(uvDir, 'strainRate', l_lmesh) ;
     tubi.dir.strainRate.measurements = ...
         fullfile(uvDir, 'strainRate', l_lmesh, 'measurements') ;
-    tubi.fileBase.strainRate = 'strainRate_%06d.mat' ;
+    tubi.fileBase.strainRate = ['strainRate_' tubi.timeStampStringSpec '.mat'] ;
     tubi.fullFileBase.strainRate = fullfile(tubi.dir.strainRate.measurements, ...
         tubi.fileBase.strainRate) ; 
     %% Pathline-based strain measurement --> from pathline path
@@ -314,11 +332,11 @@ if dynamic
         fullfile(uvDir, 'stokesForces', l_lmesh_lerr, 'measurements') ;
     tubi.fullFileBase.stokesForces = struct() ;
     tubi.fullFileBase.stokesForces.Lapv = ...
-        fullfile(tubi.dir.metricKinematics.measurements, 'Lapv_vertices_%06d') ;
+        fullfile(tubi.dir.metricKinematics.measurements, ['Lapv_vertices_' tubi.timeStampStringSpec]) ;
     tubi.fullFileBase.stokesForces.Kv = ...
-        fullfile(tubi.dir.metricKinematics.measurements, 'Kv_vertices_%06d') ;
+        fullfile(tubi.dir.metricKinematics.measurements, ['Kv_vertices_' tubi.timeStampStringSpec]) ;
     tubi.fullFileBase.stokesForces.gradP = ...
-        fullfile(tubi.dir.metricKinematics.measurements, 'gradP_vertices_%06d') ;
+        fullfile(tubi.dir.metricKinematics.measurements, ['gradP_vertices_' tubi.timeStampStringSpec]) ;
 
 end
 
@@ -333,7 +351,8 @@ tubi.fileName.pBoundaryDorsalPtsClean = ...
     fullfile(tubi.dir.cylinderMeshClean, 'pdIDx.h5') ;
 
 %% cutMesh
-tubi.fullFileBase.cutPath = fullfile(tubi.dir.cutMesh, 'cutPaths_%06d.txt') ;
+tubi.fullFileBase.cutPath = fullfile(tubi.dir.cutMesh, ...
+    ['cutPaths_' tubi.timeStampStringSpec '.txt']) ;
 
 %% fileNames
 nshift = strrep(sprintf('%03d', tubi.normalShift), '-', 'n') ;
@@ -380,9 +399,10 @@ tubi.fullFileBase.apBoundary = ...
 % tubi.fullFileBase.apBoundaryDorsalPts = tubi.fileName.apBoundaryDorsalPts ;
 tubi.fullFileBase.cylinderKeep = ...
     fullfile(tubi.dir.cylinderMesh, tubi.fileBase.cylinderKeep) ;
+tubi.fileBase.cylinderMeshClean = [tubi.fileBase.mesh '_cylindercut_clean.ply'] ;
 tubi.fullFileBase.cylinderMeshClean = ...
     fullfile(tubi.dir.cylinderMesh, 'cleaned',...
-    [tubi.fileBase.mesh '_cylindercut_clean.ply']) ;            
+    tubi.fileBase.cylinderMeshClean) ;   
 
 %% Define cutMesh directories
 % cutMesh = fullfile(meshDir, 'cutMesh') ;
@@ -415,7 +435,7 @@ imFolder_re_stack = fullfile([imFolderBase, '_sphi_relaxed'], ...
     'extended_stack') ;  
 imFolder_spe_stack = fullfile([imFolderBase, '_sphi'], ...
     'extended_stack') ;  
-imFolder_pivPathline = [imFolderBase, '_pivPathlines_%06dt0'] ;
+imFolder_pivPathline = [imFolderBase, '_pivPathlines_', tubi.timeStampStringSpec, 't0'] ;
 
 % time-averaged meshes
 if dynamic
@@ -471,27 +491,31 @@ tubi.dir.rawRicci.solution = fullfile(rawRicciMeshDir, 'ricciSolutions') ;
 tubi.dir.rawRicci.mu = fullfile(rawRicciMeshDir, 'beltramiCoefficients') ;
 
 %% Raw Ricci mesh coordinates (truly conformal via Ricci flow from cleaned cylinder mesh)
-tubi.fileBase.rawRicciMesh = 'rawRicciMesh_%04diter_%06d.mat' ;
+tubi.fileBase.rawRicciMesh = ['rawRicciMesh_%04diter_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.rawRicciMesh = fullfile(tubi.dir.rawRicci.mesh, tubi.fileBase.rawRicciMesh) ;
-tubi.fileBase.rawRicciSolution = 'rawRicciSolution_%04diter_%06d.mat' ;
+tubi.fileBase.rawRicciSolution = ['rawRicciSolution_%04diter_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.rawRicciSolution = fullfile(tubi.dir.rawRicci.solution, tubi.fileBase.rawRicciSolution) ;
-tubi.fileBase.rawRicciMu = 'rawRicciMesh_mus_%04diter_%06d.mat' ;
+tubi.fileBase.rawRicciMu = ['rawRicciMesh_mus_%04diter_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.rawRicciMu = fullfile(tubi.dir.rawRicci.mu, tubi.fileBase.rawRicciMu) ;
 
 %% Ricci mesh coordinates (truly conformal via Ricci flow from reparameterized gridCoords mesh (spsm uv or sp))
-tubi.fileBase.ricciMesh = 'ricciMesh_%04diter_%06d.mat' ;
+tubi.fileBase.ricciMesh = ['ricciMesh_%04diter_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.ricciMesh = fullfile(tubi.dir.ricci.mesh, tubi.fileBase.ricciMesh) ;
-tubi.fileBase.ricciSolution = 'ricciSolution_%04diter_%06d.mat' ;
+tubi.fileBase.ricciSolution = ['ricciSolution_%04diter_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.ricciSolution = fullfile(tubi.dir.ricci.solution, tubi.fileBase.ricciSolution) ;
-tubi.fileBase.ricciMu = 'ricciMesh_mus_%04diter_%06d.mat' ;
+tubi.fileBase.ricciMu = ['ricciMesh_mus_%04diter_' tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.ricciMu = fullfile(tubi.dir.ricci.mu, tubi.fileBase.ricciMu) ;
 
-tubi.fileBase.ricciMeshWithResampling = 'ricciMeshWithResampling_%04diter_%06d.mat' ;
+tubi.fileBase.ricciMeshWithResampling = ['ricciMeshWithResampling_%04diter_' ...
+    tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.ricciMeshWithResampling = fullfile(tubi.dir.ricci.meshWithResampling, tubi.fileBase.ricciMeshWithResampling) ;
-tubi.fileBase.ricciSolutionWithResampling = 'ricciSolutionWithResampling_%04diter_%06d.mat' ;
+tubi.fileBase.ricciSolutionWithResampling = ['ricciSolutionWithResampling_%04diter_' ...
+    tubi.timeStampStringSpec '.mat'] ;
 tubi.fullFileBase.ricciSolutionWithResampling = fullfile(tubi.dir.ricci.solutionWithResampling, tubi.fileBase.ricciSolutionWithResampling) ;
-tubi.fileBase.ricciMuWithResampling = 'ricciMesh_musWithResampling_%04diter_%06d.mat' ;
-tubi.fullFileBase.ricciMuWithResampling = fullfile(tubi.dir.ricci.muWithResampling, tubi.fileBase.ricciMuWithResampling) ;
+tubi.fileBase.ricciMuWithResampling = ['ricciMesh_musWithResampling_%04diter_' ...
+    tubi.timeStampStringSpec '.mat'] ;
+tubi.fullFileBase.ricciMuWithResampling = ...
+    fullfile(tubi.dir.ricci.muWithResampling, tubi.fileBase.ricciMuWithResampling) ;
 
 %% centerlines
 tubi.dir.clineDVhoop = ...
@@ -525,51 +549,62 @@ tubi.dir.im_re_stack = imFolder_re_stack ;
 tubi.dir.curvatures = KHSmDir ;
 tubi.dir.meanCurvature = HSmDir ;
 tubi.dir.gaussCurvature = KSmDir ;
-tubi.fullFileBase.curvatures = fullfile(tubi.dir.curvatures, 'gauss_mean_curvature_%06d.mat') ;
+tubi.fileBase.curvatures = ['guass_mean_curvature_' tubi.timeStampStringSpec '.mat'] ;
+tubi.fullFileBase.curvatures = fullfile(tubi.dir.curvatures, tubi.fileBase.curvatures);
 tubi.fullFileBase.cutMesh = ...
     fullfile(tubi.dir.cutMesh, [tubi.fileBase.name, '_cutMesh.mat']) ;
 tubi.fullFileBase.phi0fit = ...
-    fullfile(tubi.dir.spcutMesh, 'phi0s_%06d_%02d.png') ; 
+    fullfile(tubi.dir.spcutMesh, ['phi0s_' tubi.timeStampStringSpec '_%02d.png']) ; 
 tubi.fullFileBase.clineDVhoop = ...
     fullfile(tubi.dir.clineDVhoop,...
-    'centerline_from_DVhoops_%06d.mat');
+    ['centerline_from_DVhoops_' tubi.timeStampStringSpec '.mat']);
 
 %% filenames for writhe of the parameterized mesh
 tubi.fileName.writhe = fullfile(tubi.dir.writhe, ...
     ['writhe_sphi' uvexten '_avgpts.mat']) ;
 
+%% FEATURES
+% Define any features within specialized scripts
+% features =
+featuresDir = fullfile(uvDir, 'features') ;
+tubi.fileName.features = struct() ;
+tubi.fileName.features.fold = fullfile(featuresDir, ...
+  ['fold_locations_sphi' uvexten '_avgpts.mat']) ;
+tubi.fileName.features.features = ...
+  fullfile(featuresDir, ['lobe_dynamics' uvexten '.mat']) ;
+
 %% uvcutMesh
 tubi.fullFileBase.uvcutMesh = ...
-    fullfile(uvmeshDir, 'uvcutMesh_%06d.mat') ;
-tubi.fileBase.uvcutMesh = 'uvcutMesh_%06d' ;
+    fullfile(uvmeshDir, ['uvcutMesh_' tubi.timeStampStringSpec '.mat']) ;
+tubi.fileBase.uvcutMesh = ['uvcutMesh_' tubi.timeStampStringSpec] ;
 
 %%  spcutMesh and pullbacks
 tubi.fullFileBase.spcutMesh = ...
-    fullfile(sphiDir, 'spcutMesh_%06d.mat') ;
-tubi.fileBase.spcutMesh = 'spcutMesh_%06d' ;
+    fullfile(sphiDir, ['spcutMesh_' tubi.timeStampStringSpec '.mat']) ;
+tubi.fileBase.spcutMesh = ['spcutMesh_' tubi.timeStampStringSpec] ;
 if dynamic
     tubi.fullFileBase.spcutMeshSm = ...
-        fullfile(sphiSmDir, 'spcutMeshSm_%06d.mat') ;
-    tubi.fileBase.spcutMeshSm = 'spcutMeshSm_%06d' ;
+        fullfile(sphiSmDir, ['spcutMeshSm_' tubi.timeStampStringSpec '.mat']) ;
+    tubi.fileBase.spcutMeshSm = ['spcutMeshSm_' tubi.timeStampStringSpec] ;
     tubi.fullFileBase.spcutMeshSmRS = ...
-        fullfile(sphiSmRSDir, 'spcutMeshSmRS_%06d.mat') ;
-    tubi.fileBase.spcutMeshSmRS = 'spcutMeshSmRS_%06d' ;
+        fullfile(sphiSmRSDir, ['spcutMeshSmRS_' tubi.timeStampStringSpec '.mat']) ;
+    tubi.fileBase.spcutMeshSmRS = ['spcutMeshSmRS_' tubi.timeStampStringSpec] ;
     
     tubi.fullFileBase.spcutMeshSmRSC = ...
-        fullfile(sphiSmRSCDir, 'spcMSmRSC_%06d.mat') ;
+        fullfile(sphiSmRSCDir, ['spcMSmRSC_' tubi.timeStampStringSpec '.mat']) ;
     tubi.fullFileBase.spcutMeshSmRSCPLY = ...
-        fullfile(sphiSmRSCDir, 'spcMSmRSC_%06d.ply') ;
-    tubi.fileBase.spcutMeshSmRSC = 'spcMSmRSC_%06d' ;
+        fullfile(sphiSmRSCDir, ['spcMSmRSC_' tubi.timeStampStringSpec '.ply']) ;
+    tubi.fileBase.spcutMeshSmRSC = ['spcMSmRSC_' tubi.timeStampStringSpec] ;
 else
     tubi.fullFileBase.spcutMeshRS = ...
-        fullfile(sphiRSDir, 'spcutMeshRS_%06d.mat') ;
-    tubi.fileBase.spcutMeshRS = 'spcutMeshRS_%06d' ;
+        fullfile(sphiRSDir, ['spcutMeshRS_' tubi.timeStampStringSpec '.mat']) ;
+    tubi.fileBase.spcutMeshRS = ['spcutMeshRS_' tubi.timeStampStringSpec] ;
     
     tubi.fullFileBase.spcutMeshRSC = ...
-        fullfile(sphiRSCDir, 'spcMRSC_%06d.mat') ;
+        fullfile(sphiRSCDir, ['spcMRSC_' tubi.timeStampStringSpec '.mat']) ;
     tubi.fullFileBase.spcutMeshRSCPLY = ...
-        fullfile(sphiRSCDir, 'spcMRSC_%06d.ply') ;
-    tubi.fileBase.spcutMeshRSC = 'spcMRSC_%06d' ;
+        fullfile(sphiRSCDir, ['spcMRSC_' tubi.timeStampStringSpec '.ply']) ;
+    tubi.fileBase.spcutMeshRSC = ['spcMRSC_' tubi.timeStampStringSpec] ;
 end
 
 % uv
@@ -615,32 +650,6 @@ if dynamic
    
 end
 
-%% Cells segmentation / nuclei
-% tubi.fullFileBase.segmentation = ...
-%      fullfile(tubi.dir.segmentation, ...
-%      [tubi.fileBase.name, '_Probabilities.h5']) ;
-% tubi.fileBase.segmentation2d = [tubi.fileBase.name, '_segmentation2d'] ;
-% tubi.fileBase.segmentation3d = [tubi.fileBase.name, '_segmentation3d'] ;
-% tubi.fullFileBase.segmentation2d = fullfile(tubi.dir.segmentation, 'seg2d', ...
-%      [tubi.fileBase.segmentation2d '.mat']) ;
-% tubi.fullFileBase.segmentation3d = fullfile(tubi.dir.segmentation, 'seg3d', ...
-%      [tubi.fileBase.segmentation3d '.mat']) ;
-%  
-% % corrected segmentations
-% tubi.fullFileBase.segmentation2dCorrected = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
-%      [tubi.fileBase.segmentation2d '.mat']) ;
-% tubi.fullFileBase.segmentation3dCorrected = fullfile(tubi.dir.segmentation, 'seg3d_corrected', ...
-%     [tubi.fileBase.segmentation3d '.mat']) ;
-% tubi.fullFileBase.segmentation2dCorrectedBinary = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
-%      'binary_maps', [tubi.fileBase.segmentation2d '_binary_map.png']) ;
-%  
-% % nuclei only for voronoi measurement (may be identified through membrane training as non-membrane regions)
-% tubi.fullFileBase.cellProbabilities = ...
-%      fullfile(tubi.dir.cellProbabilities, ...
-%      [tubi.fileBase.name, '_pbrsme_Probabilities.h5']) ;
-% tubi.fileBase.cellID = [tubi.fileBase.name, '_pbrsme_cells'] ;
-% tubi.fullFileBase.cellID = fullfile(tubi.dir.cellID, ...
-%      [tubi.fileBase.cellID '.mat']) ;
 
 %% DYNAMICS
 if dynamic
@@ -659,7 +668,7 @@ if dynamic
     
     % pathlines data
     tubi.dir.pathlines = struct() ;
-    tubi.dir.pathlines.data = fullfile(tubi.dir.piv.root, 'pathlines', 't0_%04d') ; 
+    tubi.dir.pathlines.data = fullfile(tubi.dir.piv.root, 'pathlines', 't0_%04d') ; % HARDCODED TIMESTAMP FORMAT DELIMITER HERE FOR T0
     tubi.dir.pathlines.XY = fullfile(tubi.dir.pathlines.data, 'images_XY') ;
     tubi.dir.pathlines.XYZ = fullfile(tubi.dir.pathlines.data, 'images_XYZ') ;
     tubi.dir.pathlines.vXY = fullfile(tubi.dir.pathlines.data, 'images_vXY') ;
@@ -708,12 +717,12 @@ if dynamic
         fullfile(tubi.dir.pathlines.kymographs, 'muKymographs.mat') ;
 
     %% Pathline-based strain measurement --> from pathline path
-    tubi.fileBase.strain = 'strain_%06d.mat' ;
+    tubi.fileBase.strain = ['strain_' tubi.timeStampStringSpec '.mat'] ;
     tubi.fullFileBase.pathlines.strain = fullfile(tubi.dir.pathlines.strain, ...
         tubi.fileBase.strain) ; 
 
     tubi.fullFileBase.pathlines.ricciQuasiconformal = fullfile(tubi.dir.pathlines.ricci.quasiconformal, ...
-        'mu_%04diter_%06d_v2dv2d.mat') ;
+        ['mu_%04diter_' tubi.timeStampStringSpec '_v2dv2d.mat']) ;
     tubi.fullFileBase.pathlines.ricciMesh = fullfile(tubi.dir.pathlines.ricci.mesh, ...
         tubi.fileBase.ricciMesh) ;
     tubi.fullFileBase.pathlines.ricciSolution = fullfile(tubi.dir.pathlines.ricci.solution, ...
@@ -758,6 +767,9 @@ if dynamic
     tubi.fileName.pivAvg.v3d = fullfile(tubi.dir.piv.avg, 'vM_avg.mat')  ;
     tubi.fileName.pivAvg.vv  = fullfile(tubi.dir.piv.avg, 'vvM_avg.mat') ;
     tubi.fileName.pivAvg.vf  = fullfile(tubi.dir.piv.avg, 'vfM_avg.mat') ;
+    tubi.fileName.pivAvg.vv2d  = fullfile(tubi.dir.piv.avg, 'vv2dM_avg.mat') ;
+    tubi.fileName.pivAvg.vf2d  = fullfile(tubi.dir.piv.avg, 'vf2dM_avg.mat') ;
+    tubi.fileName.pivAvg.twist  = fullfile(tubi.dir.piv.avg, 'twist_dvphi_ds_from_pivAvg.mat') ;
     % Helmholtz-Hodge and DEC -- Lagrangian averaging
     tubi.dir.piv.avgDEC = struct() ;
     tubi.dir.piv.avgDEC.data   = fullfile(tubi.dir.piv.avg, 'dec') ;
@@ -796,18 +808,12 @@ if makeDirs
                     dirfieldsSub = struct2cell(dir2make) ;
                     for pp = 1:length(dirfieldsSub)
                         dir2makeSub = dirfieldsSub{pp} ;
-                        if ~exist(dir2makeSub, 'dir') && ~contains(dir2makeSub, '%04d') ...
-                                && ~contains(dir2makeSub, '%0.3f') ...
-                                && ~contains(dir2makeSub, '%06d') ...
-                                && ~contains(dir2makeSub, '%s')
+                        if ~exist(dir2makeSub, 'dir') && ~contains(dir2makeSub, '%') 
                             mkdir(dir2makeSub)
                         end
                     end
                 else
-                    if ~exist(dir2make, 'dir') && ~contains(dir2make, '%04d') ...
-                            && ~contains(dir2make, '%0.3f') ...
-                            && ~contains(dir2make, '%06d') ...
-                            && ~contains(dir2make, '%s')
+                    if ~exist(dir2make, 'dir') && ~contains(dir2make, '%')
                         mkdir(dir2make)
                     end
                 end
@@ -842,13 +848,27 @@ tubi.fullFileBase.segmentation3dCorrected = fullfile(tubi.dir.segmentation, 'seg
     [tubi.fileBase.segmentation3d '.mat']) ;
 tubi.fullFileBase.segmentation2dCorrectedBinary = fullfile(tubi.dir.segmentation, 'seg2d_corrected_%s', ...
      'binary_maps', [tubi.fileBase.segmentation2d '_binary_map.png']) ;
- 
+
+% % nuclei only for voronoi measurement (may be identified through membrane training as non-membrane regions)
+% tubi.fullFileBase.cellProbabilities = ...
+%      fullfile(tubi.dir.cellProbabilities, ...
+%      [tubi.fileBase.name, '_pbrsme_Probabilities.h5']) ;
+% tubi.fileBase.cellID = [tubi.fileBase.name, '_pbrsme_cells'] ;
+% tubi.fullFileBase.cellID = fullfile(tubi.dir.cellID, ...
+%      [tubi.fileBase.cellID '.mat']) ;
+
+
 
 %% Save t0 if supplied
 if t0supplied_in_opts
     disp(['Writing t0 to disk: ' tubi.fileName.t0])
     write_txt_with_header(tubi.fileName.t0, tubi.t0, 't0, the reference timestamp')
 end
+
+
+
+
+
 
 
 

@@ -58,7 +58,9 @@ else
         disp(['t = ' num2str(tt)])
         
         % load the centerline for this timepoint
-        clfns = dir(sprintf(centerlineBase, tt)) ;
+        clfns = dir(replace(centerlineBase, ...
+            tubi.timeStampStringSpec, ...
+            num2str(tt, tubi.timeStampStringSpec))) ;
         cline = dlmread(fullfile(clfns(1).folder, clfns(1).name)) ;
         cntrlines{tidx} = cat(2, ss_from_xyz(cline), cline) ; 
         tmp = ((rot * cline')' + trans) * resolution ; 
@@ -121,7 +123,8 @@ else
 
             % Prepare to plot the fixed SSR    
             % load the centerline for prev timepoint
-            clfns = dir(sprintf(centerlineBase, prevtp)) ;
+            clfns = dir(replace(centerlineBase, tubi.timeStampStringSpec, ...
+                num2str(prevtp, tubi.timeStampStringSpec))) ;
             prevcline = dlmread(fullfile(clfns(1).folder, clfns(1).name)) ;
             % Convert to APDV [um]
             prevcline = ((rot * prevcline')' + trans) * resolution ; 

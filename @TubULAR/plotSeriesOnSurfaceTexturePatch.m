@@ -1,6 +1,6 @@
 function plotSeriesOnSurfaceTexturePatch(tubi,...
    options, TexturePatchOptions)
-% PLOTDATAONSURFACETEXTUREPATCH(xp, xyzlim, rot, trans)
+% PLOTDATAONSURFACETEXTUREPATCH(tubi, options, TexturePatchOptions)
 %   Plot intensity data timeseries on 3d mesh timeseries
 %
 % Parameters
@@ -336,7 +336,9 @@ for tidx = tidx_todo
     tp = timePoints(tidx) ;
     ondisk = false(size(plot_view)) ;
     for ii = 1:length(fns)
-        ondisk(ii) = exist(sprintf(fns{ii}, tp), 'file') ;
+        file_to_seek = replace(fns{ii}, tubi.timeStampStringSpec, ...
+            num2str(tubi.timeStampStringSpec, tp)) ;
+        ondisk(ii) = exist(file_to_seek, 'file') ;
     end
     
     if (overwrite && any(plot_view)) || any(~ondisk & plot_view)
@@ -363,7 +365,7 @@ for tidx = tidx_todo
         % Read in the mesh file -----------------------------------------------
         disp('Reading mesh...')
         % Specfiy the mesh file to load
-        meshfn = sprintf( meshFileBase, tp );
+        meshfn = sprintfm( meshFileBase, tp );
         mesh = read_ply_mod( meshfn );
 
         % If we smooth before pushing along the normal
@@ -517,25 +519,30 @@ for tidx = tidx_todo
         for ii = 1:length(fns)
             % Only plot this view if plot_view(ii) is true
             if plot_view(ii)
+
+                filename_tmp = replace(fns{ii}, ...
+                    tubi.timeStampStringSpec, ...
+                    num2str(tubi.timeStampStringSpec ,tp)) ;
+
                 if ii == 1
                     % dorsal
-                    disp(['saving dorsal image: ' sprintf(fns{ii}, tp)])
+                    disp(['saving dorsal image: ' filename_tmp])
                     view(0, 90)
                 elseif ii == 2
                     % ventral
-                    disp(['saving ventral image ' sprintf(fns{ii}, tp)])
+                    disp(['saving ventral image ' filename_tmp])
                     view(0, 270)
                 elseif ii == 3
                     % Lateral views
-                    disp(['saving lateral image: ' sprintf(fns{ii}, tp)])
+                    disp(['saving lateral image: ' filename_tmp])
                     view(0, 0)
                 elseif ii == 4
                     % lateral view 2
-                    disp(['saving second lateral image: ' sprintf(fns{ii}, tp)])
+                    disp(['saving second lateral image: ' filename_tmp])
                     view(0, 180)
                 elseif ii == 5
                     % perspective view
-                    disp(['saving perspective image: ' sprintf(fns{ii}, tp)])
+                    disp(['saving perspective image: ' filename_tmp])
                     view(perspective_angle)
                 else
                     error(['Exhausted DorsalVentralLeftRight indices. ',...
@@ -546,7 +553,9 @@ for tidx = tidx_todo
                 % saveas(fig, fullfile(figvdir, fnv))
                 get(gcf, 'position')
                 set(gcf, 'position', [0, 0, xwidth, ywidth])
-                export_fig(sprintf(fns{ii}, tp), '-nocrop', '-r200')
+                output_filename = replace(fns{ii}, tubi.timeStampStringSpec, ...
+                    num2str(tp, tubi.timeStampStringSpec)) ;
+                export_fig(output_filename, '-nocrop', '-r200')
             end
         end
         close all

@@ -14,7 +14,11 @@ function write_txt_with_header(fn, dat, header)
 
 fid = fopen(fn, 'wt');
 % make header
-fprintf(fid, [header '\n']);  
+try
+    fprintf(fid, [header '\n']);  
+catch
+    fprintf(fid, strcat(header, "\n")); 
+end
 fclose(fid);
 dlmwrite(fn, dat, '-append')
 

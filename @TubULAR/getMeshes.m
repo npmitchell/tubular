@@ -1,7 +1,10 @@
 function getMeshes(tubi, overwrite, method)
 % Obtain mesh surfaces of volumetric data (like ImSAnE's surface
 % detection methods), here using level sets activecontours, akin to 
-% ImSAnE's integralDetector method. 
+% ImSAnE's integralDetector method. Note that you can adjust the starting
+% configuration of the level set by using the output of a previous
+% timepoint (which can be modified before evolution using pre_pressure 
+% and pre_tension, for example by seeding with a sphere at centerguess.
 %
 % Parameters
 % ----------
@@ -51,6 +54,12 @@ if isfield(opts, 'preview')
     preview = opts.preview ;
 else
     preview = true ;
+end
+
+if isfield(opts, 'previewIsosurface')
+    previewIsosurface = opts.previewIsosurface ;
+else
+    previewIsosurface = preview ;
 end
 
 if isfield(opts, 'pressure')
@@ -172,11 +181,11 @@ if ~exist(meshDir, 'dir')
 end
 
 if ~contains(ofn_ply, '%') || ~contains(ofn_ply, 'd')
-    ofn_ply = [ofn_ply '%06d.ply'] ;
+    ofn_ply = [ofn_ply tubi.timeStampStringSpec '.ply'] ;
 end
 
 if ~contains(ofn_smoothply, '%') || ~contains(ofn_smoothply, 'd')
-    ofn_smoothply = [ofn_smoothply '%06d.ply'] ;
+    ofn_smoothply = [ofn_smoothply tubi.timeStampStringSpec '.ply'] ;
 end
 
 for tidx = 1:length(tubi.xp.fileMeta.timePoints)
@@ -188,7 +197,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
     end
     
     %% Define the mesh we seek & check if it exists already on disk
-    outputLSfn = fullfile(meshDir, sprintf([ofn_ls '%06d.' dtype], tp)) ;
+    outputLSfn = fullfile(meshDir, sprintf([ofn_ls tubi.timeStampStringSpec '.' dtype], tp)) ;
     outputMesh = fullfile(meshDir, sprintf(ofn_ply, tp)) ;
     outputSmoothMesh = fullfile(meshDir, sprintf(ofn_smoothply, tp));
     
@@ -213,42 +222,64 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
         end
 
         % ilastik internally swaps axes. 1:x, 2:y, 3:z, 4:class
-        % strategy: put into xyzc format, then pop last index
-        if strcmp(ilastikaxisorder, 'xyzc')
-            pred = file ;
-        elseif strcmp(ilastikaxisorder, 'yxzc')
-            % to convert yxzc to xyzc, put x=2 y=1 z=3 c=4
-            pred = permute(file,[2,1,3,4]);
-        elseif strcmp(ilastikaxisorder, 'zyxc')
-            % to convert yxzc to xyzc, put x=3 y=2 z=1 c=4
-            pred = permute(file,[3,2,1,4]);
-        elseif strcmp(ilastikaxisorder, 'yzcx')
-            % to convert yxzc to xyzc, put x=4 y=1 z=2 c=3
-            pred = permute(file,[4,1,2,3]);
-        elseif strcmp(ilastikaxisorder, 'cxyz')
-            % to convert yxzc to xyzc, put x=2 y=3 z=4 c=1
-            pred = permute(file,[2,3,4,1]);
-        elseif strcmp(ilastikaxisorder, 'cyxz')
-            % to convert yxzc to xyzc, put x=2 y=3 z=4 c=1
-            pred = permute(file,[3,2,4,1]);
-        elseif strcmp(ilastikaxisorder, 'czyx')
-            % to convert yxzc to xyzc, put x=1>4 y=2>3 z=3>2 c=4>1
-            pred = permute(file,[4,3,2,1]);
-        elseif strcmp(ilastikaxisorder, 'cyzx')
-            % to convert cyzx to xyzc put x=1>4 y=2>2 z=3>3 c=4>1
-            pred = permute(file,[4,2,3,1]);
-        elseif strcmp(ilastikaxisorder, 'cxzy')
-            % to convert cxzy to xyzc put x=1>2 y=2>4 z=3>3 c=4>1
-            pred = permute(file,[2,4,3,1]);
+        % Let's extract out the XYZ data, then permute the axes correctly
+        fgc = strfind(ilastikaxisorder, 'c') ;
+        if fgc == 1
+            pred = squeeze(file(opts.foreGroundChannel, :, :, :)) ;
+        elseif fgc == 2 
+            pred = squeeze(file(:, opts.foreGroundChannel, :, :)) ;
+        elseif fgc == 3
+            pred = squeeze(file(:, :, opts.foreGroundChannel, :)) ;
+        elseif fgc == 4 
+            pred = squeeze(file(:, :, :, opts.foreGroundChannel)) ;
         else
-            error('Have not coded for this axisorder. Do so here')
+            error(['Expected 4D dorsal probabilities data, but was ' ...
+                num2str(length(size(file))) 'D'])
         end
+
+        xyzstring = erase(lower(ilastikaxisorder), 'c') ;
+        xpos = strfind(xyzstring, 'x') ;
+        ypos = strfind(xyzstring, 'y') ;
+        zpos = strfind(xyzstring, 'z') ;
+        pred = permute(pred, [xpos, ypos, zpos]) ;
+
+        % This commented code is handled more elegantly above already. 
+        % I include it for reference for how this used to be handled.
+        % % strategy: put into xyzc format, then pop last index
+        % if strcmp(ilastikaxisorder, 'xyzc')
+        %     pred = file ;
+        % elseif strcmp(ilastikaxisorder, 'yxzc')
+        %     % to convert yxzc to xyzc, put x=2 y=1 z=3 c=4
+        %     pred = permute(file,[2,1,3,4]);
+        % elseif strcmp(ilastikaxisorder, 'zyxc')
+        %     % to convert yxzc to xyzc, put x=3 y=2 z=1 c=4
+        %     pred = permute(file,[3,2,1,4]);
+        % elseif strcmp(ilastikaxisorder, 'yzcx')
+        %     % to convert yxzc to xyzc, put x=4 y=1 z=2 c=3
+        %     pred = permute(file,[4,1,2,3]);
+        % elseif strcmp(ilastikaxisorder, 'cxyz')
+        %     % to convert yxzc to xyzc, put x=2 y=3 z=4 c=1
+        %     pred = permute(file,[2,3,4,1]);
+        % elseif strcmp(ilastikaxisorder, 'cyxz')
+        %     % to convert yxzc to xyzc, put x=2 y=3 z=4 c=1
+        %     pred = permute(file,[3,2,4,1]);
+        % elseif strcmp(ilastikaxisorder, 'czyx')
+        %     % to convert yxzc to xyzc, put x=1>4 y=2>3 z=3>2 c=4>1
+        %     pred = permute(file,[4,3,2,1]);
+        % elseif strcmp(ilastikaxisorder, 'cyzx')
+        %     % to convert cyzx to xyzc put x=1>4 y=2>2 z=3>3 c=4>1
+        %     pred = permute(file,[4,2,3,1]);
+        % elseif strcmp(ilastikaxisorder, 'cxzy')
+        %     % to convert cxzy to xyzc put x=1>2 y=2>4 z=3>3 c=4>1
+        %     pred = permute(file,[2,4,3,1]);
+        % else
+        %     error('Have not coded for this axisorder. Do so here')
+        % end
         
         % Extract a binary volume based on the chosen method
         if strcmpi(method, 'threshold')
             
-            data = pred(:, :, :, opts.foreGroundChannel) ;
-            BW = data > graythresh(data) ;
+            BW = pred > graythresh(pred) ;
             
         elseif strcmpi(method, 'activecontour')
 
@@ -260,8 +291,11 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 centers = centers(1:3) ;
             elseif strcmpi(center_guess, 'click') || strcmpi(center_guess, 'select')
                 if tidx == 1 || chooseSeedCenterEveryTimepoint
-                    msg = 'Flip to desired frame to select a center pt using <\^v>, then press Enter' ;
-                    framez = flipThroughStackFindLayer(pred, msg);
+                    msg = 'Flip to desired frame to select a center pt using arrows <^v>, then press Enter' ;
+                    pred2show = pred ;
+                    clf
+                    framez = flipThroughStackFindLayer(pred2show, msg);
+                    clearvars pred2show
                     msg = 'Click on the desired point as a seed for the level set' ;
                     disp(msg)
                     title(msg)
@@ -282,7 +316,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
             if tidx > 1 || strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
                 % User has NOT supplied fn from detectOptions
                 init_ls_fn = [ofn_ls, ...
-                    num2str(previous_tp, '%06d' ) '.' dtype] ;
+                    num2str(previous_tp, tubi.timeStampStringSpec ) '.' dtype] ;
             end
 
             disp([ 'initial level set fn = ', init_ls_fn])
@@ -293,6 +327,12 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 init_ls = load(init_ls_fn, 'BW') ;
                 init_ls = init_ls.BW ;
                 niter_ii = niter ;
+                
+                % If the level set is not the same size as the current data
+                % (this will happen if different timepoints have different
+                % sizes of data)
+                init_ls = cropToMatchSize(init_ls, pred) ;
+
             elseif exist(fullfile(meshDir, init_ls_fn), 'file') || ...
                     exist(fullfile(meshDir,[init_ls_fn '.mat']), 'file') 
                 % It does exist, and given name is the relative path
@@ -302,12 +342,17 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 init_ls = load(fullfile(meshDir, init_ls_fn), 'BW') ;
                 init_ls = init_ls.BW ;
                 niter_ii = niter ; 
+                
+                % If the level set is not the same size as the current data
+                % (this will happen if different timepoints have different
+                % sizes of data)
+                init_ls = cropToMatchSize(init_ls, pred) ;
             else
                 % The guess for the initial levelset does NOT exist, so use
                 % a sphere for the guess.
                 disp(['Using default sphere of radius ' num2str(radius_guess) ...
                     ' for init_ls -- no such file on disk: ' fullfile(meshDir, [ init_ls_fn '.h5'])])
-                init_ls = zeros(size(squeeze(pred(:, :, :, opts.foreGroundChannel)))) ;
+                init_ls = zeros(size(pred)) ;
                 SE = strel("sphere", radius_guess) ;
                 SE = SE.Neighborhood ;
                 se0 = size(SE, 1) ;
@@ -379,14 +424,14 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 init_ls = imdilate(init_ls, SE) ;
             end
 
-            data = pred(:, :, :, opts.foreGroundChannel) ;
             % data_clipped = data - 0.1 ;
             % data_clipped(data_clipped < 0) = 0. ;
 
             % visualize result
-            if preview
-                clf
-                isosurface(data) ;
+            if preview && previewIsosurface
+                disp('Previewing data as isosurface -- close figure to continue')
+                close all
+                isosurface(pred) ;
                 hold on;
                 isosurface(init_ls, ones(size(init_ls))) ;
                 daspect([1,1,1])
@@ -395,26 +440,28 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 % view([60,80,45])
                 % set(gcf, 'color', 'w')
                 % export_fig( './initial_guess_300_v2.png', '-r300')
-                waitfor(gcf)
+                % waitfor(gcf)
+                pause(5)
             end
 
-            disp(['niter is ', num2str(niter_ii)]);
-            BW = activecontour(data, init_ls, niter_ii, 'Chan-Vese', ...
+            disp(['Smoothing now; niter is ', num2str(niter_ii)]);
+            BW = activecontour(pred, init_ls, niter_ii, 'Chan-Vese', ...
                 'SmoothFactor', tension, 'ContractionBias', -pressure) ;
 
             % visualize result
             if preview
-                clf
+                close all
                 isosurface(BW) ;
                 hold on;
-                isosurface(data, ones(size(init_ls))) ;
+                isosurface(pred, ones(size(init_ls))) ;
                 daspect([1,1,1])
                 % ylim([70, 115])
                 % xlim([60,110])
                 % view([60,80,45])
                 % set(gcf, 'color', 'w')
                 % export_fig( './final_guess_300_full.png', '-r300')
-                waitfor(gcf)
+                % waitfor(gcf)
+                pause(5)
             end
 
             % Post processing
@@ -433,14 +480,14 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 clf
                 if centers(3) < size(BW, 3) && centers(3) > 0.5 
                     bwPage = squeeze(BW(:, :,round(centers(3)))) ;
-                    datPage = squeeze(data(:,:,round(centers(3)))) ;
+                    datPage = squeeze(pred(:,:,round(centers(3)))) ;
                     rgb = cat(3, bwPage, datPage, datPage) ;
                     imshow(rgb)
                     sgtitle('level set found...')
                 else
                     zframe = round(size(BW, 3) * 0.5) ;
                     bwPage = squeeze(BW(:, :,zframe)) ;
-                    datPage = squeeze(data(:,:,zframe)) ;
+                    datPage = squeeze(pred(:,:,zframe)) ;
                     rgb = cat(3, bwPage, datPage, datPage) ;
                     imshow(rgb)
                     sgtitle('level set found...')
@@ -451,7 +498,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 % Show each plane in stack
                 for zframe = 1:size(BW, 3) 
                     bwPage = squeeze(BW(:, :,zframe)) ;
-                    datPage = squeeze(data(:,:,zframe)) ;
+                    datPage = squeeze(pred(:,:,zframe)) ;
                     rgb = cat(3, bwPage, datPage, datPage) ;
                     imshow(rgb)
                     sgtitle(['level set found: z=' num2str(zframe)])

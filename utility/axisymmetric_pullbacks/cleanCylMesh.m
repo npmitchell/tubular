@@ -20,7 +20,7 @@ function [mesh] = cleanCylMesh(mesh, options)
 % -------
 % mesh : cleaned cylinderMesh with fields v, f, vn
 % 
-% NPMitchell 2019
+% NPMitchell & Dillon Cislo 2019
 
 %% Default options & unpacking
 niter = 1000 ;  % max iterations for eradicating hairpin boundaries

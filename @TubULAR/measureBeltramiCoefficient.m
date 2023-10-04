@@ -1,5 +1,5 @@
-function measureBeltramiCoefficient(QS, options)
-%measureBeltramiCoefficient(QS, options)
+function measureBeltramiCoefficient(tubi, options)
+%measureBeltramiCoefficient(tubi, options)
 % 
 % Previous version measured instantaneous mu as well, which was the
 % Beltrami coefficient to the current (nearly) conformal pullback.
@@ -7,9 +7,9 @@ function measureBeltramiCoefficient(QS, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields
-%   t0Pathlines : numeric (default = QS.t0) 
+%   t0Pathlines : numeric (default = tubi.t0) 
 %       timepoint used to define Lagrangian/material frame for mu
 %       measurements to be made with respect to
 %   coordSys : str specifier ('ricci', 'uvprime' or 'sp')
@@ -26,10 +26,10 @@ function measureBeltramiCoefficient(QS, options)
 save_ims = true ;
 coordSys = 'ricci' ;    % or 'uvprime'
 maxIter = 200 ;         % only used if coordSys == 'ricci', #ricci iterations
-if isempty(QS.t0)
-    t0 = QS.t0set() ;
+if isempty(tubi.t0)
+    t0 = tubi.t0set() ;
 else
-    t0 = QS.t0 ;
+    t0 = tubi.t0 ;
 end
 t0Pathlines = t0 ;
 overwrite = false ;
@@ -38,7 +38,7 @@ if nargin < 2
 end
 climit_dmudt = 1 ;
 climit_dmudt = 0.03 ;
-[~, ~, ~, xyzlim ] = QS.getXYZLims() ; 
+[~, ~, ~, xyzlim ] = tubi.getXYZLims() ; 
 
 %% Unpack options
 if isfield(options, 'overwrite')
@@ -64,23 +64,23 @@ end
 
 %% Make sure pathlines are on disk & load them
 if contains(coordSys, 'ricci')
-    vXYfn = sprintf(QS.fileName.pathlines.vXY, t0Pathlines) ;
-    v3dfn = sprintf(QS.fileName.pathlines.v3d, t0Pathlines) ;
-    refMeshFn = sprintf(QS.fileName.pathlines.refMesh, t0Pathlines) ;
+    vXYfn = sprintf(tubi.fileName.pathlines.vXY, t0Pathlines) ;
+    v3dfn = sprintf(tubi.fileName.pathlines.v3d, t0Pathlines) ;
+    refMeshFn = sprintf(tubi.fileName.pathlines.refMesh, t0Pathlines) ;
     if ~exist(vXYfn, 'file') || ~exist(v3dfn, 'file') || ~exist(refMeshFn, 'file')
-        QS.measurePullbackPathlines(options)
+        tubi.measurePullbackPathlines(options)
     end
 elseif contains(coordSys, 'uvprime')
-    vXYfn = sprintf(QS.fileName.pathlines_uvprime.vXY, t0Pathlines) ;
-    v3dfn = sprintf(QS.fileName.pathlines_uvprime.v3d, t0Pathlines) ;
-    refMeshFn = sprintf(QS.fileName.pathlines_uvprime.refMesh, t0Pathlines) ;
+    vXYfn = sprintf(tubi.fileName.pathlines_uvprime.vXY, t0Pathlines) ;
+    v3dfn = sprintf(tubi.fileName.pathlines_uvprime.v3d, t0Pathlines) ;
+    refMeshFn = sprintf(tubi.fileName.pathlines_uvprime.refMesh, t0Pathlines) ;
     if ~exist(vXYfn, 'file') || ~exist(v3dfn, 'file') || ~exist(refMeshFn, 'file')
-        QS.measureUVPrimePathlines(options)
+        tubi.measureUVPrimePathlines(options)
     end
 else
-    vXYfn = sprintf(QS.fileName.pathlines.vXY, t0Pathlines) ;
-    v3dfn = sprintf(QS.fileName.pathlines.v3d, t0Pathlines) ;
-    refMeshFn = sprintf(QS.fileName.pathlines.refMesh, t0Pathlines) ;
+    vXYfn = sprintf(tubi.fileName.pathlines.vXY, t0Pathlines) ;
+    v3dfn = sprintf(tubi.fileName.pathlines.v3d, t0Pathlines) ;
+    refMeshFn = sprintf(tubi.fileName.pathlines.refMesh, t0Pathlines) ;
 end
 
 % Load pathlines in conformal/(u',v')/other coordinates and their embedding
@@ -103,15 +103,15 @@ catch
 end
 
 %% 
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 nTimePoints = length(timePoints) ;
 
 if contains(coordSys, 'ricci')
-    fn = sprintf(QS.fileName.pathlines.quasiconformal, t0Pathlines) ;
-    imDir = sprintf(QS.dir.pathlines.quasiconformal, t0Pathlines) ;
+    fn = sprintfm(tubi.fileName.pathlines.quasiconformal, t0Pathlines) ;
+    imDir = sprintfm(tubi.dir.pathlines.quasiconformal, t0Pathlines) ;
 elseif contains(coordSys, 'uv')
-    fn = fullfile(QS.fileName.dir.cutMesh, 'beltrami', 'mu_v3dv2d.mat') ;
-    imDir = fullfile(QS.dir.cutMesh, 'beltrami') ;
+    fn = fullfile(tubi.fileName.dir.cutMesh, 'beltrami', 'mu_v3dv2d.mat') ;
+    imDir = fullfile(tubi.dir.cutMesh, 'beltrami') ;
 end
 if ~exist(fullfile(imDir, '2d'), 'dir')
     mkdir(fullfile(imDir, '2d'))
@@ -133,11 +133,11 @@ if ~exist(fn, 'file') || overwrite
         disp(['tidx = ' num2str(tidx)])
         
         %% Set current time
-        tp = QS.xp.fileMeta.timePoints(tidx) ;
-        imFn2d_material = sprintf(fullfile(imDir, '2d', 'mu2d_material_%06d.png'), tp);
-        imFn3d_material = sprintf(fullfile(imDir, '3d', 'mu3d_material_%06d.png'), tp);
+        tp = tubi.xp.fileMeta.timePoints(tidx) ;
+        imFn2d_material = sprintfm(fullfile(imDir, '2d', 'mu2d_material_%06d.png'), tp);
+        imFn3d_material = sprintfm(fullfile(imDir, '3d', 'mu3d_material_%06d.png'), tp);
         
-        QS.setTime(tp)
+        tubi.setTime(tp)
 
         %% Measure Beltrami Coefficient
         v3d = zeros(size(vP3d.vX, 2) * size(vP3d.vX, 3), 3) ;
@@ -241,7 +241,7 @@ if ~exist(fn, 'file') || overwrite
                 real(mu_material_filtered(tidx, :)), ...
                 imag(mu_material_filtered(tidx, :)), options) ;
             sgtitle(['$\mu($embedding, material frame$)$, $t = $', ...
-                sprintf('%03d', tp-t0), ' ', QS.timeUnits], ...
+                sprintf('%03d', tp-t0), ' ', tubi.timeUnits], ...
                 'interpreter', 'latex') 
             set(gcf,'CurrentAxes', ax1)
             view(0, 0)
@@ -268,7 +268,7 @@ if ~exist(fn, 'file') || overwrite
                 real(mu_material_filtered(tidx, :)), ...
                 imag(mu_material_filtered(tidx, :)), options) ;
             sgtitle(['$\mu($embedding, material frame$)$, $t = $', ...
-                sprintf('%03d', tp-t0), ' ', QS.timeUnits], ...
+                sprintf('%03d', tp-t0), ' ', tubi.timeUnits], ...
                 'interpreter', 'latex') ;
             set(gcf,'CurrentAxes', ax1)
             view(2)
@@ -318,7 +318,7 @@ if save_ims
             end
         end
         % Make in units of inverse time
-        dmu = dmu / ((timePoints(tidx+1) - tp) * QS.timeInterval) ;
+        dmu = dmu / ((timePoints(tidx+1) - tp) * tubi.timeInterval) ;
         % reshape dmu
         nU = refMesh.nU ;
         nV = refMesh.nV ;
@@ -335,7 +335,7 @@ if save_ims
         dmu = muMVfilt_re(:) + 1j * muMVfilt_im(:) ;
         
 
-        dtImFn_material = sprintf(fullfile(imDir, 'dmudt', 'dmu2d_material_%06d.png'), tp);
+        dtImFn_material = sprintfm(fullfile(imDir, 'dmudt', 'dmu2d_material_%06d.png'), tp);
         close all
         labels = {'$\Re \mu$', '$\Im \mu$', '', ''} ;
         options.labels = labels ;
@@ -385,7 +385,7 @@ if save_ims
                 end
             end
             sgtitle(['$\partial_t \mu($embedding, material frame$)$, $t = $', ...
-                sprintf('%03d', tp-t0), ' ', QS.timeUnits], ...
+                sprintf('%03d', tp-t0), ' ', tubi.timeUnits], ...
                 'interpreter', 'latex') 
             disp(['saving ' dtImFn_material])
             drawnow

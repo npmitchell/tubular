@@ -1,5 +1,5 @@
-function plotTimeAvgVelocities(QS, options) 
-%plotTimeAvgVelSimple(QS, options) 
+function plotTimeAvgVelocities(tubi, options) 
+%plotTimeAvgVelSimple(tubi, options) 
 %   Save images of the velocity field over time that has been "simply"
 %   averaged over time in-place in the surface-Lagrangian pullback. That
 %   is, the velocity field at location (u,v) has been averaged in time with
@@ -9,7 +9,7 @@ function plotTimeAvgVelocities(QS, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields 
 %   overwrite : bool
 %       overwrite previous results
@@ -17,7 +17,7 @@ function plotTimeAvgVelocities(QS, options)
 %       view intermediate results
 %   timePoints : numeric 1D array
 %       the timepoints to consider for the measurement. For ex, could
-%       choose subset of the QS experiment timePoints
+%       choose subset of the tubi experiment timePoints
 %   alphaVal : float
 %       the opacity of the heatmap to overlay
 %   invertImage : bool
@@ -36,7 +36,7 @@ function plotTimeAvgVelocities(QS, options)
 %% Default options
 % Declare plotting options for limits
 plot_vxyz = false ;      
-pivimCoords = QS.piv.imCoords ;  % coordinate system of the pullback images used in PIV
+pivimCoords = tubi.piv.imCoords ;  % coordinate system of the pullback images used in PIV
 averagingStyle = 'Lagrangian' ;  % Lagrangian or simple, how velocities are averaged over time
 samplingResolution = '1x' ;      % 1x or 2x, resolution of 
 vtscale = 0 ;                    % if zero, default is used
@@ -85,21 +85,21 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
+%% Unpack tubi
 if strcmp(averagingStyle, 'Lagrangian')
     if doubleResolution
-        pivDir = QS.dir.piv.avg2x ;
+        pivDir = tubi.dir.piv.avg2x ;
     else
-        pivDir = QS.dir.piv.avg ;
+        pivDir = tubi.dir.piv.avg ;
     end
 elseif strcmp(averagingStyle, 'simple')
     if doubleResolution
-        pivDir = QS.dir.pivSimAvg2x ;
+        pivDir = tubi.dir.pivSimAvg2x ;
     else
-        pivDir = QS.dir.pivSimAvg ;
+        pivDir = tubi.dir.pivSimAvg ;
     end    
 end
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 % Auxiliary function for plotting smoothed meshes
 
@@ -113,7 +113,7 @@ pivImNDir = fullfile(pivDir, 'vn') ;
 % pivImRotDir = fullfile(pivSimAvgDir, 'rot') ;
 % pivImShearDir = fullfile(pivSimAvgDir, 'shear_dvphi_ds') ;
 
-pivDir = QS.dir.piv.root ;
+pivDir = tubi.dir.piv.root ;
 dilDir = fullfile(pivDir, 'dilation') ;
 vxyorigDir = fullfile(pivDir, 'vxyorig') ;
 if plot_vxyz
@@ -131,22 +131,22 @@ end
 if strcmp(averagingStyle, 'Lagrangian')
     if doubleResolution
         disp('Loading double Resolution velocity sampling')
-        QS.getVelocityAverage2x()
-        velstruct = QS.velocityAverage2x ;
+        tubi.getVelocityAverage2x()
+        velstruct = tubi.velocityAverage2x ;
     else
         disp('Loading single Resolution velocity sampling')
-        QS.getVelocityAverage()
-        velstruct = QS.velocityAverage ;
+        tubi.getVelocityAverage()
+        velstruct = tubi.velocityAverage ;
     end
 elseif strcmp(averagingStyle, 'Simple')
     if doubleResolution
         disp('Loading double Resolution simple velocity sampling')
-        QS.getVelocitySimpleAverage2x()
-        velstruct = QS.velocitySimpleAverage2x ;
+        tubi.getVelocitySimpleAverage2x()
+        velstruct = tubi.velocitySimpleAverage2x ;
     else
         disp('Loading single Resolution simple velocity sampling')
-        QS.getVelocitySimpleAverage()
-        velstruct = QS.velocitySimpleAverage ;
+        tubi.getVelocitySimpleAverage()
+        velstruct = tubi.velocitySimpleAverage ;
     end
 end
 vsmM = velstruct.v3d ;
@@ -174,7 +174,7 @@ for i = t2do
     options.vtscale = vtscale ;
     options.vnscale = vnscale ;
     options.invertImage = invertImage ;
-    QS.plotAverageVelocitiesTimePoint(tp, options)   
+    tubi.plotAverageVelocitiesTimePoint(tp, options)   
         
 end
 

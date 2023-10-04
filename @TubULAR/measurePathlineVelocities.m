@@ -1,17 +1,17 @@
-function outStruct = measurePathlineVelocities(QS, options)
-%measurePullbackStreamlines(QS, options)
+function outStruct = measurePathlineVelocities(tubi, options)
+%measurePullbackStreamlines(tubi, options)
 %   Use pathlines of optical flow in pullback space to query velocities
 %   and average along pathlines.
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields 
 %   overwrite : bool, default=false
 %       overwrite previous results
 %   preview : bool, default=false
 %       view intermediate results
-%   t0 : int, default=QS.t0set()
+%   t0 : int, default=tubi.t0set()
 %       timestamp at which the pathlines form a grid onto mesh vertices, 
 %       mesh face barycenters, or PIV evaluation points
 %
@@ -32,19 +32,19 @@ function outStruct = measurePathlineVelocities(QS, options)
 % 
 % Saves to disk
 % -------------
-% fvsmM   = sprintf(QS.fileName.pathlines.velocities.v3dsm, t0) ;
-% fvfsmM  = sprintf(QS.fileName.pathlines.velocities.vfsm, t0) ;
-% fvnsmM  = sprintf(QS.fileName.pathlines.velocities.vnsm, t0) ;
-% fvvsmM  = sprintf(QS.fileName.pathlines.velocities.vvsm, t0) ;
-% fv2dsmM = sprintf(QS.fileName.pathlines.velocities.v2dsm, t0) ;
-% fv2dsmMum = sprintf(QS.fileName.pathlines.velocities.v2dsmum, t0) ;
+% fvsmM   = sprintf(tubi.fileName.pathlines.velocities.v3dsm, t0) ;
+% fvfsmM  = sprintf(tubi.fileName.pathlines.velocities.vfsm, t0) ;
+% fvnsmM  = sprintf(tubi.fileName.pathlines.velocities.vnsm, t0) ;
+% fvvsmM  = sprintf(tubi.fileName.pathlines.velocities.vvsm, t0) ;
+% fv2dsmM = sprintf(tubi.fileName.pathlines.velocities.v2dsm, t0) ;
+% fv2dsmMum = sprintf(tubi.fileName.pathlines.velocities.v2dsmum, t0) ;
 %
 % NPMitchell 2020
 
 %% Default options
 overwrite = false ;
 overwriteImages = false ;
-timePoints = QS.xp.fileMeta.timePoints ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 samplingResolution = '1x' ;
 imethod = 'linear' ;
 if nargin < 2
@@ -54,7 +54,7 @@ end
 %% Unpack options
 % Default values for options are to use sphi smoothed extended coords
 % as PIV reference coord sys
-pivimCoords = QS.piv.imCoords ;
+pivimCoords = tubi.piv.imCoords ;
 
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
@@ -83,18 +83,18 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
-t0 = QS.t0set() ;
-timePoints = QS.xp.fileMeta.timePoints ;
+%% Unpack tubi
+t0 = tubi.t0set() ;
+timePoints = tubi.xp.fileMeta.timePoints ;
 
 %% Perform/Load Lagrangian averaging along pathline
 disp('Performing/Loading Lagrangian averaged velocities')
 % Create directories
-fileNames = QS.fileName.pathlines.velocities ;
+fileNames = tubi.fileName.pathlines.velocities ;
 % Apply t0 to fileNames
 fieldnames = fields(fileNames) ;
 for qq = 1:length(fieldnames)
-    fileNames.(fieldnames{qq}) = sprintf(fileNames.(fieldnames{qq}), t0) ;
+    fileNames.(fieldnames{qq}) = sprintfm(fileNames.(fieldnames{qq}), t0) ;
 end
 
 % Check if the time smoothed velocities exist already
@@ -105,7 +105,7 @@ end
 % vertex-based velocities are vv
 % face-based velocities are vf
 
-QS.clearTime() ;
+tubi.clearTime() ;
 
 %% Build grids for averaging
 if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
@@ -121,9 +121,9 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
     
     % Load lagrangian pathlines
     disp('Loading pathlines for velocity computation: XY')
-    load(sprintf(QS.fileName.pathlines.XY, t0), 'pivPathlines')
-    load(sprintf(QS.fileName.pathlines.vXY, t0), 'vertexPathlines')
-    load(sprintf(QS.fileName.pathlines.fXY, t0), 'facePathlines')
+    load(sprintfm(tubi.fileName.pathlines.XY, t0), 'pivPathlines')
+    load(sprintfm(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
+    load(sprintfm(tubi.fileName.pathlines.fXY, t0), 'facePathlines')
     
     ntps = length(timePoints)-1;
     
@@ -134,13 +134,13 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         % dt = timePoints(i + 1) - tp ;
         
         disp(['Filling in velocity matrices, t=' num2str(tp)])
-        QS.setTime(tp) ;
+        tubi.setTime(tp) ;
         if doubleResolution
-            QS.getCurrentVelocity('piv3d2x') ;
-            piv3d = QS.currentVelocity.piv3d2x ;
+            tubi.getCurrentVelocity('piv3d2x') ;
+            piv3d = tubi.currentVelocity.piv3d2x ;
         else
-            QS.getCurrentVelocity('piv3d') ;
-            piv3d = QS.currentVelocity.piv3d ;
+            tubi.getCurrentVelocity('piv3d') ;
+            piv3d = tubi.currentVelocity.piv3d ;
         end
         
         % Allocate memory if this is the first timestep. Assume all grids
@@ -223,7 +223,7 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
         % Chose to instead rely on metric kinematics measurement for this,
         % which resides in:
         %    fullfile(tubi.dir.metricKinematics.pathline.measurements, ...
-        %       sprintf('veln_pathline%04d_%06d.mat', t0Pathline, tp)))
+        %       sprintfm('veln_pathline%04d_%06d.mat', t0Pathline, tp)))
         % v0nvertices_rs = Fn(vX(:), vY(:)) ;   --> see above     
 
         % 5. Interpolate v0t2d onto PIV evaluation pt pathlines
@@ -256,13 +256,13 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
     disp('built v0 matrix')
     
     %% Save raw matrices
-    outdir = sprintf(QS.dir.pathlines.velocities, t0) ;
-    fvM   = sprintf(QS.fileName.pathlines.velocities.v3d, t0) ;
-    fvfM  = sprintf(QS.fileName.pathlines.velocities.vf, t0) ;
-    fvnM  = sprintf(QS.fileName.pathlines.velocities.vn, t0) ;
-    fvvM  = sprintf(QS.fileName.pathlines.velocities.vv, t0) ;
-    fv2dM = sprintf(QS.fileName.pathlines.velocities.v2d, t0) ;
-    fv2dMum = sprintf(QS.fileName.pathlines.velocities.v2dum, t0) ; 
+    outdir = sprintfm(tubi.dir.pathlines.velocities, t0) ;
+    fvM   = sprintfm(tubi.fileName.pathlines.velocities.v3d, t0) ;
+    fvfM  = sprintfm(tubi.fileName.pathlines.velocities.vf, t0) ;
+    fvnM  = sprintfm(tubi.fileName.pathlines.velocities.vn, t0) ;
+    fvvM  = sprintfm(tubi.fileName.pathlines.velocities.vv, t0) ;
+    fv2dM = sprintfm(tubi.fileName.pathlines.velocities.v2d, t0) ;
+    fv2dMum = sprintfm(tubi.fileName.pathlines.velocities.v2dum, t0) ; 
     if ~exist(outdir, 'dir')
         mkdir(outdir)
     end
@@ -305,12 +305,12 @@ if ~exist(fileNames.v2dum, 'file') || ~exist(fileNames.v2d, 'file') || ...
 
     % Save the simpleminded averaging
     disp('Saving the time-smoothed velocities to disk')
-    fvsmM   = sprintf(QS.fileName.pathlines.velocities.v3dsm, t0) ;
-    fvfsmM  = sprintf(QS.fileName.pathlines.velocities.vfsm, t0) ;
-    fvnsmM  = sprintf(QS.fileName.pathlines.velocities.vnsm, t0) ;
-    fvvsmM  = sprintf(QS.fileName.pathlines.velocities.vvsm, t0) ;
-    fv2dsmM = sprintf(QS.fileName.pathlines.velocities.v2dsm, t0) ;
-    fv2dsmMum = sprintf(QS.fileName.pathlines.velocities.v2dsmum, t0) ;
+    fvsmM   = sprintfm(tubi.fileName.pathlines.velocities.v3dsm, t0) ;
+    fvfsmM  = sprintfm(tubi.fileName.pathlines.velocities.vfsm, t0) ;
+    fvnsmM  = sprintfm(tubi.fileName.pathlines.velocities.vnsm, t0) ;
+    fvvsmM  = sprintfm(tubi.fileName.pathlines.velocities.vvsm, t0) ;
+    fv2dsmM = sprintfm(tubi.fileName.pathlines.velocities.v2dsm, t0) ;
+    fv2dsmMum = sprintfm(tubi.fileName.pathlines.velocities.v2dsmum, t0) ;
     disp(['Saving: ' fvsmM])
     save(fvsmM, 'vsmM') ;          % in um/min
     disp(['Saving: ' fvvsmM])
@@ -381,15 +381,15 @@ end
 %% Plot each timepoint's pathline velocity
 if overwriteImages
     disp('Loading pathlines for velocity computation: XY')
-    load(sprintf(QS.fileName.pathlines.XY, t0), 'pivPathlines')
-    % load(sprintf(QS.fileName.pathlines.vXY, t0), 'vertexPathlines')
-    % load(sprintf(QS.fileName.pathlines.fXY, t0), 'facePathlines')
+    load(sprintfm(tubi.fileName.pathlines.XY, t0), 'pivPathlines')
+    % load(sprintfm(tubi.fileName.pathlines.vXY, t0), 'vertexPathlines')
+    % load(sprintfm(tubi.fileName.pathlines.fXY, t0), 'facePathlines')
     
-    sampleIDxFn = fullfile(sprintf(QS.dir.pathlines.velocities, t0), ...
+    sampleIDxFn = fullfile(sprintfm(tubi.dir.pathlines.velocities, t0), ...
         'sampleIDx_for_plotting_XY.mat') ;
     if ~exist(sampleIDxFn, 'file')
-        xx = pivPathlines.XX(QS.xp.tIdx(t0), :, :) ;
-        yy = pivPathlines.YY(QS.xp.tIdx(t0), :, :) ;
+        xx = pivPathlines.XX(tubi.xp.tIdx(t0), :, :) ;
+        yy = pivPathlines.YY(tubi.xp.tIdx(t0), :, :) ;
         disp('defining points at which to draw arrows')
         if length(xx(:)) > 200
             % seed a point in the center
@@ -410,7 +410,7 @@ if overwriteImages
     
     for tidx = 1:length(timePoints)-1
         tp = timePoints(tidx) ;
-        QS.setTime(tp) ;
+        tubi.setTime(tp) ;
         close all
         % Load streamline positions at this timePoint
         plotOptions.XX = pivPathlines.XX(tidx, :, :) ;
@@ -421,6 +421,6 @@ if overwriteImages
         plotOptions.v2dsmum = squeeze(v2dsmMum(tidx, :, :)) ;
         plotOptions.overwrite = overwriteImages ;
         plotOptions.sampleIDx = sampleIDx ;
-        QS.plotPathlineVelocitiesTimePoint(tp, plotOptions) ;
+        tubi.plotPathlineVelocitiesTimePoint(tp, plotOptions) ;
     end
 end

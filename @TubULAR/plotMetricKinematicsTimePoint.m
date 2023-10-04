@@ -1,5 +1,6 @@
-function plotMetricKinematicsTimePoint(QS, tp, options)
-% 
+function plotMetricKinematicsTimePoint(tubi, tp, options)
+% plotMetricKinematicsTimePoint(tubi, tp, options)
+%
 % Plot the metric Kinematics, either for all timepoints or for a single 
 % timepoint. This function is called by measureMetricKinematics()
 % TODO: also allow the function to be a standalone method to plot all
@@ -50,23 +51,23 @@ climit_veln = options.climit_veln ;
 
 if doubleResolution
     sresStr = 'doubleRes_' ;
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
     sresStr = '' ;
-    nU = QS.nU ;
-    nV = QS.nV ;
+    nU = tubi.nU ;
+    nV = tubi.nV ;
 end
 
-%% Unpack QS
+%% Unpack tubi
 % Load time offset for first fold, t0
-QS.t0set() ;
-tfold = QS.t0 ;
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+tubi.t0set() ;
+tfold = tubi.t0 ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
-mKDir = fullfile(QS.dir.metricKinematics.root, ...
+mKDir = fullfile(tubi.dir.metricKinematics.root, ...
     strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02d'], ...
     lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 dimDirs = {fullfile(mKDir, 'images_2d'), ...
@@ -79,15 +80,15 @@ for qq = 1:length(dimDirs)
 end
        
 % Unit definitions for axis labels
-unitstr = [ '[1/' QS.timeUnits ']' ];
-Hunitstr = [ '[1/' QS.spaceUnits ']' ];
-vunitstr = [ '[' QS.spaceUnits '/' QS.timeUnits ']' ];
+unitstr = [ '[1/' tubi.timeUnits ']' ];
+Hunitstr = [ '[1/' tubi.spaceUnits ']' ];
+vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
     
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Timepoint specific operations
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-titlestr = ['$t=$' sprintf('%03d', tp - tfold) ' ' QS.timeUnits ] ;
+titlestr = ['$t=$' sprintf('%03d', tp - tfold) ' ' tubi.timeUnits ] ;
 
 % Load meshes if not supplied    
 if isempty(mesh) 
@@ -111,10 +112,10 @@ if isempty(mesh)
 
         % Load current mesh
         if doubleResolution
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC2x, tp)) ;
+            tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC2x, tp)) ;
             mesh = tmp.spcutMeshSmRSC2x ;
         else
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
+            tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
             mesh = tmp.spcutMeshSmRSC ;
         end
         
@@ -132,11 +133,11 @@ if isempty(mesh)
         if isempty(cutMesh)
             % Load cutMesh
             if doubleResolution
-                tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS2x, tp)) ;
+                tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRS2x, tp)) ;
                 cutMesh = tmp.spcutMeshSmRS2x ;
                 clearvars tmp
             else
-                tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp)) ;
+                tmp = load(sprintf(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
                 cutMesh = tmp.spcutMeshSmRS ;
                 clearvars tmp
             end
@@ -172,11 +173,11 @@ if plot_flows && redo_prediction
                 % if 3d, plot in embedding space
                 if dim == 2 && row == 2
                     ss = cutMesh.u(:, 1) ;
-                    ssvals = QS.a_fixed * ss / max(ss) ;
+                    ssvals = tubi.a_fixed * ss / max(ss) ;
                     trisurf(cutMesh.f, ssvals, ...
                         cutMesh.u(:, 2), zeros(size(cutMesh.u(:,1))),...
                         colors2d{col}, 'edgecolor', 'none')
-                    xlim([0, QS.a_fixed])
+                    xlim([0, tubi.a_fixed])
                     ylim([0, 1]) 
                     caxis([-climit, climit]) 
                     axis off
@@ -290,11 +291,11 @@ if plot_Hgdot && (~exist(fn, 'file') || overwrite)
             % plot in pullback space
             if row == 2
                 ss = cutMesh.u(:, 1) ;
-                ssvals = QS.a_fixed * ss / max(ss) ;
+                ssvals = tubi.a_fixed * ss / max(ss) ;
                 trisurf(cutMesh.f, ssvals, ...
                     cutMesh.u(:, 2), zeros(size(cutMesh.u(:,1))),...
                     colors2d{col}, 'edgecolor', 'none')
-                xlim([0, QS.a_fixed])
+                xlim([0, tubi.a_fixed])
                 ylim([0, 1]) 
                 caxis([-climits(col), climits(col) ]) 
                 axis off
@@ -379,11 +380,11 @@ if plot_factors && (~exist(fn, 'file') || overwrite)
             % plot in pullback space
             if row == 2
                 ss = cutMesh.u(:, 1) ;
-                ssvals = QS.a_fixed * ss / max(ss) ;
+                ssvals = tubi.a_fixed * ss / max(ss) ;
                 trisurf(cutMesh.f, ssvals, ...
                     cutMesh.u(:, 2), zeros(size(cutMesh.u(:,1))),...
                     colors2d{col}, 'edgecolor', 'none')
-                xlim([0, QS.a_fixed])
+                xlim([0, tubi.a_fixed])
                 ylim([0, 1]) 
                 caxis([-climits(col), climits(col) ]) 
                 axis off

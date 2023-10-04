@@ -231,20 +231,20 @@ for tp = tp2do
         tic 
         if doubleResolution
             % Load current mesh
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC2x, tp)) ;
+            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRSC2x, tp)) ;
             mesh = tmp.spcutMeshSmRSC2x ;
 
             % Load cutMesh
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS2x, tp)) ;
+            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRS2x, tp)) ;
             cutMesh = tmp.spcutMeshSmRS2x ;
             clearvars tmp
         else
             % Load current mesh
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
+            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
             mesh = tmp.spcutMeshSmRSC ;
 
             % Load cutMesh
-            tmp = load(sprintf(QS.fullFileBase.spcutMeshSmRS, tp)) ;
+            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRS, tp)) ;
             cutMesh = tmp.spcutMeshSmRS ;
             clearvars tmp
         end
@@ -260,7 +260,15 @@ for tp = tp2do
                 lambda_mesh, 'implicit', mesh.v) ;
         end
         DEC = DiscreteExteriorCalculus(mesh.f, mesh.v) ;
-        H3d = sum(mesh.vn .* DEC.laplacian(mesh.v), 2) * 0.5 ;
+
+        % Edit 2023-09-05--> now we do laplacian component by component
+        % old version:
+        % H3d = sum(mesh.vn .* DEC.laplacian(mesh.v), 2) * 0.5 ;
+        % new version: 
+        lapX = DEC.laplacian(mesh.v(:,1)) ;
+        lapY = DEC.laplacian(mesh.v(:,2)) ;
+        lapZ = DEC.laplacian(mesh.v(:,3)) ;
+        H3d = sum(mesh.vn .* [lapX, lapY, lapZ], 2) * 0.5 ;
         
         %% Test that this measurement of H is correct using sphere
         % [mesh] = sphericalTriangulation('numIterations', 5) ;
@@ -280,15 +288,15 @@ for tp = tp2do
         % [~, F2V] = meshAveragingOperators(mesh.f, mesh.v) ;
         if strcmp(averagingStyle, 'Lagrangian')
             if doubleResolution
-                dec_tp = load(sprintf(QS.fullFileBase.decAvg2x, tp)) ;
+                dec_tp = load(sprintfm(QS.fullFileBase.decAvg2x, tp)) ;
             else
-                dec_tp = load(sprintf(QS.fullFileBase.decAvg, tp)) ;
+                dec_tp = load(sprintfm(QS.fullFileBase.decAvg, tp)) ;
             end
         else
             if doubleResolution
-                dec_tp = load(sprintf(QS.fullFileBase.decSimAvg2x, tp)) ;
+                dec_tp = load(sprintfm(QS.fullFileBase.decSimAvg2x, tp)) ;
             else
-                dec_tp = load(sprintf(QS.fullFileBase.decSimAvg, tp)) ;
+                dec_tp = load(sprintfm(QS.fullFileBase.decSimAvg, tp)) ;
             end
         end
         
@@ -350,7 +358,7 @@ for tp = tp2do
         % pause(1);
         % hold on;
         % quiver3(mesh.v(:, 1), mesh.v(:, 2), mesh.v(:, 3), vv(:, 1), vv(:, 2), vv(:, 3))
-        % tmp2 = load(sprintf(QS.fullFileBase.spcutMeshSmRSC, tp+1)) ;
+        % tmp2 = load(sprintfm(QS.fullFileBase.spcutMeshSmRSC, tp+1)) ;
         % m2 = tmp2.spcutMeshSmRSC ;
         % trisurf(m2.f, m2.v(:, 1), m2.v(:, 2), m2.v(:, 3), ...
         %     vv(:, 2), 'edgecolor', 'k', 'facealpha', 0.6)

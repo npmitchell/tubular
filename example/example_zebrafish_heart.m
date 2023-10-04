@@ -298,7 +298,7 @@ end
 for t = xp.fileMeta.timePoints
     
     prepFileName = fullfile( projectDir, sprintf( [ 'prepFiles/' ...
-        masterSettings.fn ], t ) );
+        masterSettings.fn '.h5'], t ) );
     
     if ~exist(prepFileName, 'file')
         
@@ -320,7 +320,7 @@ clear prepFileName
 %% Batch Creation of Ilastik Prediction ===================================
 % At this point the user should switch to Ilastik and train to create a
 % pixel probability map using the sub-sampled prep files.  Don't work too
-% hard here! You dont have to train on every single time point.  Training
+% hard here! You don't have to train on every single time point.  Training
 % can be performed on a subset of the time series (or even on a single time
 % point if you're bold) and used to batch process the rest!
 %
@@ -557,7 +557,8 @@ for t = xp.fileMeta.timePoints()
     end
     
     if ~exist(meshFileName, 'file')
-        
+        disp('Mesh does not exist on disk. generating mesh from pt cloud')
+
         %------------------------------------------------------------------
         % Generate Mesh From Point Cloud
         %------------------------------------------------------------------
@@ -881,7 +882,7 @@ if ~exist('TubULAR_Results', 'dir')
         
         outputMeshFile = fullfile( projectDir, ...
             sprintf(['TubULAR_Results/'...
-            detectOptions.ofn_smoothply '%06d.ply'], t) );
+            detectOptions.ofn_smoothply '%03d.ply'], t) );
         
         if ~exist(outputMeshFile, 'file') || overwrite        
 
@@ -1431,9 +1432,12 @@ options.plot_dzdp = false ;
 tubi.measurePathlineStrainRate(options)
 
 %% Measure divergence and out-of-plane deformation along pathlines
-tubi.measurePathlineMetricKinematics()
+options = struct() ;
+options.zwidth = 3 ;
+options.nmodes = 5 ;
+tubi.measurePathlineMetricKinematics(options)
 
-% Pathline strain rate plots
+%% Pathline strain rate plots
 options = struct() ;
 options.climit = 0.05 ;
 options.climitWide = 1.0 ;

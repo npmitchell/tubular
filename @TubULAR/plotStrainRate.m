@@ -1,14 +1,14 @@
-function plotStrainRate(QS, options)
-%plotStrainRateTimePoint(QS, tp, options)
+function plotStrainRate(tubi, options)
+%plotStrainRateTimePoint(tubi, tp, options)
 %   Plot the traceful and traceless components of the strain rate tensor
 %   defined on each face, both for individual timepoints, and 
 %   also over time as kymographs
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % tp : int 
-%   timepoint in units of (1/QS.timeInterval) * QS.timeUnits
+%   timepoint in units of (1/tubi.timeInterval) * tubi.timeUnits
 % options: struct with fields
 %   
 % Returns
@@ -23,10 +23,10 @@ clim_trace = 0.05 ;
 clim_deviatoric = 0.05 ;
 averagingStyle = 'Lagrangian' ;
 skipTimePoint = false ;
-lambda = QS.smoothing.lambda ;
-lambda_mesh = QS.smoothing.lambda_mesh ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 
 %% Unpack required params
 % Sampling resolution: whether to use a double-density mesh
@@ -80,18 +80,18 @@ else
 end
 
 %% Unpack QS
-t0 = QS.t0set() ;
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
-srlambdaDir = fullfile(QS.dir.strainRate.root, ...
+t0 = tubi.t0set() ;
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
+srlambdaDir = fullfile(tubi.dir.strainRate.root, ...
     [strrep(sprintf('lambda%0.3f_lmesh%0.3f', ...
     lambda, lambda_mesh), '.', 'p'), ...
     sprintf('_modes%02dw%02d', nmodes, zwidth)]) ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
-nU = QS.nU ;
-nV = QS.nV ;
-fons = t0 - QS.xp.fileMeta.timePoints(1) ;
+nU = tubi.nU ;
+nV = tubi.nV ;
+fons = t0 - tubi.xp.fileMeta.timePoints(1) ;
 
 %% Prepare directories for images
 dirs2make = { srlambdaDir, ...
@@ -121,12 +121,12 @@ pm256 = phasemap(256) ;
 
 %% Collate data from each quarter of the gut
 if strcmp(averagingStyle, 'simple')
-    sKDir = fullfile(QS.dir.strainRateSimple, ...
+    sKDir = fullfile(tubi.dir.strainRateSimple, ...
         [strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f'], ...
         lambda, lambda_mesh), '.', 'p'), ...
         sprintf('_modes%02dw%02d', nmodes, zwidth)]);
 else
-    sKDir = fullfile(QS.dir.strainRate.root, ...
+    sKDir = fullfile(tubi.dir.strainRate.root, ...
         [strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f'], ...
         lambda, lambda_mesh), '.', 'p'), ...
         sprintf('_modes%02dw%02d', nmodes, zwidth)]);
@@ -149,12 +149,12 @@ if files_exist
     load(dKymoFn, 'tr_dM', 'dv_dM', 'th_dM')
     load(vKymoFn, 'tr_vM', 'dv_vM', 'th_vM')
 else
-    for tp = QS.xp.fileMeta.timePoints(1:end-1)
-        tidx = QS.xp.tIdx(tp) ;
+    for tp = tubi.xp.fileMeta.timePoints(1:end-1)
+        tidx = tubi.xp.tIdx(tp) ;
 
         %% Define metric strain filename        
         estrainFn = fullfile(srlambdaDir, 'measurements', ...
-            sprintf(QS.fileBase.strainRate, tp)) ;
+            sprintf(tubi.fileBase.strainRate, tp)) ;
         disp(['t=' num2str(tp) ': Loading strainrate results from disk: ' estrainFn])
         load(estrainFn, 'strainrate', 'tre', 'dev', 'theta', ...
             'tre_ap', 'tre_l', 'tre_r', 'tre_d', 'tre_v', ...
@@ -167,7 +167,7 @@ else
             tpOpts.lambda = lambda ;
             tpOpts.lambda_mesh = lambda_mesh ;
             tpOpts.overwrite = overwrite ;
-            QS.plotStrainRateTimePoint(tp, tpOpts)
+            tubi.plotStrainRateTimePoint(tp, tpOpts)
         end
 
         %% Store in matrices    
@@ -221,7 +221,7 @@ vDir = fullfile(sKDir, 'avgVentral') ;
 outdirs = {dvDir, lDir, rDir, dDir, vDir} ;
 titleadd = {': circumferentially averaged', ...
     ': left side', ': right side', ': dorsal side', ': ventral side'} ;
-tps = QS.xp.fileMeta.timePoints(1:end-1) - t0 ;
+tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0 ;
 titles = {'dilation, $\frac{1}{2}\textrm{Tr}[g^{-1}\dot{\varepsilon}]$ ',...
           'shear, $||\varepsilon-\frac{1}{2}\mathrm{Tr}\left[\mathbf{g}^{-1}\dot{\varepsilon}\right)\bf{g}||$'} ;  
 for qq = 1:length(outdirs)
@@ -248,10 +248,10 @@ for qq = 1:length(outdirs)
         
         % Titles 
         title([titles{1}, titleadd{qq}], 'Interpreter', 'Latex')
-        ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+        ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
         xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
 
-        tidx0 = QS.xp.tIdx(t0) ;
+        tidx0 = tubi.xp.tIdx(t0) ;
         cb = colorbar() ;
         ylabel(cb, label, 'Interpreter', 'Latex')  
         
@@ -309,7 +309,7 @@ for qq = 1:length(outdirs)
 
         % title and save
         title([titles{2}, titleadd{qq}], 'Interpreter', 'Latex')
-        ylabel(['time [' QS.timeUnits ']'], 'Interpreter', 'Latex')
+        ylabel(['time [' tubi.timeUnits ']'], 'Interpreter', 'Latex')
         xlabel('ap position [$\zeta/L$]', 'Interpreter', 'Latex')
         ylabel(cb, label, 'Interpreter', 'Latex')  
         fn = fullfile(odir, [ name '.png']) ;

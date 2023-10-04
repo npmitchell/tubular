@@ -290,8 +290,9 @@ disp('done')
 
 %% PLOT TexturePatch IMAGES OF DATA ON MESH SURFACES
 options = struct() ;
-options.timePoints = [15, 20] ;
+options.timePoints = [7:9, 11:14, 16:20] ;
 tubi.plotSeriesOnSurfaceTexturePatch(options)
+disp('done')
 
 %% EXTRACT CENTERLINES
 % Note: these just need to be 'reasonable' centerlines for topological
