@@ -40,7 +40,7 @@ function IV = getCurrentData(tubi, adjustIV, varargin)
             % use bioformats if posssible
             hasbf = exist('bioformats_package.jar','file') ||...
                     exist('loci_tools.jar','file');
-            if hasbf
+            if (hasbf && tubi.useBioformats)
                 disp('loadStackBioformats() executing...')
                 data = loadStackBioformats(tubi, varargin{:});
             else
@@ -49,7 +49,7 @@ function IV = getCurrentData(tubi, adjustIV, varargin)
             IV = rescaleToUnitAspect(data, tubi.xp.fileMeta.stackResolution);
         else
             disp('Treating xp as an Experiment class instance')
-            tubi.xp.loadTime(tubi.currentTime);
+            tubi.xp.loadTime(tubi.currentTime, tubi.useBioformats);
             tubi.xp.rescaleStackToUnitAspect();
             IV = tubi.xp.stack.image.apply() ;
         end
@@ -114,45 +114,46 @@ function stacks = rescaleToUnitAspect(data, resolution)
         stacks{channel} = squeeze(data(:,:,:,channel)) ;
     end
     resolution = resolution([2,1,3]);
-    [~, ii]     = sort(resolution);
+    % [~, ii]     = sort(resolution); % Only necessar for old method
     
     imSize = size(stacks{1});
     newImSize = ceil( imSize .* (resolution ./ min(resolution)) );
-
+    
     fprintf('\n');
     for i = 1:numel(stacks)
-
+        
         fprintf(['Re-scaling channel ' num2str(i) '\n']);
-
-        % NEW WAY: Resize stack simultaneously --------------------
-                % Is 'imresize3' in a special toolbox?
-                
-                curr = stacks{i};
-                scaled = imresize3(curr, newImSize);
-                stacks{i} = scaled;
-                
-                % OLD WAY: Resize stack slice-by-slice --------------------
-                % Assumes isotropic resolution in X and Y
-                
-                % curr = stacks{i}; % Original stack for current channel
-                % curr = permute(curr,ii); % Stack re-ordered high-to-low by resolution
-                % newnslices = round(size(curr,3)*this.aspect); % New number of slices
-                % scaled = zeros([size(curr,1) size(curr,2) newnslices], class(curr));
-                % for j=1:size(curr,1)
-                %     % debugMsg(3, '.');
-                %     % if rem(j,80) == 0
-                %     %     debugMsg(3, '\n');
-                %     %     debugMsg(2, '.') ;
-                %     % end
-                %     scaled(j,:,:) = imresize(squeeze(curr(j,:,:)),...
-                %                                 [size(curr,2) newnslices]);
-                % end
-                % % debugMsg(3,'\n');
-                %
-                % % permute back to original axis order
-                % scaled = ipermute(scaled,ii);
-                % stacks{i} = scaled;
-                
+        
+        % NEW WAY: Resize stack simultaneously ----------------------------
+        % Is 'imresize3' in a special toolbox? Only other reason not to do
+        % this would be potential memory overflows for massive data sets...
+        
+        curr = stacks{i};
+        scaled = imresize3(curr, newImSize);
+        stacks{i} = scaled;
+        
+        % OLD WAY: Resize stack slice-by-slice ----------------------------
+        % Assumes isotropic resolution in X and Y
+        
+        % curr = stacks{i}; % Original stack for current channel
+        % curr = permute(curr,ii); % Stack re-ordered high-to-low by resolution
+        % newnslices = round(size(curr,3)*this.aspect); % New number of slices
+        % scaled = zeros([size(curr,1) size(curr,2) newnslices], class(curr));
+        % for j=1:size(curr,1)
+        %     % debugMsg(3, '.');
+        %     % if rem(j,80) == 0
+        %     %     debugMsg(3, '\n');
+        %     %     debugMsg(2, '.') ;
+        %     % end
+        %     scaled(j,:,:) = imresize(squeeze(curr(j,:,:)),...
+        %                                 [size(curr,2) newnslices]);
+        % end
+        % % debugMsg(3,'\n');
+        %
+        % % permute back to original axis order
+        % scaled = ipermute(scaled,ii);
+        % stacks{i} = scaled;
+        
     end
     
 end
@@ -162,14 +163,14 @@ function data = loadStackBioformats(tubi, varargin)
     % Load stack from disc into project.
     %
     % loadStack()
-    % loadStack(justMeta)
+    % loadStack(justMeta, useBioformats)
     %
     % Based on the metadata, load the stack at the current time
     % point using bioformats library. 
     % 
     % see also getCurrentData
 
-    if nargin==2
+    if nargin == 2
         justMeta = varargin{1};
     else
         justMeta = 0;
@@ -300,70 +301,94 @@ function data = loadStackNoBioformats(tubi, varargin)
     % Only used if tubi.xp is not ImSAnE Experiment class instance
     %
     %
+    
+    if (nargin >= 2), justMeta = varargin{1}; else, justMeta = false; end
+    
     fileName = sprintf(tubi.xp.fileMeta.filenameFormat, tubi.currentTime);
     fullFileName = fullfile(tubi.xp.fileMeta.dataDir, fileName);
-    tmp = imfinfo(fullFileName);
-    nImages = numel(tmp);
-    tmp = tmp(1);
-    isRGB = strcmp(tmp.ColorType,'truecolor');
+    imInfo = imfinfo(fullFileName);
+    nImages = numel(imInfo);
+    isRGB = strcmp(imInfo(1).ColorType, 'truecolor');
 
-    if nargin==2
+    if (justMeta || ~isfield(tubi.xp.fileMeta, 'stackSize'))
 
-        xSize = tmp.Width;
-        ySize = tmp.Height;
+        xSize = imInfo(1).Width;
+        ySize = imInfo(1).Height;
         if isRGB
             zSize = nImages;
-            assert(this.fileMeta.nChannels==3,...
+            assert(tubi.xp.fileMeta.nChannels == 3,...
                 'your data is RGB, fileMeta.nChannels should equal 3');
         else
-            zSize = nImages / this.fileMeta.nChannels;
+            zSize = nImages / tubi.xp.fileMeta.nChannels;
         end
-        this.fileMeta.stackSize = [xSize ySize zSize];
+        
+        tubi.xp.fileMeta.stackSize = [xSize ySize zSize];
 
-        return
+        if justMeta, return; end
+        
     end
-
+    
+    xSize = tubi.xp.fileMeta.stackSize(1);
+    ySize = tubi.xp.fileMeta.stackSize(2);
+    zSize = tubi.xp.fileMeta.stackSize(3);
     nChannels = tubi.xp.fileMeta.nChannels;
-
-    if strcmp(tmp.ColorType,'grayscale')
+    
+    if strcmp(imInfo(1).ColorType,'grayscale')
         assert(nImages == zSize*nChannels,...
-             'fileMeta.nChannels is not consistent with data');
+            'fileMeta.nChannels is not consistent with data');
     elseif isRGB
         assert(nImages == zSize,...
-             'fileMeta.nChannels is not consistent with data');
+            'fileMeta.nChannels is not consistent with data');
     end
-
+    
     % number of channels used
     nChannelsUsed = numel(tubi.xp.expMeta.channelsUsed);
-
+    
     % read the data
     ticID = tic;
-    for i = 1:nImages
-        % load image plane
-        im = imread(fullFileName, i);
+    data = zeros([ySize xSize zSize nChannelsUsed], 'uint16');
 
-        % if first image, preallocate data array
-        if i == 1
-            ySize = size(im, 1) ;
-            xSize = size(im, 2) ;
-            zSize = nImages ;
-            data = zeros([ySize xSize zSize nChannelsUsed], 'uint16');
+    % Loads all planes/channels sequentially using 'imread'
+    if isRGB
+        
+        for i = 1:nImages
+            
+            im = imread(fullFileName, i, 'Info', imInfo);
+            data(:, :, i, :) = im(:, :, tubi.xp.expMeta.channelsUsed);
+            if (rem(i,80) == 0),  disp('...'); end
+            
         end
-
-        if isRGB
-            data(:,:, i, :) = im(:,:,tubi.xp.expMeta.channelsUsed);	
-        else
-            zidx = 1 + floor((i-1) / nChannels);
-            cidx = 1 + mod(i-1, nChannels);
-            if sum(tubi.xp.expMeta.channelsUsed == cidx)
-                data(:,:, zidx, tubi.xp.expMeta.channelsUsed == cidx) = im;
-            end
+        
+    else
+        
+        % TIFF files are stored in an interleaved format (i.e, (:,:,1,1),
+        % (:,:,1,2), ..., (:,:,1,c), (:,:,2,1), ..., (:,:,2,c), ...). The
+        % legacy code also assumes this independently of image format. We
+        % can expand this out so as not to load unnecessary frames.
+        
+        % The interleaved indexing of the full stored image stack
+        iidx = 1:nImages;
+        zidx = repmat(1:zSize, nChannels, 1); zidx = zidx(:);
+        cidx = repmat((1:nChannels).', 1, zSize); cidx = cidx(:);
+        
+        % Re-format color index to reflect only the ordered, used
+        % channels.
+        [~, cidx] = ismember(cidx, tubi.xp.expMeta.channelsUsed);
+        rmIDx = cidx == 0;
+        iidx(rmIDx) = []; zidx(rmIDx) = []; cidx(rmIDx) = [];
+        
+        for i = 1:numel(iidx)
+            data(:, :, zidx(i), cidx(i)) = ...
+                imread(fullFileName, iidx(i), 'Info', imInfo);
+            if (rem(i,80) == 0),  disp('...'); end
         end
-
-        % progress indicator
-        % debugMsg(1,'.');
-        % if rem(i,80) == 0
-        %     debugMsg(1,'\n');
-        % end
+        
     end
+    
+    fprintf('\n');
+
+    dt = toc(ticID);
+    fprintf(['dt = ' num2str(dt) '\n']);
+    fprintf('tubular.getCurrentData: loadStack() finished loading data volume')
+    
 end

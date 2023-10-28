@@ -15,6 +15,9 @@ function initializeTubULAR(tubi, xp, opts)
 %   flipy : bool
 %       Set to true if lab coordinates are mirrored along some axis wrt to 
 %       data coords.
+%   useBioformats : bool
+%       Set to true if data should be loaded using the Bioformats importer,
+%       if possible
 %   meshDir : str
 %       path to where meshes are stored and output will be placed
 %   timeUnits : str
@@ -109,6 +112,11 @@ if isfield(opts, 'ilastikOutputAxisOrder')
 end
 if isfield(opts, 'makeDirs')
     makeDirs = opts.makeDirs;
+end
+if isfield(opts, 'useBioformats')
+    tubi.useBioformats = opts.useBioformats;
+else
+    tubi.useBioformats = true;
 end
     
 % Assign which pullback coordsys is used for velocimetry

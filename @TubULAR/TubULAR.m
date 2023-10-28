@@ -113,6 +113,7 @@ classdef TubULAR < handle
         fileName                % fileName struct with fields such as rot, trans, etc where measurements/parameters are stored on disk
         fileBase                % fileNames to be populated by timestamp ('...%06d...mat')
         fullFileBase            % full path of filenames (like fullfile(tubi.dir.X, tubi.fileBase.X))
+        useBioformats           % Whether to use Bioformats loader, if possible
         ssfactor                % subsampling factor for probabilities 
         APDV = struct(...               % specification of transformation from data frame to aligned APDV frame, as struct with fields
             'resolution', [], ...       % resolution of data in spaceUnits / pixel
