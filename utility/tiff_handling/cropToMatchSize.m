@@ -28,7 +28,8 @@ function dat2crop = cropToMatchSize(dat2crop, dataRef)
 
         % crop or pad dim 2
         aa = size(dat2crop, 2) ;
-        bb = size(data, 2) ;
+        %bb = size(data, 2) ;
+        bb = size(dataRef, 2) ;
         if aa > bb
             dat2crop = dat2crop(:, 1:bb, :) ;
         elseif aa < bb
@@ -37,7 +38,8 @@ function dat2crop = cropToMatchSize(dat2crop, dataRef)
 
         % crop or pad dim 3
         aa = size(dat2crop, 3) ;
-        bb = size(data, 3) ;
+        %bb = size(data, 3) ;
+        bb = size(dataRef, 3) ;
         if aa > bb
             dat2crop = dat2crop(:, :, 1:bb) ;
         elseif aa < bb

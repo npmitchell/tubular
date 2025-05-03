@@ -97,6 +97,8 @@ classdef TubULAR < handle
     %
     % 
     properties
+        axesPixels
+        axes_pixels_list
         xp                      % struct with fields or ImSAnE experiment class instance 
                                 %   expMeta : struct with fields
                                 %   fileMeta : struct with fields
@@ -1324,6 +1326,11 @@ classdef TubULAR < handle
             if strcmpi(coordSys, 'spsmrs') 
                 mesh = tubi.getCurrentSPCutMeshSmRS() ;
                 mesh.u(:, 1) = mesh.u(:, 1) * umax / max(mesh.u(:, 1)) ;
+            elseif strcmpi(coordSys, 'sprs')
+                mesh = tubi.getCurrentSPCutMesh();
+                mesh.u=mesh.sphi;
+                mesh.u(:, 1) = mesh.u(:, 1) * 1 / max(mesh.u(:, 1));
+                mesh.v = tubi.xyz2APDV(mesh.v) ;
             else
                 error('handle coordSys here')
             end
@@ -2153,7 +2160,8 @@ classdef TubULAR < handle
                 if isempty(t0)
                     t0 = tubi.t0 ;
                 end
-                
+                disp(['t0 is ' num2str(t0)])
+                disp(['pathline t0 is ' num2str(tubi.pathlines.t0)])
                 if tubi.pathlines.t0 ~= t0
                     % The timestamp at which pathlines form grid that is 
                     % requested is different than the one that is loaded,
@@ -2741,6 +2749,8 @@ classdef TubULAR < handle
         end
         
     end
+
+    
     
     methods (Static)
         function uv = XY2uv(im, XY, doubleCovered, umax, vmax)
@@ -3004,6 +3014,64 @@ classdef TubULAR < handle
             yy(yy < minY) = yy(yy < minY) + Ly ;
         end
         
+        function im2 = extendImage2DoubleCover(im, histeq) 
+            % Transform a single cover into a double-covered image
+            %
+            % Parameters
+            % ----------
+            % im : NxM 2d or RGB image 
+            %   the image to double cover
+            % histeq : optional bool, default=false
+            %   Apply adaptive histogram equilization
+            % NPM 2025
+
+            if nargin < 2
+                histeq = false ;
+            end
+            halfsize = round(0.5 * size(im, 1)) ;
+    
+            % im2 is as follows:
+            % [ im(end-halfsize) ]
+            % [     ...          ]
+            % [    im(end)       ]
+            % [     im(1)        ]
+            % [     ...          ]
+            % [    im(end)       ]
+            % [     im(1)        ]
+            % [     ...          ]
+            % [  im(halfsize)    ]
+            
+            is2d = length(size(im)) == 2 || ...
+                (length(size(im))==3 && size(im, 3)==1) ;
+            
+            if is2d
+                im2 = uint8(zeros(size(im, 1) + 2 * halfsize, size(im, 2))) ;
+                im2(1:halfsize, :) = im(end-halfsize + 1:end, :);
+                im2(halfsize + 1:halfsize + size(im, 1), :) = im ;
+                im2(halfsize + size(im, 1) + 1:end, :) = im(1:halfsize, :);
+           
+                % Histogram equilize (LUT tiled into bits)
+                if histeq
+                    im2 = adapthisteq(im2, 'NumTiles', ...
+                        [round(options.a_fixed * options.ntiles), round(2 * options.ntiles)]) ;
+                end
+            elseif length(size(im))==3
+                im2 = uint8(zeros(size(im, 1) + 2 * halfsize, size(im, 2), 3)) ;
+                im2(1:halfsize, :, :) = im(end-halfsize + 1:end, :, :);
+                im2(halfsize + 1:halfsize + size(im, 1), :, :) = im ;
+                im2(halfsize + size(im, 1) + 1:end, :, :) = im(1:halfsize, :, :);
+           
+                % Histogram equilize (LUT tiled into bits)
+                if histeq
+                    error('check that adaptive histogram works on RGB images')
+                    im2 = adapthisteq(im2, 'NumTiles', ...
+                        [round(options.a_fixed * options.ntiles), round(2 * options.ntiles)]) ;
+                end
+            else
+                error('Could not identify image as RGB or grayscale. Is it 3d?')
+            end
+        end
+
         function XY = doubleToSingleCover(XY, Ly)
             % detect if XY is passed as a pair of grids
             if length(size(XY)) > 2 && size(XY, 2) > 2

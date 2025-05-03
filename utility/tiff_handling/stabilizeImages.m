@@ -7,7 +7,14 @@ function stabilizeImages(fileName, fileNameOut, rgbName, typename, ...
 % We compute the shifts to stabilize all volumes and write the 16
 % bit stabilized volumes to disk. We generate the stabilized MIPs and show
 % an RGB overlay of the reference timepoint data and stabilized data in
-% cyan/magenta.
+% cyan/magenta. If overwrite_mips == True, then the stabilization is
+% recomputed even if on disk.
+% If a new stabilized output tiff is generated, then a new 'mips_stab'
+% stabilized MIP image is also generated, as well as a 'stab_check' image,
+% which is an RGB overlay of the current timepoint (ex, in cyan) and the
+% reference (ex, in red). 
+%
+%
 % 
 % NOTE:
 % view1 = along third dimension, near half
@@ -109,7 +116,8 @@ elseif strcmp(timechannel, 't')
     name12 = fullfile('view12', ['mip_12_%03d_c' num2str(channel) '.tif']);
     name22 = fullfile('view22', ['mip_22_%03d_c' num2str(channel) '.tif']);
 end
-t_ref_ind = find( timePoints == t_ref ) ;
+t_ref_ind = find( timePoints == t_ref ) ; 
+%here, t_ref_ind is a static variable. We always compare the image with the first image (reference time)
 
 %% Define shifts for each time point ======================================
 disp('Defining shifts...')
@@ -412,11 +420,15 @@ for tid = tidx_todo
             end
             
             % Make a color of the current mip wrt the reference
+            %The whole time running the code, we are only
+            %working on one channel, which is determined by the parameter
+            %Options.stabChannel. 
+            %This color is not fluorescence. It is fake color instead. 
             mip_1 = squeeze(max(im,[],3));
             if strcmp(typename, 'uint8')
                 rgb = zeros(size(mip_ref,1),size(mip_ref,2),3,'uint8');
-                rgb(:,:,1)= uint8(mip_1 * im_intensity);
-                rgb(:,:,2)= uint8(mip_1 * im_intensity);
+                rgb(:,:,1)= uint8(mip_1 * im_intensity); %e.g. color 1
+                rgb(:,:,2)= uint8(mip_1 * im_intensity); %e.g. color 2
                 rgb(:,:,2)= uint8(mip_ref * im_intensity);
                 rgb(:,:,3)= uint8(mip_ref * imref_intensity);
                 rgb(rgb(:) > 255) = 255 ;
@@ -435,7 +447,7 @@ for tid = tidx_todo
             % Make record of the mip drift
             imwrite(rgb, fullfile(mipsRGBDir, rgb_outname))
 
-            % Creat MIPs (maximum intensity projections) of stabilized images
+            % Create MIPs (maximum intensity projections) of stabilized images
             disp(['creating mips for timepoint=' num2str(time)])
             imSize = size(im) ;
             mip_1 = max(im(:,:,1:round(imSize(end)/2)),[],3);

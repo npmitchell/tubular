@@ -14,14 +14,14 @@ function [vfield3d, jacobian_2d_to_3d] = ...
 % v3d : #vertices x 3 float array
 %   mesh vertices in 3d target/embedding space
 % ff : #faces x 3 int array
-%   connectivity list
+%   connectivity list --- tm0f
 % fieldfaces : length(vfield2d, 1) 
 %   face indices at which vector field is defined
 %
 % Returns
 % -------
-% vfield2d : #faces x 2 float array
-%   The vector field mapped to the 2d mesh
+% vfield3d : #faces x 3 float array
+%   The vector field mapped to the 2d mesh   
 % jacobian_2d_to_3d : length(ff) x 1 cell array
 %   A cell array containing the jacobian for each face as each element
 % 
