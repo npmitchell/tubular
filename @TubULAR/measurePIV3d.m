@@ -723,6 +723,7 @@ else
         datstruct.y0 = y0 ;
         datstruct.pt0 = pt0 ;
         datstruct.pt1 = pt1 ;
+        datstruct.v0 = v0 ;
         datstruct.v0n = v0n ;
         datstruct.v0t = v0t  ;
         datstruct.facenormals = facenormals ;
