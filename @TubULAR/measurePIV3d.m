@@ -577,8 +577,12 @@ else
         % Decompose/Resolve tangential and normal velocities ==============
         % Also obtain jacobian.
         [v0n, v0t, v0t2d, jac, facenormals, g_ab, dilation] = ...
-            resolveTangentNormalVelocities(tm0f, tm0v3d, v0_DT, fieldfaces, tm0XY) ;
-        
+            resolveTangentNormalVelocities(tm0f, tm0v3d, v0, fieldfaces, tm0XY) ;
+        if notClosedTube
+            [v0n, v0t, v0t2d, jac, facenormals, g_ab, dilation] = ...
+                resolveTangentNormalVelocities(tm0f, tm0v3d, v0_DT, fieldfaces, tm0XY) ;
+        end
+
         % Check for NaNs
         assert(~any(isnan(v0t2d(:)))) 
         
@@ -655,7 +659,10 @@ else
             bc = mean( bc, 3 );
 
             % cast as NxMx3, then as N*M x 1 arrays for vx,vy,vz separately
-            v3dgrid = reshape(v0_DT, [size(piv.x{1}, 1), size(piv.x{1}, 2), 3]) ;
+            v3dgrid = reshape(v0, [size(piv.x{1}, 1), size(piv.x{1}, 2), 3]) ;
+            if notClosedTube
+                v3dgrid = reshape(v0_DT, [size(piv.x{1}, 1), size(piv.x{1}, 2), 3]) ;
+            end
             xvel = squeeze(v3dgrid(:, :, 1)) ;
             yvel = squeeze(v3dgrid(:, :, 2)) ;
             zvel = squeeze(v3dgrid(:, :, 3)) ;
@@ -687,8 +694,11 @@ else
         end
         
         % Test validity of result
-        v0_rs =  tubi.dx2APDV(v0_DT) ;
-        if any(isnan(v0_rs(:))) || any(isnan(v0_rs(:)))
+        v0_rs =  tubi.dx2APDV(v0) ;
+        if notClosedTube
+            v0_rs =  tubi.dx2APDV(v0_DT) ;
+        end
+        if any(isnan(v0_rs(:))) 
            % disp('inpainting NaNs in pt0 & pt1')
            error('why nans?')
            % pt0 = inpaint_nans(pt0) ;
@@ -729,7 +739,10 @@ else
         assert(all(size(v3dfaces) == size(datstruct.m0f)))
         
         % rotated and scaled velocities
-        datstruct.v0_rs = tubi.dx2APDV(v0_DT) ; % note we already /dt in v0 def
+        datstruct.v0_rs = tubi.dx2APDV(v0) ; % note we already /dt in v0 def
+        if notClosedTube
+            datstruct.v0_rs = tubi.dx2APDV(v0_DT) ; % note we already /dt in v0 def
+        end
         datstruct.v0t_rs = tubi.dx2APDV(v0t) ; % note we already /dt in v0 def
         if tubi.flipy
             % Direct normals inward
