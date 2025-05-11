@@ -3083,8 +3083,18 @@ classdef TubULAR < handle
                 error('Could not identify image as RGB or grayscale. Is it 3d?')
             end
         end
+ 
+        function XY = singleToDoubleCover(XY, Ly)
+            % Transform XY coordinates from a doubleCover representation to
+            % a singleCover, which is essentially adding 0.25*Ly
+            XY(:,2) = XY(:, 2) + round(Ly*0.5) ;
+        end
 
         function XY = doubleToSingleCover(XY, Ly)
+            % Transform XY coordinates from a singleCover representation to
+            % a doubleCover, which is essentially moving Y points that are
+            % Y<Ly*0.25 and Y>Ly*0.75 inside the range [0.25*Ly, 0.75*Ly]
+
             % detect if XY is passed as a pair of grids
             if length(size(XY)) > 2 && size(XY, 2) > 2
                 % XY is a pair of position grids each as 2D arrays. Clip Y
