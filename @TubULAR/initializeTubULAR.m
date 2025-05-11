@@ -152,7 +152,6 @@ tubi.dir.rawRicciMesh = fullfile(meshDir, 'rawRicciMesh') ;
 tubi.dir.cylinderMeshClean = fullfile(tubi.dir.cylinderMesh, 'cleaned') ;
 tubi.dir.texturePatchIm = fullfile(meshDir, 'images_texturepatch') ;
 tubi.dir.mip = fullfile(meshDir, 'mips', 'dim%d_pages%04dto%04d') ;
-
 % Mips
 tubi.fileBase.mip = ['mip_' tubi.timeStampStringSpec '.tif'] ;
 tubi.fullFileBase.mip = fullfile(tubi.dir.mip, ['mip_' tubi.timeStampStringSpec '.tif']) ;
@@ -567,8 +566,9 @@ tubi.fileName.writhe = fullfile(tubi.dir.writhe, ...
 % Define any features within specialized scripts
 % features =
 featuresDir = fullfile(uvDir, 'features') ;
+tubi.dir.features = featuresDir ;
 tubi.fileName.features = struct() ;
-tubi.fileName.features.fold = fullfile(featuresDir, ...
+tubi.fileName.features.folds = fullfile(featuresDir, ...
   ['fold_locations_sphi' uvexten '_avgpts.mat']) ;
 tubi.fileName.features.features = ...
   fullfile(featuresDir, ['lobe_dynamics' uvexten '.mat']) ;
@@ -798,6 +798,8 @@ tubi.dir.LBSoverTime = fullfile(tubi.dir.mesh, 'LBSoverTime') ;
 %% Ensure directories
 if makeDirs
     dirs2make = struct2cell(tubi.dir) ;
+    disp('creating dirs: ')
+    disp(tubi.dir)
     for ii=1:length(dirs2make)
         dir2make = dirs2make{ii} ;
         if isa(dir2make, 'struct')
@@ -820,7 +822,12 @@ if makeDirs
             end
         else
             if ~exist(dir2make, 'dir')
-                mkdir(dir2make)
+                try
+                    mkdir(dir2make)
+                catch
+                    warning(['Could not make directory: ' dir2make])
+                    mkdir(dir2make)
+                end
             end
         end
     end

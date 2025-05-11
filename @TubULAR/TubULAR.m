@@ -573,27 +573,39 @@ classdef TubULAR < handle
         end
         
         function features = getFeatures(tubi, varargin)
-            %GETFEATURES(QS, varargin)
+            %GETFEATURES(tubi, varargin)
             %   Load features of the tubular object (those specied, or all of 
             %   them). 
             %   Currently, features include {'folds', 'fold_onset', 'ssmax', 
             %   'ssfold', 'rssmax', 'rssfold'}. 
             if nargin > 1
                 for qq=1:length(varargin)
-                    if isempty(eval(['QS.features.' varargin{qq}]))
+                    if isempty(eval(['tubi.features.' varargin{qq}]))
                         disp(['Loading feature: ' varargin{qq}])
                         tubi.loadFeatures(varargin{qq})
                     end
                 end
             else
-                tubi.loadFeatures() ;
+                try
+                    tubi.loadFeatures() ;
+                catch
+                    if nargin < 2 || any(strcmp(varargin, {'folds', 'fold_onset', ...
+                    'ssmax', 'ssfold', 'rssmax', 'rssfold'}))
+                        tubi.identifyFolds() ;
+                    end
+
+                end
+
             end
             if nargout > 0
                 features = tubi.features ; 
             end
         end
+
+        identifyFolds(tubi, varargin)
+
         function loadFeatures(tubi, varargin)
-            % Load all features stored in QS.features
+            % Load all features stored in tubi.features
             % 
             % Parameters
             % ----------
@@ -2665,13 +2677,13 @@ classdef TubULAR < handle
                              
         
         %% Tracking -- manual workflow
-        function tracks = manualTrackingAdd(QS, options)
+        function tracks = manualTrackingAdd(tubi, options)
             % Add to current tracks on disk
-            trackOutfn = fullfile(QS.dir.tracking, 'manualTracks.mat') ;
+            trackOutfn = fullfile(tubi.dir.tracking, 'manualTracks.mat') ;
             tracks = [] ;
-            timePoints = QS.xp.fileMeta.timePoints ;
-            imDir = fullfile(QS.dir.im_sp_sm, 'endoderm') ;
-            imFileBase = QS.fullFileBase.im_sp_sm ;
+            timePoints = tubi.xp.fileMeta.timePoints ;
+            imDir = fullfile(tubi.dir.im_sp_sm, 'endoderm') ;
+            imFileBase = tubi.fullFileBase.im_sp_sm ;
             tracks2Add = length(tracks)+1:length(tracks) + 10 ;
                 
             close all
@@ -2696,8 +2708,8 @@ classdef TubULAR < handle
             % Decide on tidx0
             if isfield(options, 'tidx0')
                 tidx0 = options.tidx0 ;
-            elseif all(timePoints == QS.xp.fileMeta.timePoints)
-                tidx0 = QS.xp.tIdx(QS.t0set()) ;
+            elseif all(timePoints == tubi.xp.fileMeta.timePoints)
+                tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
             else
                 tidx0 = 1 ;
             end
@@ -2708,14 +2720,14 @@ classdef TubULAR < handle
             disp('Review tracking results: manualCorrectTracks2D')
             %% Ensure all pairIDs are good tracks in muscle layer
             subdir = 'muscle' ;
-            imDir = fullfile(QS.dir.im_sp_sm, subdir) ;
+            imDir = fullfile(tubi.dir.im_sp_sm, subdir) ;
             timePoints = 1:60 ;
-            fileBase = fullfile(imDir, QS.fileBase.im_sp_sm) ;
-            trackOutfn = fullfile(QS.dir.tracking, 'muscle_tracks.mat') ;
+            fileBase = fullfile(imDir, tubi.fileBase.im_sp_sm) ;
+            trackOutfn = fullfile(tubi.dir.tracking, 'muscle_tracks.mat') ;
             load(trackOutfn, 'tracks') ;
             tracks2Correct = 1:length(tracks) ;
-            if all(timePoints == QS.xp.fileMeta.timePoints)
-                tidx = QS.xp.tidx(QS.t0set()) ;
+            if all(timePoints == tubi.xp.fileMeta.timePoints)
+                tidx = tubi.xp.tidx(tubi.t0set()) ;
             else
                 tidx = 1 ;
             end
@@ -2725,9 +2737,9 @@ classdef TubULAR < handle
         
         %% Visualize tracked segmentation
         % for visualizing T1 transitions
-        visualizeDemoTracks(QS, Options)
-        visualizeTracking3D(QS, Options)
-        visualizeSegmentationPatch(QS, Options)
+        visualizeDemoTracks(tubi, Options)
+        visualizeTracking3D(tubi, Options)
+        visualizeSegmentationPatch(tubi, Options)
         
         %% timepoint-specific coordinate transformations
         sf = interpolateOntoPullbackXY(tubi, XY, scalar_field, options)
