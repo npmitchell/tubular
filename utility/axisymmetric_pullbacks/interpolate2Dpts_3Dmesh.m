@@ -41,6 +41,7 @@ if isequal(size(uv), [2 1])
     uv = reshape(uv, [1, 2]) ;
 end
 
+uv = double(uv);  % uv must be a double matrix
 tr0 = triangulation(faces, v2d) ;
 [fieldfaces, baryc0] = pointLocation(tr0, uv) ; 
 
