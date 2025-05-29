@@ -1,7 +1,7 @@
 function measurePathlineStrain(tubi, options)
 % measurePathlineStrain(tubi, options)
 %   Compute strain from integrated pathlines deforming mesh vertices.
-%   Measurements are taken with respect to fixed Lagrangian frame. 
+%   Measurements are taken with respect to fixed Lagrangian frame.
 %   Plot results in 2d and/or 3d for each timepoint.
 %   
 %
@@ -13,10 +13,9 @@ function measurePathlineStrain(tubi, options)
 %   overwriteImages : bool, overwrite images of results on disk
 %   plot_comparison : bool, plot a comparison with DEC traceful dilation
 %   median_filter_strainRates : bool
-% 
+%
 % NPMitchell 2020
-
-%% Default options 
+%% Default options
 overwrite = false ;
 overwriteImages = false ;
 plot_dzdp = false ;
@@ -26,20 +25,22 @@ climitInitial = 0.05 ;
 climitRamp = 0.005 ;
 climitRatio = 1 ;
 preview = false ;
+notClosedTube = 0;
+% Note: default case -- notClosedTube = 0; this means the tube occupies the azimuth angle 0~2pi if we think of it as in cylindrical coordinate. Or say, at every phi value, you can see the tissue
+
 
 %% Parameter options
 lambda_mesh = 0.002 ;
-lambda = 0.01 ; 
+lambda = 0.01 ;
 debug = false ;
 % Sampling resolution: whether to use a double-density mesh
-samplingResolution = '1x'; 
+samplingResolution = '1x';
 averagingStyle = "Lagrangian" ;
 LagrangianFrame = 'zetaphi' ;
 % Load time offset for first fold, t0 -- default pathline t0
 tubi.t0set() ;
 t0 = tubi.t0 ;
 % By default, t0Pathline = t0 (see below)
-
 %% Unpack options & assign defaults
 if nargin < 2
     options = struct() ;
@@ -59,7 +60,6 @@ end
 if isfield(options, 'plot_dzdp')
     plot_dzdp = options.plot_dzdp ;
 end
-
 %% parameter options
 if isfield(options, 'climitInitial')
     climitInitial = options.climitInitial ;
@@ -90,6 +90,9 @@ if isfield(options, 't0Pathline')
 else
     t0Pathline = t0 ;
 end
+if isfield(options, 'notClosedTube')
+    notClosedTube = options.notClosedTube;
+end
 
 %% Determine sampling Resolution from input -- either nUxnV or (2*nU-1)x(2*nV-1)
 if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
@@ -98,14 +101,12 @@ if strcmp(samplingResolution, '1x') || strcmp(samplingResolution, 'single')
 else
     error("Could not parse samplingResolution: set to '1x'")
 end
-
 %% Unpack tubi
 tubi.getXYZLims ;
 xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 fons = tubi.t0set() - tubi.xp.fileMeta.timePoints(1) ;
-
 %% Colormap
 close all
 set(gcf, 'visible', 'off')
@@ -114,7 +115,6 @@ caxis([-1, 1])
 bwr256 = bluewhitered(256) ;
 bbr256 = blueblackred(256) ;
 close all
-
 %% load from tubi
 if doubleResolution
     nU = tubi.nU * 2 - 1 ;
@@ -123,10 +123,8 @@ else
     nU = tubi.nU ;
     nV = tubi.nV ;    
 end
-
 % We relate the normal velocities to the divergence / 2 * H.
 tps = tubi.xp.fileMeta.timePoints(1:end-1) - t0;
-
 % Unit definitions for axis labels
 unitstr = [ '[1/' tubi.timeUnits ']' ];
 vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
@@ -136,27 +134,22 @@ vunitstr = [ '[' tubi.spaceUnits '/' tubi.timeUnits ']' ];
 %% Load pathlines to build metric from advected mesh faces
 tubi.loadPullbackPathlines(t0Pathline, 'vertexPathlines')
 vP = tubi.pathlines.vertices ;
-
 % Output directory is inside pathline dir
 outdir = sprintf(tubi.dir.pathlines.strain, t0) ;
 if ~exist(outdir, 'dir')
     mkdir(outdir)
 end
-
-% Load Lx, Ly by loadingPIV. 
+% Load Lx, Ly by loadingPIV.
 tubi.loadPIV()
 Xpiv = tubi.piv.raw.x ;
 Ypiv = tubi.piv.raw.y ;
-
 % Also need velocities to advect mesh
 % tubi.loadVelocityAverage('vv')
 % vPIV = tubi.velocityAverage.vv ;
-
 % Discern if piv measurements are done on a double covering or the meshes
 if strcmp(tubi.piv.imCoords(end), 'e')
     doubleCovered = true ;
 end
-
 %% INTEGRATE STRAINRATE INTO STRAIN ON PATHLINES
 % Compute or load all timepoints
 pb = tubi.getPullbackPathlines([], 'vertexPathlines3d') ;
@@ -167,19 +160,17 @@ vY3rs = pb.vertices3d.vYrs ;
 vZ3rs = pb.vertices3d.vZrs ;
 t0 = pb.vertices3d.t0 ;
 tIdx0 = pb.vertices3d.tIdx0 ;
-
 if ~all(isfinite(vX3rs(:)))
     error('Some vertex 3D positions are infinite. Check interpolation')
 end
-
 % Define reference mesh
 refMeshFn = fullfile(sprintfm(tubi.dir.pathlines.data, t0Pathline), ...
         'refMesh.mat') ;
 if exist(refMeshFn, 'file') || overwrite
     load(refMeshFn, 'refMesh')
 else
-    refMesh = struct() ; 
-    vX = vertexPathlines.vX(tIdx0, :) ; 
+    refMesh = struct() ;
+    vX = vertexPathlines.vX(tIdx0, :) ;
     vY = vertexPathlines.vY(tIdx0, :) ;
     vXY = [vX(:), vY(:)] ;
     Lx = vertexPathlines.Lx ;
@@ -189,21 +180,18 @@ else
     x0 = vX3rs(tIdx0, :) ;
     y0 = vY3rs(tIdx0, :) ;
     z0 = vZ3rs(tIdx0, :) ;
-    refMesh.v = [ x0(:), y0(:), z0(:) ] ; 
+    refMesh.v = [ x0(:), y0(:), z0(:) ] ;
     pathPairs = [ (1:nU)', (nV-1)*nU + (1:nU)' ] ;
     refMesh.pathPairs = pathPairs ;
     refMesh.nU = tubi.nU ;
     refMesh.nV = tubi.nV ;
     assert(numel(refMesh.u(:, 1)) == tubi.nU * tubi.nV)
-
     % Save reference Mesh as lagrangian frame
     save(refMeshFn, 'refMesh') ;
 end
-
 % Set the rotated scaled vertices as field "v" for
 % inducedStrainPeriodicMesh() call
 refMesh.v = refMesh.vrs ;
-
 ntps = length(tubi.xp.fileMeta.timePoints(1:end-1)) ;
 tidx2do = 1:40:ntps ;
 tidx0 = tubi.xp.tIdx(tubi.t0set()) ;
@@ -217,10 +205,9 @@ for tidx = tidx2do
     % ffn = sprintfm(tubi.fullFileBase.pathline.fundForms, t0, tp) ;
     
     ffn = sprintfm(tubi.fullFileBase.pathlines.strain, t0, tp) ;
-    if ~exist(ffn, 'file') || overwrite 
+    if ~exist(ffn, 'file') || overwrite
         disp(['t = ' num2str(tp)])
         tubi.setTime(tp) ;
-
         % Load Lagrangian advected vertices as mesh for this timepoint
         % load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp), 'spcutMeshSmRS') ;
         xx = vX3rs(tidx, :) ;
@@ -265,7 +252,7 @@ for tidx = tidx2do
         theta_pb = outputStruct.theta_pb ;
         faceIDs = outputStruct.faceIDs ;
         
-        % Ratio of initial to 
+        % Ratio of initial to
         fractionalAreaChange = (doublearea(mesh.v, mesh.f) - ...
             doublearea(refMesh.v, refMesh.f)) ./ doublearea(refMesh.v, refMesh.f) ;
         
@@ -275,10 +262,9 @@ for tidx = tidx2do
         e12 = squeeze(fundForms.g1(faceIDs, 1, 2)-fundForms.g0(faceIDs, 1, 2)) ;
         e21 = squeeze(fundForms.g1(faceIDs, 2, 1)-fundForms.g0(faceIDs, 2, 1)) ;
         e22 = squeeze(fundForms.g1(faceIDs, 2, 2)-fundForms.g0(faceIDs, 2, 2)) ;
-
         % Smooth all four components with laplacian
         [V2F, F2V] = meshAveragingOperators(mesh.f, mesh.v) ;
-        
+
         % Force no imaginary values in V2F and F2V
         F2V = real(F2V) ;
         smoothing_options = struct('widthX', 3, 'nmodes', 5) ;
@@ -287,6 +273,20 @@ for tidx = tidx2do
         e21 = modeFilterQuasi1D(reshape(F2V * e21, [nU, nV]), smoothing_options) ;
         e22 = modeFilterQuasi1D(reshape(F2V * e22, [nU, nV]), smoothing_options) ;
         dA0 = modeFilterQuasi1D(reshape(F2V * fractionalAreaChange, [nU, nV]), smoothing_options) ;
+        if notClosedTube
+            smoothing_options = struct('widthX', 3, 'nmodes', 0) ;
+            e11 = F2V * e11; e12 = F2V * e12; e21 = F2V * e21; e22 = F2V * e22;
+            dA0 = F2V * fractionalAreaChange;
+        else
+            F2V = real(F2V) ;
+            smoothing_options = struct('widthX', 3, 'nmodes', 5) ;
+            e11 = modeFilterQuasi1D(reshape(F2V * e11, [nU, nV]), smoothing_options) ;
+            e12 = modeFilterQuasi1D(reshape(F2V * e12, [nU, nV]), smoothing_options) ;
+            e21 = modeFilterQuasi1D(reshape(F2V * e21, [nU, nV]), smoothing_options) ;
+            e22 = modeFilterQuasi1D(reshape(F2V * e22, [nU, nV]), smoothing_options) ;
+            dA0 = modeFilterQuasi1D(reshape(F2V * fractionalAreaChange, [nU, nV]), smoothing_options) ;
+        end
+
         % e11 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e11,1000) ;
         % e12 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e12,1000) ;
         % e21 = laplacian_smooth(mesh.v,mesh.f,'cotan',[], lambda,'explicit',F2V*e21,1000) ;
@@ -320,8 +320,7 @@ for tidx = tidx2do
         strain_sm(:, 1, 2) = V2F*e12(:) ;
         strain_sm(:, 2, 1) = V2F*e21(:) ;
         strain_sm(:, 2, 2) = V2F*e22(:) ;
-        fractionalAreaChange_sm = V2F*fractionalAreaChange_sm_vertices(:) ; 
-
+        fractionalAreaChange_sm = V2F*fractionalAreaChange_sm_vertices(:) ;
         tre_sm = zeros(numel(faceIDs), 1) ;
         dev_sm = zeros(numel(faceIDs), 1) ;
         theta_sm = zeros(numel(faceIDs), 1) ;
@@ -373,26 +372,20 @@ for tidx = tidx2do
     else
         disp(['Strain + fundForms for t = ' num2str(tp) ' already on disk'])
     end
-
     %% Plot strain for this timepoint
     options.overwrite = overwriteImages ;
     tubi.plotPathlineStrainTimePoint(tp, options)
 end
-
 disp('done with integrated pathline strain calculations')
-
-
 %% Combine DV-averaged gg and bb into kymographs
 apKymoFn = fullfile(outdir, 'apKymographLagrangianMetric.mat') ;
 lKymoFn = fullfile(outdir, 'leftKymographLagrangianMetric.mat') ;
 rKymoFn = fullfile(outdir, 'rightKymographLagrangianMetric.mat') ;
 dKymoFn = fullfile(outdir, 'dorsalKymographLagrangianMetric.mat') ;
 vKymoFn = fullfile(outdir, 'ventralKymographLagrangianMetric.mat') ;
-
 % Create mesh averaging operators
 glueRefMesh = glueCylinderCutMeshSeam(refMesh) ;
 [~, F2V] = meshAveragingOperators(glueRefMesh.f, glueRefMesh.v) ;
-
 files_exist = exist(apKymoFn, 'file') && ...
     exist(lKymoFn, 'file') && exist(rKymoFn, 'file') && ...
     exist(dKymoFn, 'file') && exist(vKymoFn, 'file') ;
@@ -400,10 +393,8 @@ if ~files_exist || overwrite || true
     disp('Compiling kymograph data to save to disk...')
     for tp = tubi.xp.fileMeta.timePoints(1:end-1)
         tidx = tubi.xp.tIdx(tp) ;
-
         % Check for timepoint measurement on disk
         srfn = fullfile(outdir, sprintf('strain_%06d.mat', tp))   ;
-
         % Load timeseries measurements
         load(srfn, 'tre', 'dev', 'theta', 'faceIDs') ;
         tre = F2V * tre(faceIDs) ;
@@ -461,22 +452,18 @@ if ~files_exist || overwrite || true
         str_apM(tidx, :) = tr_ap ;
         sdv_apM(tidx, :) = dv_ap ;
         sth_apM(tidx, :) = th_ap ;
-
         % left quarter
         str_lM(tidx, :) = tr_l ;
         sdv_lM(tidx, :) = dv_l ;
         sth_lM(tidx, :) = th_l ;
-
         % right quarter
         str_rM(tidx, :) = tr_r ;
         sdv_rM(tidx, :) = dv_r ;
         sth_rM(tidx, :) = th_r ;
-
         % dorsal quarter
         str_dM(tidx, :) = tr_d ;
         sdv_dM(tidx, :) = dv_d ;
         sth_dM(tidx, :) = th_d ;
-
         % ventral quarter
         str_vM(tidx, :) = tr_v ;
         sdv_vM(tidx, :) = dv_v ;
@@ -499,4 +486,3 @@ if ~files_exist || overwrite || true
 else
     disp('strain kymograph data already on disk')    
 end
-

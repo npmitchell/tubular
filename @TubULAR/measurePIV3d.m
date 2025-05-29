@@ -72,6 +72,7 @@ save_ims = true ;
 save_piv3d_im = false ;
 vnscale = 2 ;
 vtscale = 5 ;
+notClosedTube = 0; 
 
 if nargin < 2
     options = struct() ;
@@ -110,6 +111,9 @@ if isfield(options, 'vtscale')
 end
 if isfield(options, 'vnscale')
     vnscale = options.vnscale ;
+end
+if isfield(options, 'notClosedTube')
+    notClosedTube = options.notClosedTube; 
 end
 
 %% Unpack tubi
@@ -175,6 +179,11 @@ else
             im1 = imread(sprintfm(tubi.fullFileBase.im_sp_sme, timePoints(ii+1))) ;
             
             doubleCovered = true ;
+        % elseif strcmp(pivimCoords, 'uv')
+        %     im0 = imread(sprintfm(tubi.fullFileBase.im_uv, tp)) ;
+        %     im1 = imread(sprintfm(tubi.fullFileBase.im_uv, timePoints(ii+1))) ;
+        %     doubleCovered = false;  % sometimes you might want to use uv coordinate system instead...
+        %     disp('Using uv coordinate system...')
         else
             error(['Unrecognized pivimCoords: ' pivimCoords])
         end
@@ -526,12 +535,79 @@ else
         % end
         
         %% Take the difference to get the velocity field ------------------
-        v0 = (pt1 - pt0) / dt ;
+        v0 = (pt1 - pt0) / dt ; 
+        
+        if notClosedTube
+            v0_cpy = reshape(v0, [size(piv.x{1}, 1), size(piv.x{1}, 2),3]); 
+            v0_mask = reshape(v0, [size(piv.x{1}, 1), size(piv.x{1}, 2),3]); 
+            v0_DT = reshape(v0, [size(piv.x{1}, 1), size(piv.x{1}, 2),3]); 
+
+            %get the mask of the gut at this tp
+            gutBoundaryBW_dir = [tubi.fullFileBase.im_sp_sm(1:end-20), 'gutBoundary_GOOD/BW']; 
+            tubi.fullFileBase.gutBoundaryBW = [gutBoundaryBW_dir, '/BW_%d.png']; 
+            if ~exist(gutBoundaryBW_dir,'dir')
+                mkdir(gutBoundaryBW_dir); 
+            end
+
+            gutBoundaryBW_curr = sprintf(tubi.fullFileBase.gutBoundaryBW, timePoints(ii)); 
+            gutBoundaryBW_next = sprintf(tubi.fullFileBase.gutBoundaryBW, timePoints(ii + 1)); 
+
+            maskk_curr = imread(gutBoundaryBW_curr); 
+            maskk_next = imread(gutBoundaryBW_next); 
+            maskk_curr_dbC = zeros(size(maskk_curr,1) * 2, size(maskk_curr,2)); %double cover
+            maskk_next_dbC = zeros(size(maskk_next,1) * 2, size(maskk_next,2)); %double cover
+            maskk_curr_dbC(1:500, :) = maskk_curr(501:end,:); maskk_curr_dbC(501:1500,:) = maskk_curr; maskk_curr_dbC(1501:2000, :) = maskk_curr(1:500,:);
+            maskk_next_dbC(1:500, :) = maskk_next(501:end,:); maskk_next_dbC(501:1500,:) = maskk_next; maskk_next_dbC(1501:2000, :) = maskk_next(1:500,:);
+            [DT_curr, IDX_curr] = bwdist(maskk_curr_dbC, 'euclidean'); %IDX is the x and y coords of the point that is closest to the current point
+            [IDX_Y_curr, IDX_X_curr] = ind2sub(size(maskk_curr_dbC), IDX_curr);
+            [DT_next, IDX_next] = bwdist(maskk_next_dbC, 'euclidean'); %IDX is the x and y coords of the point that is closest to the current point
+            %[IDX_Y_next, IDX_X_next] = ind2sub(size(maskk_next_dbC), IDX_next);
+            
+            sigma = 5;  %sigma for exponential decay
+            %vx_dt = reshape(vx, size(xyfstruct.x));       vx_1 = reshape(vx, size(xyfstruct.x));
+            
+            for iii = 1:size(v0_cpy, 1)-1
+                for jjj = 1:size(v0_cpy, 2)-1
+                    DT_curr = DT_curr(y0(iii,jjj), x0(iii,jjj)); %DT of a specific point (DT_curr_pt)
+                    DT_next = DT_next(y1(iii,jjj), x1(iii,jjj)); %DT of the point in next time frame. The points are x1,y1 and they are in the picture of next timepoint
+                    if (DT_curr ~= 0 || DT_next ~= 0) && fix(IDX_Y_curr(iii,jjj)/8)>0 && fix(IDX_X_curr(iii,jjj)/8)>0
+                        v0_mask(iii,jjj,:) = [0,0,0];  %Every component in v0 or v0_mask is a vector with length 3
+                        v0_DT(iii,jjj) = v0_cpy(fix(IDX_X_curr(iii,jjj,:)./8), fix(IDX_Y_curr(iii,jjj,:)./8)) .* exp(-DT_curr/sigma^2);
+                    end
+                end
+            end
+
+            %Smooth v0_DT -- only do smoothing for the points that are outside the gut
+            v0_DT_sm = zeros(size(v0_DT)); %Initialize v_DT_sm to be 0. Later we only want to smooth the points that are outside the gut
+            sigmaG = 2; %sigma for Gaussian smoothing
+            for iii = 1:size(v0_DT, 1)-1
+                 for jjj = 1:size(v0_DT, 2)-1
+                     if (DT_curr ~= 0 || DT_next ~= 0) && fix(IDX_Y_curr(iii,jjj)/8)>0 && fix(IDX_X_curr(iii,jjj)/8)>0
+                        v0_DT_sm(iii,jjj,1) = imgaussfilt(v0_mask(iii,jjj,1), sigmaG); 
+                        v0_DT_sm(iii,jjj,2) = imgaussfilt(v0_mask(iii,jjj,2), sigmaG); 
+                        v0_DT_sm(iii,jjj,3) = imgaussfilt(v0_mask(iii,jjj,3), sigmaG); 
+                     else
+                         v0_DT_sm(iii,jjj,:) = v0_mask(iii,jjj,:); 
+                     end
+                 end
+            end
+
+            %change dims of the vector
+            v0_mask = reshape(v0_mask, size(v0)); 
+            v0_DT = reshape(v0_DT, size(v0)); 
+            v0_DT_sm = reshape(v0_DT_sm, size(v0)); 
+
+        end
         
         % Decompose/Resolve tangential and normal velocities ==============
         % Also obtain jacobian.
-        [v0n, v0t, v0t2d, jac, facenormals, g_ab, dilation] = ...
+        if notClosedTube
+        	[v0n, v0t, v0t2d, jac, facenormals, g_ab, dilation] = ...
+            resolveTangentNormalVelocities(tm0f, tm0v3d, v0_DT, fieldfaces, tm0XY) ;
+        else
+        	[v0n, v0t, v0t2d, jac, facenormals, g_ab, dilation] = ...
             resolveTangentNormalVelocities(tm0f, tm0v3d, v0, fieldfaces, tm0XY) ;
+        end
         
         % Check for NaNs
         assert(~any(isnan(v0t2d(:)))) 
@@ -609,7 +685,11 @@ else
             bc = mean( bc, 3 );
 
             % cast as NxMx3, then as N*M x 1 arrays for vx,vy,vz separately
-            v3dgrid = reshape(v0, [size(piv.x{1}, 1), size(piv.x{1}, 2), 3]) ;
+            if notClosedTube
+            	v3dgrid = reshape(v0_DT, [size(piv.x{1}, 1), size(piv.x{1}, 2), 3]) ;
+            else
+            	v3dgrid = reshape(v0, [size(piv.x{1}, 1), size(piv.x{1}, 2), 3]) ;
+            end
             xvel = squeeze(v3dgrid(:, :, 1)) ;
             yvel = squeeze(v3dgrid(:, :, 2)) ;
             zvel = squeeze(v3dgrid(:, :, 3)) ;
@@ -641,7 +721,11 @@ else
         end
         
         % Test validity of result
-        v0_rs =  tubi.dx2APDV(v0) ;
+        if notClosedTube
+        	v0_rs =  tubi.dx2APDV(v0_DT) ;
+        else
+        	v0_rs =  tubi.dx2APDV(v0) ;
+        end
         if any(isnan(v0_rs(:))) || any(isnan(v0_rs(:)))
            % disp('inpainting NaNs in pt0 & pt1')
            error('why nans?')
@@ -670,7 +754,12 @@ else
         datstruct.v0 = v0 ;
         datstruct.v0n = v0n ;
         datstruct.v0t = v0t  ;
-        datstruct.facenormals = facenormals ;
+        datstruct.facenormals = facenormals ; 
+        if notClosedTube
+            datstruct.v0_mask = v0_mask ;
+            datstruct.v0_DT = v0_DT; 
+            datstruct.v0_DT_sm = v0_DT_sm; 
+        end
         
         % Face-centered velocities
         datstruct.v3dvertices = v3dvertices ;
@@ -679,7 +768,11 @@ else
         assert(all(size(v3dfaces) == size(datstruct.m0f)))
         
         % rotated and scaled velocities
-        datstruct.v0_rs = tubi.dx2APDV(v0) ; % note we already /dt in v0 def
+        if notClosedTube
+        	datstruct.v0_rs = tubi.dx2APDV(v0_DT) ; % note we already /dt in v0 def
+        else
+        	datstruct.v0_rs = tubi.dx2APDV(v0) ; % note we already /dt in v0 def
+        end
         datstruct.v0t_rs = tubi.dx2APDV(v0t) ; % note we already /dt in v0 def
         if tubi.flipy
             % Direct normals inward
