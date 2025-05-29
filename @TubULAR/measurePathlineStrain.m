@@ -7,7 +7,7 @@ function measurePathlineStrain(tubi, options)
 %
 % Parameters
 % ----------
-% tubi : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields
 %   overwrite : bool, overwrite data on disk
 %   overwriteImages : bool, overwrite images of results on disk
@@ -265,19 +265,14 @@ for tidx = tidx2do
         % Smooth all four components with laplacian
         [V2F, F2V] = meshAveragingOperators(mesh.f, mesh.v) ;
 
-        % Force no imaginary values in V2F and F2V
-        F2V = real(F2V) ;
-        smoothing_options = struct('widthX', 3, 'nmodes', 5) ;
-        e11 = modeFilterQuasi1D(reshape(F2V * e11, [nU, nV]), smoothing_options) ;
-        e12 = modeFilterQuasi1D(reshape(F2V * e12, [nU, nV]), smoothing_options) ;
-        e21 = modeFilterQuasi1D(reshape(F2V * e21, [nU, nV]), smoothing_options) ;
-        e22 = modeFilterQuasi1D(reshape(F2V * e22, [nU, nV]), smoothing_options) ;
-        dA0 = modeFilterQuasi1D(reshape(F2V * fractionalAreaChange, [nU, nV]), smoothing_options) ;
         if notClosedTube
+            % Force no imaginary values in V2F and F2V
+            F2V = real(F2V) ;
             smoothing_options = struct('widthX', 3, 'nmodes', 0) ;
             e11 = F2V * e11; e12 = F2V * e12; e21 = F2V * e21; e22 = F2V * e22;
             dA0 = F2V * fractionalAreaChange;
         else
+            % Force no imaginary values in V2F and F2V
             F2V = real(F2V) ;
             smoothing_options = struct('widthX', 3, 'nmodes', 5) ;
             e11 = modeFilterQuasi1D(reshape(F2V * e11, [nU, nV]), smoothing_options) ;
