@@ -30,6 +30,8 @@ function measurePIV2d(tubi, options)
 % tubi.fileName.pivRaw.raw: 'x', 'y', 'u', 'v', 'u_filtered', 'v_filtered'
 %
 % NPMitchell 2022
+% Haibei used successfully with PIVLab v3.02
+% Canto now using v3.09 of PIVLab, fails 
 
 if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
@@ -162,8 +164,12 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             % %  --> 128 (32 step), 64 (32 step), 32 (16 step), 16 (8 step)
             % %  --> Linear window deformation interpolator
             % %  --> 5x repeated correlation 
+            % %   The previous line is for piv ver.2, now in ver.3 there isn't
+            % %   such a setting. however, 'If you select "high", 
+            % %   then linear correlation (new feature) will be enabled'
             % %  --> Disable auto-correlation
-            % % Post-processing
+            % % Post-processing *see Validation tab> velocity validation in
+            % %     the GUI
             % %  --> Standard deviation filter: 7 stdev
             % %  --> Local median filter: thres=5, eps=0.1
             % %  --> Interpolate missing data
@@ -312,32 +318,50 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             % PIV analysis:
             % for syntax see https://github.com/Shrediquette/PIVlab/blob/main/Accuracy.m
             try
-                image1 = PIVlab_preproc (im1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
+                image1 = preproc.PIVlab_preproc(im1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
+                image2 = preproc.PIVlab_preproc(im2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
             catch
-                error('PIVlab image preprocessing failed -- is PIVLab installed?')
+                % For old PIVlab versions, there is no package preproc
+                try
+                    image1 = PIVlab_preproc(im1,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2}); %preprocess images
+                    image2 = PIVlab_preproc(im2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
+            
+                catch
+                    error('PIVlab image preprocessing failed -- is PIVLab installed?')
+                end
             end
-            image2 = PIVlab_preproc (im2,p{1,2},p{2,2},p{3,2},p{4,2},p{5,2},p{6,2},p{7,2},p{8,2},p{9,2},p{10,2});
             tic % start timer for PIV analysis only
             cell2table(s)
             try
                 disp(['computing PIV for tidx = ' num2str(tidx) '/' num2str(length(timePoints))])
-                [xx, yy, uu, vv, ~] = piv_FFTmulti (image1, image2,...
+                [xx, yy, uu, vv, ~] = piv.piv_FFTmulti(image1, image2,...
                     s{1,2},s{2,2}, s{3,2}, s{4,2}, s{5,2}, s{6,2}, s{7,2} ,s{8,2},...
                     s{9,2},s{10,2},s{11,2},s{12,2},s{13,2},0,s{14,2},s{15,2});
             catch
-                error('pivlab FFTmulti failed -- make sure PIVLab is up to date.')
+                % For old PIVlab versions, there is no package preproc
+                try
+                    disp(['computing PIV for tidx = ' num2str(tidx) '/' num2str(length(timePoints))])
+                    [xx, yy, uu, vv, ~] = piv_FFTmulti(image1, image2,...
+                       s{1,2},s{2,2}, s{3,2}, s{4,2}, s{5,2}, s{6,2}, s{7,2} ,s{8,2},...
+                       s{9,2},s{10,2},s{11,2},s{12,2},s{13,2},0,s{14,2},s{15,2});
+                catch
+                    error('pivlab FFTmulti failed -- make sure PIVLab is up to date and package naming is preserved.')
+                end
             end
 
             %% Postprocessing
-            [u_filt,v_filt] = PIVlab_postproc(uu,vv, r{1,2}, r{2,2}, r{3,2}, r{4,2},...
-                r{5,2},	r{6,2},	r{7,2}) ;
-
-            % typevector_filt = typevector; % initiate
-            % typevector_filt(isnan(u_filt))=2;
-            % typevector_filt(isnan(v_filt))=2;
-            % typevector_filt(typevector==0)=0; %restores typevector for mask
-            u_filt=inpaint_nans(u_filt,4);
-            v_filt=inpaint_nans(v_filt,4);
+            try
+                % new PIVlab vertsion has package postproc
+                [u_filt,v_filt] = postproc.PIVlab_postproc(uu,vv, r{1,2}, r{2,2}, r{3,2}, r{4,2},...
+                    r{5,2},	r{6,2},	r{7,2}) ;
+                u_filt=misc.inpaint_nans(u_filt,4);
+                v_filt=misc.inpaint_nans(v_filt,4);
+            catch
+                [u_filt,v_filt] = PIVlab_postproc(uu,vv, r{1,2}, r{2,2}, r{3,2}, r{4,2},...
+                    r{5,2},	r{6,2},	r{7,2}) ;
+                u_filt=inpaint_nans(u_filt,4);
+                v_filt=inpaint_nans(v_filt,4);
+            end
 
         end
         u{tidx} = uu ;
