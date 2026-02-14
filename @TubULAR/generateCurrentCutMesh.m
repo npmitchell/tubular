@@ -34,8 +34,8 @@ function generateCurrentCutMesh(tubi, cutMeshOptions)
 
 % Parameters for cutMesh creation
 nsegs4path = 2 ;
-maxJitter = 100 ;
-maxTwChange = 0.7 ;
+maxJitter = 50 ;
+maxTwChange = 0.5 ;
 preview = false ;
 useMaxDeviationPtsForCorrection = true ;
 definePDviaRicci_t0 = false ;
@@ -395,7 +395,12 @@ if preview
 end
 
 % Find lateral scaling that minimizes spring network energy
-ar = minimizeIsoarealAffineEnergy( cutMesh.f, cutMesh.v, cutMesh.u );
+try
+    ar = minimizeIsoarealAffineEnergy( cutMesh.f, cutMesh.v, cutMesh.u );
+catch
+    disp('WARNING: could not compute relaxed aspect ratio. If you use this in the future, just interpolate values from other timepoints') ;
+    ar = 0 ;
+end
 % Assign scaling based on options: either a0 or a_fixed
 % if tidx == 1 && ~a_fixed
 %     a_fixed = ar ;

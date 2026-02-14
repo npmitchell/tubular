@@ -38,7 +38,9 @@ function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 %     spcutMesh.vn  
 %     spcutMesh.ringpath_ss 
 %     spcutMesh.radii_from_mean_uniform_rs  % from uniform DV sampling
-%     spcutMesh.radii_from_avgpts 
+%     spcutMesh.radii_from_avgpts % Note that this is uniformly sampled in
+%                                   phi as well as s. That is, these are
+%                                   resampled hoops.
 %     spcutMesh.mss         % from uniform DV sampling, also stored in centerline
 %     spcutMesh.mcline      % from uniform DV sampling, also stored in centerline
 %     spcutMesh.avgpts      % from uniform DV sampling, also stored in centerline

@@ -1,5 +1,5 @@
-function measureMetricKinematics(QS, options)
-%[gdot_apM, HH_apM, divv_apM, veln_apM] = measureMetricKinematics(QS, options)
+function measureMetricKinematics(tubi, options)
+%[gdot_apM, HH_apM, divv_apM, veln_apM] = measureMetricKinematics(tubi, options)
 %   Measure degree of incompressibility of the flow on the evolving surface
 %   Out-of-plane motion is v_n * 2H, where v_n is normal velocity and H is
 %   mean curvature.
@@ -11,7 +11,7 @@ function measureMetricKinematics(QS, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields 
 %   overwrite : bool
 %       overwrite previous results
@@ -38,11 +38,11 @@ overwrite = false ;
 plot_Hgdot = true ;
 plot_flows = true ;
 plot_factors = true ;
-lambda = QS.smoothing.lambda ; 
-lambda_mesh = QS.smoothing.lambda_mesh ;
-lambda_err = QS.smoothing.lambda_err ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+lambda = tubi.smoothing.lambda ; 
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+lambda_err = tubi.smoothing.lambda_err ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 climit = 0.2 ;
 climit_veln = climit * 10 ;
 climit_H = climit * 2 ;
@@ -116,17 +116,17 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
-QS.getXYZLims ;
-xyzlim = QS.plotting.xyzlim_um ;
+%% Unpack tubi
+tubi.getXYZLims ;
+xyzlim = tubi.plotting.xyzlim_um ;
 buff = 10 ;
 xyzlim = xyzlim + buff * [-1, 1; -1, 1; -1, 1] ;
 if strcmp(averagingStyle, 'simple')
-    mKDir = fullfile(QS.dir.metricKinematicsSimple, ...
+    mKDir = fullfile(tubi.dir.metricKinematicsSimple, ...
         strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02d'], ...
         lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 else
-    mKDir = fullfile(QS.dir.metricKinematics.root, ...
+    mKDir = fullfile(tubi.dir.metricKinematics.root, ...
         strrep(sprintf([sresStr 'lambda%0.3f_lmesh%0.3f_lerr%0.3f_modes%02dw%02d'], ...
         lambda, lambda_mesh, lambda_err, nmodes, zwidth), '.', 'p'));
 end
@@ -137,42 +137,42 @@ bwr256 = bluewhitered(256) ;
 %% Load vertex-based velocity measurements
 if strcmp(averagingStyle, 'Lagrangian')
     if doubleResolution
-        vvsmMfn = fullfile(QS.dir.pivAvg2x, 'vvM_avg2x.mat')  ;
+        vvsmMfn = fullfile(tubi.dir.pivAvg2x, 'vvM_avg2x.mat')  ;
         tmp = load(vvsmMfn) ;
         vertex_vels = tmp.vvsmM ;
     else
-        vvsmMfn = QS.fileName.pivAvg.vv ;
+        vvsmMfn = tubi.fileName.pivAvg.vv ;
         % Note that this is fullfile(QS.dir.pivAvg, 'vvM_avg.mat')  
         tmp = load(vvsmMfn) ;
         vertex_vels = tmp.vvsmM ;   
     end
 elseif strcmp(averagingStyle, 'simple')
     if doubleResolution
-        vvsmMfn = fullfile(QS.dir.pivSimAvg2x, 'vvM_simpletimeavg2x.mat')  ;
+        vvsmMfn = fullfile(tubi.dir.pivSimAvg2x, 'vvM_simpletimeavg2x.mat')  ;
         tmp = load(vvsmMfn) ;
         vertex_vels = tmp.vvsmM ;
     else
-        vvsmMfn = fullfile(QS.dir.pivSimAvg, 'vvM_simpletimeavg.mat')  ; 
+        vvsmMfn = fullfile(tubi.dir.pivSimAvg, 'vvM_simpletimeavg.mat')  ; 
         tmp = load(vvsmMfn) ;
         vertex_vels = tmp.vvsmM ;   
     end
 end
 
 %% Load time offset, t0
-QS.t0set() ;
+tubi.t0set() ;
 
 %% load from QS
 if doubleResolution
-    nU = QS.nU * 2 - 1 ;
-    nV = QS.nV * 2 - 1 ;
+    nU = tubi.nU * 2 - 1 ;
+    nV = tubi.nV * 2 - 1 ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;    
+    nU = tubi.nU ;
+    nV = tubi.nV ;    
 end
 
 %% Test incompressibility of the flow on the evolving surface
 % preallocate for cumulative error
-ntps = length(QS.xp.fileMeta.timePoints(1:end-1)) ;
+ntps = length(tubi.xp.fileMeta.timePoints(1:end-1)) ;
 % HH_apM   = zeros(ntps, nU) ;   % dv averaged
 % divv_apM = zeros(ntps, nU) ;
 % veln_apM = zeros(ntps, nU) ;
@@ -195,12 +195,12 @@ ntps = length(QS.xp.fileMeta.timePoints(1:end-1)) ;
 % gdot_vM = zeros(ntps, nU) ;
 
 % Build timepoint list so that we first do every 10, then fill in details
-lastIdx = length(QS.xp.fileMeta.timePoints) - 1 ;
+lastIdx = length(tubi.xp.fileMeta.timePoints) - 1 ;
 veryCoarseIdx = 1:50:lastIdx ;
 coarseIdx = setdiff(1:10:lastIdx, veryCoarseIdx) ;
 fineIdx = setdiff(1:lastIdx, [veryCoarseIdx, coarseIdx]) ;
 allIdx = [veryCoarseIdx, coarseIdx, fineIdx ] ;
-tp2do = QS.xp.fileMeta.timePoints(allIdx) ;
+tp2do = tubi.xp.fileMeta.timePoints(allIdx) ;
 
 % Output directory is inside metricKinematics dir
 outdir = fullfile(mKDir, 'measurements') ;
@@ -212,7 +212,7 @@ end
 for tp = tp2do
     close all
     disp(['t = ' num2str(tp)])
-    tidx = QS.xp.tIdx(tp) ;
+    tidx = tubi.xp.tIdx(tp) ;
 
     % Check for timepoint measurement on disk
     Hfn = fullfile(outdir, sprintf('HH_vertices_%06d.mat', tp))   ;
@@ -231,20 +231,20 @@ for tp = tp2do
         tic 
         if doubleResolution
             % Load current mesh
-            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRSC2x, tp)) ;
+            tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRSC2x, tp)) ;
             mesh = tmp.spcutMeshSmRSC2x ;
 
             % Load cutMesh
-            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRS2x, tp)) ;
+            tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS2x, tp)) ;
             cutMesh = tmp.spcutMeshSmRS2x ;
             clearvars tmp
         else
             % Load current mesh
-            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRSC, tp)) ;
+            tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRSC, tp)) ;
             mesh = tmp.spcutMeshSmRSC ;
 
             % Load cutMesh
-            tmp = load(sprintfm(QS.fullFileBase.spcutMeshSmRS, tp)) ;
+            tmp = load(sprintfm(tubi.fullFileBase.spcutMeshSmRS, tp)) ;
             cutMesh = tmp.spcutMeshSmRS ;
             clearvars tmp
         end
@@ -288,15 +288,15 @@ for tp = tp2do
         % [~, F2V] = meshAveragingOperators(mesh.f, mesh.v) ;
         if strcmp(averagingStyle, 'Lagrangian')
             if doubleResolution
-                dec_tp = load(sprintfm(QS.fullFileBase.decAvg2x, tp)) ;
+                dec_tp = load(sprintfm(tubi.fullFileBase.decAvg2x, tp)) ;
             else
-                dec_tp = load(sprintfm(QS.fullFileBase.decAvg, tp)) ;
+                dec_tp = load(sprintfm(tubi.fullFileBase.decAvg, tp)) ;
             end
         else
             if doubleResolution
-                dec_tp = load(sprintfm(QS.fullFileBase.decSimAvg2x, tp)) ;
+                dec_tp = load(sprintfm(tubi.fullFileBase.decSimAvg2x, tp)) ;
             else
-                dec_tp = load(sprintfm(QS.fullFileBase.decSimAvg, tp)) ;
+                dec_tp = load(sprintfm(tubi.fullFileBase.decSimAvg, tp)) ;
             end
         end
         
@@ -578,7 +578,7 @@ for tp = tp2do
     pOptions.climit_err = climit ;
     pOptions.climit_veln = climit_veln ;
     pOptions.climit_H = climit_H ;
-    QS.plotMetricKinematicsTimePoint(tp, pOptions)
+    tubi.plotMetricKinematicsTimePoint(tp, pOptions)
     
     % %% Store in matrices
     % % dv averaged

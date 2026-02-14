@@ -12,6 +12,10 @@ function measurePIV2d(tubi, options)
 % ----------
 % tubi : TubULAR class instance
 % options : struct with optional fields
+%   overwrite : bool (default=False)
+%       overwrite previous results on disk
+%   preview : bool (default=true)
+%       view intermediate results
 %   use_PIVLab : bool (default=True)
 %   edgeLength : size of interrogation window in pixels
 %   histequilize : bool (default=True)
@@ -20,6 +24,8 @@ function measurePIV2d(tubi, options)
 %       the timepoints for which to compute PIV
 %   coordSys : string specifier (default is tubi.piv.imCoords)
 %       the image coordinates in which PIV is to be performed
+%   patchOpts : struct 
+%       Options used for previewing PIV results in texturepatch overlay
 %   
 % Returns
 % -------
@@ -37,6 +43,11 @@ if isfield(options, 'overwrite')
     overwrite = options.overwrite ;
 else
     overwrite = false ;    
+end
+if isfield(options, 'preview')
+    preview = options.preview ;
+else
+    preview = true ;
 end
 if isfield(options, 'usePIVLab')
     use_PIVLab = options.usePIVLab ;
@@ -161,7 +172,7 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             % %  --> Wiener2 denoise filter with 3 pix
             % %  --> DO NOT Auto constrast stretch
             % % PIV settings: 
-            % %  --> 128 (32 step), 64 (32 step), 32 (16 step), 16 (8 step)
+            % %  --> Standard: 128 (32 step), 64 (32 step), 32 (16 step), 16 (8 step)
             % %  --> Linear window deformation interpolator
             % %  --> 5x repeated correlation 
             % %   The previous line is for piv ver.2, now in ver.3 there isn't
@@ -205,7 +216,19 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             do_local_median = 1  ;
             neigh_thresh    = 3  ;
             if isfield(options, 'intArea1')
-                step = options.intArea1 ;
+                intArea1 = options.intArea1 ;
+            end
+            if isfield(options, 'intArea2')
+                intArea2 = options.intArea1 ;
+            end
+            if isfield(options, 'intArea3')
+                intArea3 = options.intArea1 ;
+            end
+            if isfield(options, 'intArea4')
+                intArea4 = options.intArea4 ;
+            end
+            if isfield(options, 'step')
+                step = options.step ;
             end
             if isfield(options, 'subpixFindr')
                 subpixFindr = options.subpixFindr ;
@@ -223,7 +246,7 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
                 intArea2    = options.intArea2 ;
             end
             if isfield(options, 'intArea3')
-                intArea3    = options.intArea4 ;
+                intArea3    = options.intArea3 ;
             end
             if isfield(options, 'intArea4')
                 intArea4    = options.intArea4 ;
@@ -361,6 +384,84 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
                     r{5,2},	r{6,2},	r{7,2}) ;
                 u_filt=inpaint_nans(u_filt,4);
                 v_filt=inpaint_nans(v_filt,4);
+            end
+
+            %% preview the result
+            if preview
+                clf
+                subplot(2, 2, 1)
+                imshow(image1)
+                title(sprintf('t=%d', timePoints(tidx))) ;
+                subplot(2, 2, 2)
+                imshow(image2)
+                title(sprintf('t=%d', timePoints(tidx+1))) ;
+                subplot(2, 2, 3)
+                im12 = cat(3, image2, image1, image2) ;
+                imshow(im12)
+                hold on; 
+                quiver(xx,yy,uu,vv, 0)
+                set(gcf, 'visible', 'on')
+                xlim([720, 900])
+                ylim([820, 1000])
+                xlims = xlim;
+                ylims = ylim; 
+                title(sprintf('green: t=%d, magenta: t=%d', ...
+                    timePoints(tidx), timePoints(tidx+1))) ;
+
+                % Generate cutMesh face triangulation
+                % 2025-06-13 NPM checked that this is the right axis ordering by using a rectangular image
+                nX = size(xx, 1) ; nY = size(xx, 2) ; 
+                % vvtmp is only used for faces definition
+                xT = xx' ;
+                yT = yy' ;
+                f1 = defineFacesRectilinearGrid([xT(:), yT(:)], nX, nY) ;
+                v1 = double([xx(:), yy(:)]) ;
+
+                % Generate cutpath pairs
+                svcutP1 = 1:nX ;
+                svcutP2 = nX*nY - fliplr(0:(nX-1)) ;
+                mesh0.pathPairs = [ svcutP1', svcutP2' ] ;
+
+                disp('measurePIV2d: generating evaluation pullback')
+                f2 = f1 ;
+                v2 = double([xx(:) + u_filt(:) , yy(:) + v_filt(:)]) ;
+                
+                % Create texture image
+                if any(isnan(v1))
+                    error('here -- check for NaNs in TV2D ')
+                end
+                if isfield(options, 'patchOpts')
+                    patchOpts = options.patchOpts ;
+                else
+                    patchOpts = struct() ; 
+                end
+                disp('measurePIV2d: patchOpts = ')
+                disp(patchOpts)
+                patchIm2 = texture_patch_to_image(f1, v1, f2, v2,...
+                    image2', patchOpts );
+                patchIm1 = texture_patch_to_image(f1, v1, f1, v1,...
+                    image1', patchOpts );
+                subplot(2,2,4)
+                if isa(image1, 'uint8')
+                    patchIm1 = uint8(255 * patchIm1) ;
+                    patchIm2 = uint8(255 * patchIm2) ;
+                else
+                    error('code for this image class here')
+                end
+                im12piv = cat(3, patchIm2, ...
+                    patchIm1, patchIm2) ;
+                imshow(im12piv)
+                rescale = size(patchIm1,1)/size(image1,1) ;
+                xlim(xlims * rescale)
+                ylim(ylims * rescale)
+                title(sprintf('green: t=%d, magenta: t=%d', ...
+                    timePoints(tidx), timePoints(tidx+1))) ;
+                set(gcf, 'color', 'w')
+                if ~exist(fullfile(tubi.dir.piv.root, 'pivCheck'), 'dir')
+                    mkdir(fullfile(tubi.dir.piv.root, 'pivCheck'))
+                end
+                saveas(gcf, fullfile(tubi.dir.piv.root, 'pivCheck', ...
+                    sprintf([tubi.fileBase.name '.png'], timePoints(tidx))))
             end
 
         end

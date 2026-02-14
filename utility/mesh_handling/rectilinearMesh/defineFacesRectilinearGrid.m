@@ -59,6 +59,13 @@ if ~isempty(uv)
             assert(uv(1, 2) ~= uv(2, 2))
             error('Should we transpose here?')
         catch
+
+            if (uv(1, 1) == uv(2, 1))
+                disp('Error: uv(1:2, 1) are equal (u/x values are equal)')
+            end
+            if (uv(1, 2) ~= uv(2, 2))
+                disp('Error: uv(1:2, 2) are not equal (v/y values are not equal)')
+            end
             error('Input coordinates appear transposed from proper grid')
         end
     end

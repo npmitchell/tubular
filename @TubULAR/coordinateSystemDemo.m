@@ -17,6 +17,7 @@ function fig = coordinateSystemDemo(tubi, options)
 %   normLongitudinal : bool
 %   includeCenterline : bool 
 %   fillHoops : bool
+%   viewAngle : perspective for the 3D plot
 %
 % Returns
 % -------
@@ -286,6 +287,9 @@ function fig = coordinateSystemDemo(tubi, options)
     
     labelAxes_util(coordSys, interpreter, tubi)
     
+    if isfield(options, viewAngle)
+        view(viewAngle)
+    end
     
     set(gcf, 'color', 'w')
     set(gcf, 'position', [0, 0, 9, 12])

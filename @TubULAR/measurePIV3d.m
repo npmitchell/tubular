@@ -952,8 +952,13 @@ else
             % Load the image to put flow on top
             imRGB = cat(3, im0, im0, im0) ;  % convert to rgb for no cmap change
             im = imRGB * washout2d + max(im0(:)) * (1-washout2d) ;
+            if strcmpi(tubi.spaceUnits, 'μm')
+                spaceUnits = '$\mu$m' ;
+            else
+                spaceUnits = tubi.spaceUnits ;
+            end
             options.label = ['scaled tangential velocity, ', ...
-                '$|v_t|/||g^{-1}||$ [' tubi.spaceUnits '/', tubi.timeUnits, ']'] ;
+                '$|v_t|/||g^{-1}||$ [' spaceUnits '/', tubi.timeUnits, ']'] ;
             options.xlim = [0, size(im, 2)] ;
             if doubleCovered
                 options.ylim = size(im, 1) * [0.25, 0.75] ;

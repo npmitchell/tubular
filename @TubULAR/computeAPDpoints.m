@@ -45,8 +45,6 @@ function [apts_sm, ppts_sm, dpt] = computeAPDpoints(tubi, opts)
 %                       is used for extracting COM from probability cloud
 %   - posteriorChannel : int, which channel of training to use if training
 %                       is used for extracting COM from probability cloud
-%   - dorsalChannel : int, which channel of training to use if training
-%                       is used for extracting COM from probability cloud
 %   - overwrite : bool, overwrite previous results on disk
 %   - preview_com : bool, inspect the centers of mass extraction
 %   - axorder : length 3 int array, permutation of axes if needed
@@ -146,6 +144,7 @@ end
 % Default options
 overwrite = false ; 
 preview_com = false ;
+preview_probabilities=false;
 
 % Unpack opts
 if isfield(opts, 'anteriorChannel')
@@ -153,7 +152,7 @@ if isfield(opts, 'anteriorChannel')
 else
     anteriorChannel = 1 ;
 end
-if isfield(opts, 'anteriorChannel')
+if isfield(opts, 'posteriorChannel')
     posteriorChannel = opts.posteriorChannel ;
 else
     posteriorChannel = 2 ;
@@ -163,6 +162,10 @@ if isfield(opts, 'overwrite')
 end
 if isfield(opts, 'preview_com')
     preview_com = opts.preview_com ;
+end
+
+if isfield(opts, 'preview_probabilities')
+    preview_probabilities = opts.preview_probabilities ;
 end
 
 % Default valued options
@@ -294,6 +297,21 @@ if ~load_from_disk || overwrite
                         num2str(length(size(ddatM))) 'D, or failed to recognize ilastikOutputAxisOrder'])
                 end
 
+                % Extract background channel if we are visualizing
+                % intermediate results
+                if preview_probabilities
+                    bgChannel = find(~ismember([1,2,3], [anteriorChannel, posteriorChannel]));
+                    if channelAxis == 1
+                        bdat = squeeze(pdatM(bgChannel,:,:,:)) ;
+                    elseif channelAxis == 2
+                        bdat = squeeze(pdatM(:, bgChannel,:,:)) ;
+                    elseif channelAxis == 3
+                        bdat = squeeze(pdatM(:, :, bgChannel,:)) ;
+                    elseif channelAxis == 4 
+                        bdat = squeeze(pdatM(:, :, :, bgChannel)) ;
+                    end
+                end
+
                 disp(['Extracted adat and pdat of size [' num2str(size(adat)) ']'])
         
                 xyzstring = erase(lower(ilastikOutputAxisOrder), 'c') ;
@@ -335,14 +353,29 @@ if ~load_from_disk || overwrite
                 % pdat = permute(pdat, axorder) ;
 
 
-                % if preview
-                %     for xid = 1:1:size(adat, 1)
-                %         imagesc(squeeze(adat(xid, :,:))) ;
-                %         cb = colorbar ;
-                %         title(['x = ' num2str(xid)])
-                %         pause(0.01)
-                %     end
-                % end
+                if preview_probabilities
+                    for xid = 1:1:size(adat, 1)
+                        subplot(1, 3, 1)
+                        imagesc(squeeze(adat(xid, :,:))) ;
+                        cb = colorbar ;
+                        clim([0,1]) ;
+                        axis equal ; axis tight;
+                        title(['anterior: x = ' num2str(xid)])
+                        subplot(1, 3, 2)
+                        imagesc(squeeze(pdat(xid, :,:))) ;
+                        cb = colorbar ;
+                        clim([0,1]) ;
+                        axis equal ; axis tight;
+                        title(['posterior: x = ' num2str(xid)])
+                        subplot(1, 3, 3)
+                        imagesc(squeeze(bdat(xid, :,:))) ;
+                        cb = colorbar ;
+                        clim([0,1]) ; 
+                        axis equal ; axis tight;
+                        title(['background: x = ' num2str(xid)])
+                        pause(0.01)
+                    end
+                end
 
 
 
