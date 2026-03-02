@@ -74,6 +74,16 @@ if isfield(options, 'coordSys')
 else
     coordSys = tubi.piv.imCoords ;
 end
+if isfield(options, 'intArea1')
+    intArea1 = options.intArea1 ;
+else
+    intArea1 = 128 ;
+end
+if isfield(options, 'intArea2')
+    intArea2 = options.intArea2 ;
+else
+    intArea2 = 64 ;
+end
 
 if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite 
     % Compute PIV for each timepoint requested
@@ -188,13 +198,13 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             % %  --> File > Save > MAT file
 
             % Standard PIV Settings
-            intArea1        = 128 ;
+            intArea1        = intArea1 ;
             step            = 32 ;
             subpixFindr     = 1  ;
             mask            = [] ;
             roi             = [] ;
             numPasses       = 4  ;
-            intArea2        = 64 ;
+            intArea2        = intArea2 ;
             intArea3        = 32 ;
             intArea4        = 16 ;
             repeat          = 1  ;
