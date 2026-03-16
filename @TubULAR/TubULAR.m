@@ -345,6 +345,7 @@ classdef TubULAR < handle
                     % indices into timepoints
                     dlmread(tubi.fileName.t0, ',', 1, 0) ;
                 else
+                    disp('WARNING: no t0 exists on disk, setting t0=timePoints(1)')
                     tubi.t0 = tubi.xp.fileMeta.timePoints(1) ;
                 end
             else
@@ -604,6 +605,86 @@ classdef TubULAR < handle
 
         identifyFolds(tubi, varargin)
 
+        % folds & lobes
+        measureFoldRadiiVariance(tubi, options)
+        [lengths, areas, volumes] = measureLobeDynamics(tubi, options)
+        plotLobes(tubi, options) 
+        function plotConstrictionDynamics(tubi, opts)
+            % plot details on folds/constrictions including cross-sectional
+            % profiles
+            % 
+            %
+            if nargin < 2
+                opts = struct() ;
+            end
+            if isfield(opts, 'timePoints')
+                timePoints = opts.timePoints ;
+            else
+                timePoints = tubi.xp.fileMeta.timePoints ;
+            end
+            if isfield(opts, 'overwrite')
+                overwrite = opts.overwrite ;
+            else
+                overwrite = false ;
+            end
+            if isfield(opts, 'colors')
+                colors = opts.colors ;
+            else
+                colors = tubi.plotting.colors ;
+                % isolum(size(tubi.features.folds, 2))*0.9
+            end
+            
+            % Plot the location of the constrictions over time along with
+            % centerlines over time
+            tubi.getXYZLims() ;
+            tubi.getRotTrans() ;
+            tubi.t0set() ;
+            tubi.loadFeatures() ;
+            lobeDir = tubi.dir.features ;
+            foldHoopImDir = fullfile(lobeDir, 'constriction_hoops') ;
+            if ~exist(foldHoopImDir, 'dir')
+                mkdir(foldHoopImDir)
+            end
+            
+            % Plot motion of DVhoop at folds in yz plane over time
+            aux_plot_constriction_DVhoops(tubi.features.folds, ...
+                tubi.features.fold_onset, foldHoopImDir,...
+                tubi.uvexten, tubi.plotting.save_ims, ...
+                overwrite, ...
+                timePoints, tubi.fullFileBase.spcutMesh, ...
+                tubi.fullFileBase.alignedMesh, ...
+                tubi.normalShift, tubi.APDV.rot, tubi.APDV.trans, tubi.APDV.resolution, ...
+                colors, tubi.plotting.xyzlim_um_buff * 1.1, tubi.flipy, ...
+                tubi.t0, tubi.timeInterval, tubi.timeUnits, tubi.spaceUnits, tubi.xp.fileMeta.timePoints)
+            
+            % Plot motion of avgpts at folds in yz plane over time
+            aux_plot_avgptcline_lobes(tubi.features.folds, ...
+                tubi.features.fold_onset, lobeDir, ...
+                tubi.uvexten, tubi.plotting.save_ims, ...
+                overwrite, timePoints,...
+                tubi.fullFileBase.spcutMesh, tubi.fullFileBase.clineDVhoop, ...
+                tubi.t0, tubi.timeInterval, tubi.timeUnits, tubi.spaceUnits, ...
+                tubi.xp.fileMeta.timePoints)
+            
+            % Plot shape of DVhoop at folds in locally transverse plane 
+            % over time
+            if ~exist(fullfile(lobeDir, 'constriction_hoops_transverse'), 'dir')
+                mkdir(fullfile(lobeDir, 'constriction_hoops_transverse'))
+            end
+            aux_plot_constriction_DVhoops_transverse(tubi.features.folds, ...
+                tubi.xp.tIdx(tubi.t0), ...
+                fullfile(lobeDir, 'constriction_hoops_transverse'),...
+                tubi.uvexten, tubi.plotting.save_ims, ...
+                overwrite, ...
+                tubi.xp.fileMeta.timePoints, tubi.fullFileBase.spcutMesh, ...
+                tubi.fullFileBase.alignedMesh, ...
+                tubi.normalShift, tubi.APDV.rot, tubi.APDV.trans, tubi.APDV.resolution, ...
+                tubi.plotting.colors, tubi.plotting.xyzlim_um_buff, tubi.flipy, ...
+                tubi.t0, tubi.timeInterval, tubi.timeUnits, tubi.spaceUnits)
+        end
+        generateFoldCrossSections(tubi, options)
+        measureFoldCrossSectionDynamics(tubi, options)
+
         function loadFeatures(tubi, varargin)
             % Load all features stored in tubi.features
             % 
@@ -618,7 +699,7 @@ classdef TubULAR < handle
                     
                     % Load all features relating to folds
                     disp('Loading folding features')
-                    load(tubi.fileName.features.fold, 'folds', 'fold_onset', ...
+                    load(tubi.fileName.features.folds, 'folds', 'fold_onset', ...
                         'ssmax', 'ssfold', 'rssmax', 'rssfold') ;
                     tubi.features.folds = folds ;
                     tubi.features.fold_onset = fold_onset ; 
@@ -631,7 +712,7 @@ classdef TubULAR < handle
                 end
             else
                 % Load all features
-                load(tubi.fileName.features.fold, 'folds', 'fold_onset', ...
+                load(tubi.fileName.features.folds, 'folds', 'fold_onset', ...
                     'ssmax', 'ssfold', 'rssmax', 'rssfold') ;
                 tubi.features.folds = folds ;
                 tubi.features.fold_onset = fold_onset ; 
