@@ -96,6 +96,11 @@ if isfield(options, 'ywidth')
 end
 if isfield(options, 'viewAngles')
     viewAngles = options.viewAngles ;
+end 
+if isfield(options, 'planeColor')
+    planeColor = options.planeColor; 
+else
+    planeColor = false;
 end
 
 %% Colors
@@ -107,7 +112,11 @@ purple = colors(4, :) ;
 green  = colors(5, :) ;
 sky    = colors(6, :) ;
 maroon = colors(7, :) ;
-lscolor = sky ;
+if isfield(options, 'meshcolor')
+    lscolor = options.meshcolor ;
+else
+    lscolor=sky ;
+end
 
 %% Directories
 if plot_growth
@@ -719,7 +728,7 @@ if plot_meshOnly
     timePoints = tubi.xp.fileMeta.timePoints ;
     
     first = true ;
-    tidx2do = [173] ;
+    tidx2do = [73] ;
     tidx2do = [tidx2do, setdiff(1:30:length(timePoints), tidx2do)] ;
     tidx2do = [tidx2do, setdiff(1:10:length(timePoints), tidx2do)] ;
     tidx2do = [tidx2do, setdiff(1:length(timePoints), tidx2do)] ;
@@ -843,6 +852,7 @@ if plot_evolution
     tidx2do = [tidx2do, setdiff(1:30:length(timePoints), tidx2do)] ;
     tidx2do = [tidx2do, setdiff(1:10:length(timePoints), tidx2do)] ;
     tidx2do = [tidx2do, setdiff(1:length(timePoints), tidx2do)] ;
+    tidx2do = [60] %1:10:length(timePoints)
     for ii = tidx2do
     
         tp = timePoints(ii) ;
@@ -872,7 +882,43 @@ if plot_evolution
                 % Load the raw data from tiff
                 % raw = readTiff4D(tiffn_i, 1, 'xyz') ;
                 raw = tubi.getCurrentData() ;
-                IV = raw{1} ;
+
+                if planeColor 
+                    IV1 = raw{1}; % muscle
+                    IV2 = raw{2}; % hindgut
+                    IV3 = raw{3}; % endoderm
+                    % Normalize to [0,1]
+                    I1n = double(IV1) / 65535;
+                    I2n = double(IV2) / 65535;
+                    I3n = double(IV3) / 65535;
+                    
+                    % ----- Custom LUTs (example, 256 entries each) -----
+                    N = 256;
+                    t = linspace(0,1,N)';
+                    
+                    % LUT per image: each row is [R G B]
+                    lut1 = [t, 0.7843*t, 0.3922*t];        % reddish
+                    %lut2 = [0*t, t, 0.3*t];        % green-cyan
+                    lut3 = [0.3922*t, 0.7843*t, t];        % bluish
+                    
+                    % Map grayscale -> RGB using LUT interpolation
+                    RGB1 = applyLUT3D(I1n, lut1);
+                    %RGB2 = applyLUT3D(I2n, lut2);
+                    RGB3 = applyLUT3D(3.0*I3n, lut3);
+                    
+                    % Mix (weights optional)
+                    w = [1.0, 1.0, 1.0];
+                    IV = w(1)*RGB1 + w(3)*RGB3; %+ w(2)*RGB2;
+                    IV = min(max(IV,0),1);   % clamp
+                    
+                   
+                    
+                    
+
+                else
+                    IV = raw{1} ;
+                end
+
 
             end
 
@@ -943,7 +989,7 @@ if plot_evolution
             % preview with mesh
             if preview
                 clf
-                h = trimesh(rmesh.f, xr, yr, zr, 'EdgeColor', 'none', 'facecolor', lscolor) ;
+                h = trimesh(amesh.f, xr, yr, zr, 'EdgeColor', 'none', 'facecolor', lscolor) ;
                 axis equal
                 hold on;
                 scatter3(xpx(:), xpy(:), xpz(:), 10, 'markeredgecolor', 'r')
@@ -951,17 +997,42 @@ if plot_evolution
                 scatter3(zpx(:), zpy(:), zpz(:), 10, 'markeredgecolor', 'b')
                 waitfor(gcf)
             end
-            disp('performing interpolation in Xplane')
-            ix = interp3(double(IV), xyzX(:, 2), xyzX(:, 1), xyzX(:, 3)) ;
-            ix = reshape(ix, size(x1)) ;
 
-            disp('performing interpolation in Yplane')
-            iy = interp3(double(IV), xyzY(:, 2), xyzY(:, 1), xyzY(:, 3)) ;
-            iy = reshape(iy, size(x2)) ;
+            if planeColor
+                disp('performing interpolation in Xplane')
+    
+                ix1 = interp3(double(IV(:,:,:,1)), xyzX(:, 2), xyzX(:, 1), xyzX(:, 3)) ;
+                ix2 = interp3(double(IV(:,:,:,2)), xyzX(:, 2), xyzX(:, 1), xyzX(:, 3)) ;
+                ix3 = interp3(double(IV(:,:,:,3)), xyzX(:, 2), xyzX(:, 1), xyzX(:, 3)) ;
+                ix = reshape([ix1, ix2, ix3], [size(x1),3]) ;
+    
+                disp('performing interpolation in Yplane')
+    
+                iy1 = interp3(double(IV(:,:,:,1)), xyzY(:, 2), xyzY(:, 1), xyzY(:, 3)) ;
+                iy2 = interp3(double(IV(:,:,:,2)), xyzY(:, 2), xyzY(:, 1), xyzY(:, 3)) ;
+                iy3 = interp3(double(IV(:,:,:,3)), xyzY(:, 2), xyzY(:, 1), xyzY(:, 3)) ;
+                iy = reshape([iy1, iy2, iy3], [size(x2),3]) ;
+    
+                disp('performing interpolation in Zplane')
+    
+                iz1 = interp3(double(IV(:,:,:,1)), xyzZ(:, 2), xyzZ(:, 1), xyzZ(:, 3)) ;
+                iz2 = interp3(double(IV(:,:,:,2)), xyzZ(:, 2), xyzZ(:, 1), xyzZ(:, 3)) ;
+                iz3 = interp3(double(IV(:,:,:,3)), xyzZ(:, 2), xyzZ(:, 1), xyzZ(:, 3)) ;
+                iz = reshape([iz1, iz2, iz3], [size(x3),3]) ;
 
-            disp('performing interpolation in Zplane')
-            iz = interp3(double(IV), xyzZ(:, 2), xyzZ(:, 1), xyzZ(:, 3)) ;
-            iz = reshape(iz, size(x3)) ;
+            else
+                disp('performing interpolation in Xplane')
+                ix = interp3(double(IV), xyzX(:, 2), xyzX(:, 1), xyzX(:, 3)) ;
+                ix = reshape(ix, size(x1)) ;
+                disp('performing interpolation in Yplane')
+                iy = interp3(double(IV), xyzY(:, 2), xyzY(:, 1), xyzY(:, 3)) ;
+                iy = reshape(iy, size(x2)) ;
+    
+                disp('performing interpolation in Zplane')
+                iz = interp3(double(IV), xyzZ(:, 2), xyzZ(:, 1), xyzZ(:, 3)) ;
+                iz = reshape(iz, size(x3)) ;
+
+            end
 
             if preview
                 % Check order of axes wrt IV
@@ -989,15 +1060,28 @@ if plot_evolution
                 close all
             end
 
+            
             ix(isnan(ix)) = 0 ;
             iy(isnan(iy)) = 0 ;
             iz(isnan(iz)) = 0 ;
-            ix = brighten * ix / 2^(16) ;
-            iy = brighten * iy / 2^(16) ;
-            iz = brighten * iz / 2^(16) ;
-            ix(ix > 255) = 255 ;
-            iy(iy > 255) = 255 ;
-            iz(iz > 255) = 255 ;
+            if planeColor
+                ix = 1 * ix  ;
+                iy = 1 * iy  ;
+                iz = 1 * iz  ;
+                ix(ix > 1.0) = 1.0;
+                iy(iy > 1.0) = 1.0;
+                iz(iz > 1.0) = 1.0;
+                
+            else
+                
+
+                ix = brighten * ix / 2^(16) ;
+                iy = brighten * iy / 2^(16) ;
+                iz = brighten * iz / 2^(16) ;
+                ix(ix > 255) = 255 ;
+                iy(iy > 255) = 255 ;
+                iz(iz > 255) = 255 ;
+            end
         end
         
         %% Plot in APDV
@@ -1232,3 +1316,21 @@ if plot_evolution
     
 end
 disp('done')
+
+function RGB = applyLUT(I, lut)
+    N = size(lut,1);
+    x = linspace(0,1,N);
+    R = interp1(x, lut(:,1), I, 'linear', 'extrap');
+    G = interp1(x, lut(:,2), I, 'linear', 'extrap');
+    B = interp1(x, lut(:,3), I, 'linear', 'extrap');
+    RGB = cat(3, R, G, B);
+end
+
+function RGB = applyLUT3D(V, lut)
+    x = linspace(0,1,size(lut,1));
+    R = interp1(x, lut(:,1), V, 'linear', 'extrap');
+    G = interp1(x, lut(:,2), V, 'linear', 'extrap');
+    B = interp1(x, lut(:,3), V, 'linear', 'extrap');
+    RGB = cat(4, R, G, B);  % [N M K 3]
+end
+end
