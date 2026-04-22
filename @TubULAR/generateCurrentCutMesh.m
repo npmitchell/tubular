@@ -1,6 +1,8 @@
 function generateCurrentCutMesh(tubi, cutMeshOptions)
 % generateCurrentCutMesh(tubi, cutMeshOptions)
 %
+% Todo: if we re-define AD / PD points using Ricci flow and phi=0 branch cut, consider overwriting the cylinder mesh result on file... or a separate file.
+%
 % Parameters
 % ----------
 % tubi : TubULAR class instance
@@ -40,6 +42,7 @@ preview = false ;
 useMaxDeviationPtsForCorrection = true ;
 definePDviaRicci_t0 = false ;
 definePDviaRicci = false ;
+defineUVviaRicci = false ;
 ricciOptions = struct() ;
 try
     t0 = tubi.t0set() ;
@@ -67,6 +70,9 @@ if nargin > 1
     end
     if isfield(cutMeshOptions, 'definePDviaRicci_t0')
         definePDviaRicci_t0 = cutMeshOptions.definePDviaRicci_t0 ;
+    end
+    if isfield(cutMeshOptions, 'defineUVviaRicci')
+        defineUVviaRicci = cutMeshOptions.defineUVviaRicci ;
     end
     if isfield(cutMeshOptions, 'definePDviaRicci')
         definePDviaRicci = cutMeshOptions.definePDviaRicci ;
@@ -119,6 +125,7 @@ pdIDx = h5read(tubi.fileName.pBoundaryDorsalPtsClean,...
     ['/' sprintf('%06d', tt)]) ;
 
 % try geodesic if first timepoint
+ricciComputed = false ;
 if tt == t0
     cutPath_ok = false ;
     
@@ -126,6 +133,7 @@ if tt == t0
     if definePDviaRicci_t0
         [rawRicciMesh, ~] = ...
             tubi.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
+        ricciComputed = true ;
 
         % Assert that adIDx vertex is very near phi= 0
         assert(rawRicciMesh.rectangle.u(adIDx,2) == 0)
@@ -216,10 +224,11 @@ if tt == t0
 else
     
     % Modify adIDx/pdIDx if desired (for removing possible twist)
-    if definePDviaRicci
+    if definePDviaRicci 
         [rawRicciMesh, ~] = ...
             tubi.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
-
+        ricciComputed = true ;
+        
         % Assert that adIDx vertex is very near phi= 0
         assert(rawRicciMesh.rectangle.u(adIDx,2) == 0)
         
@@ -311,76 +320,87 @@ clearvars header
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Generate pullback to rectangular domain ---------------------
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The surface parameterization algorithm (optionally) takes four vertex IDs
-% as input to specify the corners of the square parameterization domain.
-% Maddeningly, the order in which these points are specified to not seem to
-% effect the output. For consistency, we perform a post-hoc correction so
-% that the final output has the following geometric ordering
-%
-%   (AD1)-------(PD1)
-%     |           |
-%     |           |
-%     |           |
-%     |           |
-%   (AD2)-------(PD2)
-%
-% Note that the pathPairs variable has the following columns:
-%   [ ( AD1 -> PD1 ), ( AD2 -> PD2 ) ]
-%--------------------------------------------------------------------------
-
-% View results --------------------------------------------------------
-% P = cutMesh.pathPairs(:,1);
-% 
-% trisurf( triangulation( mesh.f, mesh.v ) );
-% 
-% hold on
-%
-% line( mesh.v(P,1), mesh.v(P,2), mesh.v(P,3), ...
-%     'Color', 'c', 'LineWidth',2);
-% 
-% scatter3( mesh.v(adIDx,1), mesh.v(adIDx,2), mesh.v(adIDx,3), ...
-%     'filled', 'r' );
-% scatter3( mesh.v(pdIDx,1), mesh.v(pdIDx,2), mesh.v(pdIDx,3), ...
-%     'filled', 'm' );
-% 
-% hold off
-% 
-% axis equal
-% 
-% clear P
-
-%----------------------------------------------------------------------
-% Generate Pullback to Annular Orbifold Domain
-%----------------------------------------------------------------------
-fprintf('Relaxing network via Affine transformation... ');
-try
-    cutMesh = flattenAnnulus( cutMesh );
-catch
-    disp('Bad boundary! Remeshing')
-    cutMesh = flattenAnnulus( cutMesh );
-    % Reduce the mesh and check the results this way
-    fv.faces = mesh.f ;
-    fv.vertices = mesh.v ;
-    fv = reducepatch(fv, 0.9) ;    
-    [~, adIDx2] = min(vecnorm(fv.vertices - mesh.v(adIDx, :), 2, 2)) ;
-    [~, pdIDx2] = min(vecnorm(fv.vertices - mesh.v(pdIDx, :), 2, 2)) ;
-    vn2 = per_vertex_normals(fv.vertices, fv.faces, 'Weighting', 'angle') ;
-    cutMesh = cylinderCutMesh(fv.faces, fv.vertices, vn2, adIDx2, pdIDx2, cutMeshOptions );
-    bdyIDx = freeBoundary( triangulation( cutMesh.f, cutMesh.v ) ) ;
-    idx = bdyIDx(:, 1) ;
+if ~defineUVviaRicci
+    % "Orbifold" method
+    % -----------------
+    % The surface parameterization algorithm (optionally) takes four vertex IDs
+    % as input to specify the corners of the square parameterization domain.
+    % Maddeningly, the order in which these points are specified to not seem to
+    % effect the output. For consistency, we perform a post-hoc correction so
+    % that the final output has the following geometric ordering
+    %
+    %   (AD1)-------(PD1)
+    %     |           |
+    %     |           |
+    %     |           |
+    %     |           |
+    %   (AD2)-------(PD2)
+    %
+    % Note that the pathPairs variable has the following columns:
+    %   [ ( AD1 -> PD1 ), ( AD2 -> PD2 ) ]
+    %--------------------------------------------------------------------------
     
-    % plot the remeshing
-    if preview
-        trisurf(cutMesh.f, cutMesh.v(:, 1), cutMesh.v(:, 2), ...
-            cutMesh.v(:, 3), 'edgecolor', 'none', 'facealpha', 1.)
-        hold on;
-        plot3(cutMesh.v(idx, 1), cutMesh.v(idx, 2), cutMesh.v(idx, 3), '.-')
-        title('Remeshed the surface and took new cutPath. Will retry flattening')
-        disp('Remeshed the surface and took new cutPath. Close figure to retry flattening')
-        waitfor(gcf)
+    % View results --------------------------------------------------------
+    % P = cutMesh.pathPairs(:,1);
+    % 
+    % trisurf( triangulation( mesh.f, mesh.v ) );
+    % 
+    % hold on
+    %
+    % line( mesh.v(P,1), mesh.v(P,2), mesh.v(P,3), ...
+    %     'Color', 'c', 'LineWidth',2);
+    % 
+    % scatter3( mesh.v(adIDx,1), mesh.v(adIDx,2), mesh.v(adIDx,3), ...
+    %     'filled', 'r' );
+    % scatter3( mesh.v(pdIDx,1), mesh.v(pdIDx,2), mesh.v(pdIDx,3), ...
+    %     'filled', 'm' );
+    % 
+    % hold off
+    % 
+    % axis equal
+    % 
+    % clear P
+    
+    %----------------------------------------------------------------------
+    % Generate Pullback to Annular Orbifold Domain
+    %----------------------------------------------------------------------
+    fprintf('Relaxing network via Affine transformation... ');
+    try
+        cutMesh = flattenAnnulus( cutMesh );
+    catch
+        disp('Bad boundary! Remeshing')
+        cutMesh = flattenAnnulus( cutMesh );
+        % Reduce the mesh and check the results this way
+        fv.faces = mesh.f ;
+        fv.vertices = mesh.v ;
+        fv = reducepatch(fv, 0.9) ;    
+        [~, adIDx2] = min(vecnorm(fv.vertices - mesh.v(adIDx, :), 2, 2)) ;
+        [~, pdIDx2] = min(vecnorm(fv.vertices - mesh.v(pdIDx, :), 2, 2)) ;
+        vn2 = per_vertex_normals(fv.vertices, fv.faces, 'Weighting', 'angle') ;
+        cutMesh = cylinderCutMesh(fv.faces, fv.vertices, vn2, adIDx2, pdIDx2, cutMeshOptions );
+        bdyIDx = freeBoundary( triangulation( cutMesh.f, cutMesh.v ) ) ;
+        idx = bdyIDx(:, 1) ;
+        
+        % plot the remeshing
+        if preview
+            trisurf(cutMesh.f, cutMesh.v(:, 1), cutMesh.v(:, 2), ...
+                cutMesh.v(:, 3), 'edgecolor', 'none', 'facealpha', 1.)
+            hold on;
+            plot3(cutMesh.v(idx, 1), cutMesh.v(idx, 2), cutMesh.v(idx, 3), '.-')
+            title('Remeshed the surface and took new cutPath. Will retry flattening')
+            disp('Remeshed the surface and took new cutPath. Close figure to retry flattening')
+            waitfor(gcf)
+        end
+        
+        cutMesh = flattenAnnulus( cutMesh );
     end
-    
-    cutMesh = flattenAnnulus( cutMesh );
+else
+    disp('Defining UV using the Ricci flow')
+    if ~ricciComputed
+        [rawRicciMesh, ~] = ...
+            tubi.generateRawRicciMeshTimePoint(tt, ricciOptions) ;
+    end
+    cutMesh = ...(rawRiciMesh.rectangle....) ;
 end
 
 if preview
