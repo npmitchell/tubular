@@ -29,6 +29,7 @@ upperboundy = 350 ;
 step_phi0tile = 25 ;
 width_phi0tile = 150 ;
 potential_sigmay = 350 ;
+textureChannel = 1 ;
 if nargin > 4
     if isfield(phi0TextureOpts, 'lowerboundy')
         lowerboundy = phi0TextureOpts.lowerboundy ;
@@ -45,6 +46,9 @@ if nargin > 4
     end
     if isfield(phi0TextureOpts, 'potential_sigmay')
         potential_sigmay = phi0TextureOpts.potential_sigmay ;
+    end
+    if isfield(phi0TextureOpts, 'textureChannel')
+        textureChannel = phi0TextureOpts.textureChannel ;
     end
 end
 
@@ -64,11 +68,14 @@ if isempty(tubi.currentData.IV)
 
     % Raw stack data
     IV = tubi.xp.stack.image.apply();
-    IV = imadjustn(IV{1});         
+    IV = imadjustn(IV{textureChannel});         
     tubi.currentData.IV = IV ;
 else
     % Raw stack data
     IV = tubi.currentData.IV ;
+    if iscell(IV)
+        IV = IV{textureChannel} ;
+    end
 end
 
 % Unpack QS
