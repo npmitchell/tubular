@@ -81,7 +81,7 @@ try
     assert( isequal( bdyIDx(:,1), [ bdyIDx(end,2); bdyIDx(1:end-1,2) ] ) ) ;
 catch
     disp('try to reorient faces to obtain correctly-oriented boundary')
-    cutMesh.f = reorient_facets( cutMesh.v, cutMesh.f );
+    cutMesh.f = reorient_faces( cutMesh.v, cutMesh.f );
     bdyIDx = freeBoundary( triangulation( cutMesh.f, cutMesh.v ) ) ;
 
     tmp = [bdyIDx(:, 1), [ bdyIDx(end,2); bdyIDx(1:end-1,2) ] ] ;

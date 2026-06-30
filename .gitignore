@@ -40,6 +40,11 @@
 # MATLAB stuff
 *.m~
 *~
+*.asv
 
 # Stuff to ignore
 *.ignore*
+
+# External
+*external/gptoolbox/external/*
+*external/gptoolbox/mex*
