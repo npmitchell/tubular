@@ -26,6 +26,10 @@ function getMeshes(tubi, overwrite, method)
 %       diffusion coefficient. Otherwise, if zero, performs no smoothing.
 %       Otherwise, if negative, uses MeshLab to smooth the mesh, using the
 %       specified mlxprogram in tubi.xp.detectOptions.mlxprogram
+%           Note, if smooth_with_matlab > 0, then later lambda =
+%           smooth_with_matlab. A bigger lambda means more smooth. 
+%              if smooth_with_matlab < 0, smooth with meshlab. Here the
+%              absolute value of it does not have any meaning
 %
 % Returns
 % -------
@@ -49,6 +53,15 @@ if nargin < 2
 end
 
 opts = tubi.xp.detectOptions ;
+%axesPixels = tubi.axesPixels;
+axesPixels = tubi.axesPixels;
+
+% Define timepoints to iterate over 
+if isfield(opts, 'timepoints')
+    timepoints = opts.timepoints ;
+else
+    timepoints = tubi.xp.fileMeta.timePoints ;
+end
 
 if isfield(opts, 'preview')
     preview = opts.preview ;
@@ -77,21 +90,21 @@ if isfield(opts, 'pre_pressure')
 else
     pre_pressure = 0 ;
 end
-% if isfield(opts, 'pre_tension')
-%     pre_tension = opts.pre_tension ;
-% else
-%     pre_tension = 0 ;
-% end
+if isfield(opts, 'pre_tension')
+    pre_tension = opts.pre_tension ;
+else
+    pre_tension = 0 ;
+end
 if isfield(opts, 'post_pressure')
     post_pressure = opts.post_pressure ;
 else
     post_pressure = 0 ;
 end
-% if isfield(opts, 'post_tension')
-%     post_tension = opts.post_tension ;
-% else
-%     post_tension = 0 ;
-% end
+if isfield(opts, 'post_tension')
+    post_tension = opts.post_tension ;
+else
+    post_tension = 0 ;
+end
 if isfield(opts, 'target_edgelength')
     tar_length = opts.target_edgelength ;
 else
@@ -110,7 +123,7 @@ end
 if isfield(opts, 'maxIterRelaxMeshSpikes')
     maxIterRelaxMeshSpikes = opts.maxIterRelaxMeshSpikes ;
 else
-    maxIterRelaxMeshSpikes = 100 ;
+    maxIterRelaxMeshSpikes = 0 ;
 end
 if isfield(opts, 'fileName')
     fileBaseName = opts.fileName ;
@@ -127,10 +140,14 @@ if isfield(opts, 'chooseSeedCenterEveryTimepoint')
 else
     chooseSeedCenterEveryTimepoint = false ;
 end
+if isfield(opts, 'useAxesPixels4Permutation')
+    useAxesPixels4Permutation = opts.useAxesPixels4Permutation ;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Identify the surface using the loaded probabilities here
 % Convert the current image to a level set using morphological snakes
+
 ssfactor = opts.ssfactor ;
 niter = opts.niter ;
 niter0 = opts.niter0 ;
@@ -168,7 +185,7 @@ try
     mlxprogram = opts.mlxprogram;
 catch
     if smooth_with_matlab < 0
-        if ~isfield(ops, 'mlxprogram')
+        if ~isfield(opts, 'mlxprogram')
             error(['Since smooth_with_matlab < 0, you must specify an ', ...
                 'mlxprogram (filename of a .mlx script) that specifies', ...
                 'a meshLab program to run on the mesh'])
@@ -188,12 +205,13 @@ if ~contains(ofn_smoothply, '%') || ~contains(ofn_smoothply, 'd')
     ofn_smoothply = [ofn_smoothply tubi.timeStampStringSpec '.ply'] ;
 end
 
-for tidx = 1:length(tubi.xp.fileMeta.timePoints)
-    tp = tubi.xp.fileMeta.timePoints(tidx) ;
+for tidx = length(timepoints):-1:1
+%for tidx = 1:length(timepoints)
+    tp = timepoints(tidx) ;
     try
-        previous_tp = tubi.xp.fileMeta.timePoints(tidx-1) ;
+        previous_tp = timepoints(tidx-1) ;
     catch
-        previous_tp = tubi.xp.fileMeta.timePoints(tidx) - 1 ;
+        previous_tp = timepoints(tidx) - 1 ;
     end
     
     %% Define the mesh we seek & check if it exists already on disk
@@ -221,27 +239,94 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 'the format of version 1.1 or 0.5 (ie with exported_data as a dataset)']);
         end
 
-        % ilastik internally swaps axes. 1:x, 2:y, 3:z, 4:class
-        % Let's extract out the XYZ data, then permute the axes correctly
-        fgc = strfind(ilastikaxisorder, 'c') ;
-        if fgc == 1
-            pred = squeeze(file(opts.foreGroundChannel, :, :, :)) ;
-        elseif fgc == 2 
-            pred = squeeze(file(:, opts.foreGroundChannel, :, :)) ;
-        elseif fgc == 3
-            pred = squeeze(file(:, :, opts.foreGroundChannel, :)) ;
-        elseif fgc == 4 
-            pred = squeeze(file(:, :, :, opts.foreGroundChannel)) ;
+        if useAxesPixels4Permutation
+            %% Do axis permutation by size of each dimension
+            % axes_pixel_list: A vector. It is the 4 numbers are xpix, ypix, zpix, cnum
+            % respectively. This is the reference coordinate system that is in
+            % the correct order. 
+            % file_to_check_axis: a probability h5 file at any timepoint
+            % size_of_file: A vector. Contains the pixel number of the 4 axes of the probability h5
+            % file. Highly possible that the axes are not in the correct order
+            % and need permutation. 
+            % permute_order: if == [p,q,r,s], then it means that the p^th
+            % component of the size_of_file vector is actually x axis, etc
+            axes_pixels_list = tubi.axes_pixels_list; % [323,163,172,2]
+            disp(axes_pixels_list)
+            disp('Above is the axes of the original h5 file')
+            file_to_check_axes = h5read(fileName,'/exported_data');
+            % This one actually has 3 channels, != 2 channels in original file
+            size_of_file = size(file_to_check_axes); % 3   172   163   323
+            disp(size_of_file)
+            disp('Above is the axes of the probability h5 file')
+    
+            % check which one is the color channel, and change it to the cnum
+            % of original h5 file here
+    
+            flag = [0,0,0,0];  % if that axes dim in file_to_check_axes is contained in size_of_file
+            % here for example 3 is not in [323,163,172,2]
+    
+            for uu = 1:length(size_of_file)
+                for vv = 1:length(axes_pixels_list)
+                    if size_of_file(uu) == axes_pixels_list(vv)
+                        flag(uu) = 1;
+                    end
+                end
+                if flag(uu) == 0
+                    size_of_file(uu) = axes_pixels_list(4);
+                    disp(size_of_file(uu))
+                end
+            end
+    
+            permute_order = [0,0,0,0];
+            %for ii = 1:length(size_of_file)
+            %    size_of_specific_axis = size_of_file(ii); % (first one:) 323. can also be other values, like 163
+            %    axis_corr_order = find(axes_pixels_list == size_of_specific_axis);% 2, if size_of_specific_axis == 163
+            %    %for every axis of the (new) file, compare it with the the
+            %    %reference axes vector -- axesPixels, 
+            %    % for the variable axis_corr(esponding)_order: 
+            %    %1:x, 2:y, 3:z, 4:c
+            %    permute_order(ii) = axis_corr_order;
+            %end
+     
+            for ii = 1:length(axes_pixels_list)
+                size_of_specific_axis = axes_pixels_list(ii);
+                axis_corr_order = find(size_of_file == size_of_specific_axis);
+                disp(axis_corr_order)
+                permute_order(ii) = axis_corr_order;
+            end
+            disp(permute_order); % 4 3 2 1
+    
+            file_permuted = permute(file_to_check_axes, permute_order); % permute array dimensions
+            % size(file_to_check_axes)   % 2   172   163   323
+            % size(file_permuted)   %  323   163   172     2
+            pred = squeeze(file_permuted(:, :, :,tubi.xp.detectOptions.foreGroundChannel));
+            disp(size(pred))
         else
-            error(['Expected 4D dorsal probabilities data, but was ' ...
-                num2str(length(size(file))) 'D'])
+            % ilastik internally swaps axes. 1:x, 2:y, 3:z, 4:class
+            % Let's extract out the XYZ data, then permute the axes correctly
+            fgc = strfind(ilastikaxisorder, 'c') ;
+            if fgc == 1
+                pred = squeeze(file(opts.foreGroundChannel, :, :, :)) ;
+            elseif fgc == 2 
+                pred = squeeze(file(:, opts.foreGroundChannel, :, :)) ;
+            elseif fgc == 3
+                pred = squeeze(file(:, :, opts.foreGroundChannel, :)) ;
+            elseif fgc == 4 
+                pred = squeeze(file(:, :, :, opts.foreGroundChannel)) ;
+            else
+                error(['Expected 4D dorsal probabilities data, but was ' ...
+                    num2str(length(size(file))) 'D'])
+            end
+        
+            % Now permute
+            xyzstring = erase(lower(ilastikaxisorder), 'c') ;
+            xpos = strfind(xyzstring, 'x') ;
+            ypos = strfind(xyzstring, 'y') ;
+            zpos = strfind(xyzstring, 'z') ;
+            pred = permute(pred, [xpos, ypos, zpos]) ;
         end
 
-        xyzstring = erase(lower(ilastikaxisorder), 'c') ;
-        xpos = strfind(xyzstring, 'x') ;
-        ypos = strfind(xyzstring, 'y') ;
-        zpos = strfind(xyzstring, 'z') ;
-        pred = permute(pred, [xpos, ypos, zpos]) ;
+
 
         % This commented code is handled more elegantly above already. 
         % I include it for reference for how this used to be handled.
@@ -290,7 +375,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 centers = size(pred) * 0.5 ;
                 centers = centers(1:3) ;
             elseif strcmpi(center_guess, 'click') || strcmpi(center_guess, 'select')
-                if tidx == 1 || chooseSeedCenterEveryTimepoint
+                if tidx == length(timepoints) || chooseSeedCenterEveryTimepoint
                     msg = 'Flip to desired frame to select a center pt using arrows <^v>, then press Enter' ;
                     pred2show = pred ;
                     clf
@@ -313,7 +398,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
 
             disp(['init_ls_fn = ', init_ls_fn])
             disp(['ofn_ls = ', ofn_ls])
-            if tidx > 1 || strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
+            if strcmp(init_ls_fn, 'none') || strcmp(init_ls_fn, '')
                 % User has NOT supplied fn from detectOptions
                 init_ls_fn = [ofn_ls, ...
                     num2str(previous_tp, tubi.timeStampStringSpec ) '.' dtype] ;
@@ -475,7 +560,11 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 BW = imdilate(BW, SE) ;
             end
 
-            % preview current results
+            % Here, should check if later we can get a topological sphere by
+            % looking at every slice of BW. And esp. show where the surface can be
+            % wrong. 
+
+            % preview current results. 
             if preview
                 clf
                 if centers(3) < size(BW, 3) && centers(3) > 0.5 
@@ -508,6 +597,7 @@ for tidx = 1:length(tubi.xp.fileMeta.timePoints)
                 end
             end
         end
+
 
         % Remove all but biggest component
         if enforceSingleComponent

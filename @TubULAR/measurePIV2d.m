@@ -84,6 +84,16 @@ if isfield(options, 'intArea2')
 else
     intArea2 = 64 ;
 end
+if isfield(options, 'intArea3')
+    intArea3 = options.intArea1 ;
+else 
+    intArea3 = 32 ;
+end
+if isfield(options, 'intArea4')
+    intArea4 = options.intArea4 ;
+else 
+    intArea4 = 16 ;
+end
 
 if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite 
     % Compute PIV for each timepoint requested
@@ -205,8 +215,8 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             roi             = [] ;
             numPasses       = 4  ;
             intArea2        = intArea2 ;
-            intArea3        = 32 ;
-            intArea4        = 16 ;
+            intArea3        = intArea3 ;
+            intArea4        = intArea4 ;
             repeat          = 1  ;
             disAuto         = 0  ;
             % Image proc
@@ -225,18 +235,7 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             stdthresh       = 7  ;
             do_local_median = 1  ;
             neigh_thresh    = 3  ;
-            if isfield(options, 'intArea1')
-                intArea1 = options.intArea1 ;
-            end
-            if isfield(options, 'intArea2')
-                intArea2 = options.intArea1 ;
-            end
-            if isfield(options, 'intArea3')
-                intArea3 = options.intArea1 ;
-            end
-            if isfield(options, 'intArea4')
-                intArea4 = options.intArea4 ;
-            end
+
             if isfield(options, 'step')
                 step = options.step ;
             end
@@ -251,15 +250,6 @@ if ~exist(tubi.fileName.pivRaw.raw, 'file') || overwrite
             end
             if isfield(options, 'numPasses')
                 numPasses   = options.numPasses  ;
-            end
-            if isfield(options, 'intArea2')
-                intArea2    = options.intArea2 ;
-            end
-            if isfield(options, 'intArea3')
-                intArea3    = options.intArea3 ;
-            end
-            if isfield(options, 'intArea4')
-                intArea4    = options.intArea4 ;
             end
             if isfield(options, 'repeat')
                 repeat      = options.repeat  ;

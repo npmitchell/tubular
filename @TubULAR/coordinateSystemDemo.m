@@ -78,6 +78,9 @@ function fig = coordinateSystemDemo(tubi, options)
     if isfield(options, 'axisOn')
         axisOn = options.axisOn ;
     end
+     if isfield(options, 'viewAngle')
+        viewAngle=options.viewAngle;
+    end
     
     % add to exten
     if (subU ~= 1 || subV ~=1) && strcmpi(style, 'curves')
