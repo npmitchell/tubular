@@ -171,9 +171,12 @@ end
 
 %% Set up the figure
 % If grayscale image is passed, convert to RGB
-if length(size(im)) < 3
-    im = cat(3, im, im, im) ;
+if size(im,3) == 1
+    im = cat(3, im, im, im);
+elseif size(im,3) ~= 3
+    im = repmat(mat2gray(max(im,[],3)), [1 1 3]);  % or im(:,:,1:3)
 end
+
 h1 = imshow(im) ;
 hold on;
 

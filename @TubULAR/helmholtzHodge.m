@@ -1,5 +1,5 @@
-function helmholtzHodge(QS, options) 
-%helmholtzHodge(QS, options) 
+function helmholtzHodge(tubi, options) 
+%helmholtzHodge(tubi, options) 
 %   - Compute DEC divergence and DEC "curl" on 2d evolving surface in 3d.
 %   - Compute laplacian in covariant frame 
 %   - Compute scalar fields representing rotational and harmonic components
@@ -7,7 +7,7 @@ function helmholtzHodge(QS, options)
 %
 % Parameters
 % ----------
-% QS : QuapSlap class instance
+% tubi : TubULAR class instance
 % options : struct with fields 
 %   overwrite : bool
 %       overwrite previous results
@@ -38,11 +38,11 @@ plot_dec_pullback = true ;
 plot_lap_pullback = true ;
 plot_dec_texturepatch = false ;
 preview = false ;
-pivimCoords = QS.piv.imCoords ;
-lambda_smooth = QS.smoothing.lambda ;
-lambda_mesh = QS.smoothing.lambda_mesh ;
-nmodes = QS.smoothing.nmodes ;
-zwidth = QS.smoothing.zwidth ;
+pivimCoords = tubi.piv.imCoords ;
+lambda_smooth = tubi.smoothing.lambda ;
+lambda_mesh = tubi.smoothing.lambda_mesh ;
+nmodes = tubi.smoothing.nmodes ;
+zwidth = tubi.smoothing.zwidth ;
 samplingResolution = '1x' ;
 averagingStyle = 'Lagrangian' ;
 clipDiv = 5.0 ;                     % max allowed divergence measurement  
@@ -114,80 +114,80 @@ else
     error("Could not parse samplingResolution: set to '1x' or '2x'")
 end
 
-%% Unpack QS
-timePoints = QS.xp.fileMeta.timePoints ;
-fname = QS.fileBase.name ;
-[rot, trans] = QS.getRotTrans() ;
-resolution = QS.APDV.resolution ;
+%% Unpack tubi
+timePoints = tubi.xp.fileMeta.timePoints ;
+fname = tubi.fileBase.name ;
+[rot, trans] = tubi.getRotTrans() ;
+resolution = tubi.APDV.resolution ;
 if doubleResolution
-    nU = 2 * QS.nU - 1 ;
-    nV = 2 * QS.nV - 1 ;
-    piv3dFileBase = QS.fullFileBase.piv3d2x ;
+    nU = 2 * tubi.nU - 1 ;
+    nV = 2 * tubi.nV - 1 ;
+    piv3dFileBase = tubi.fullFileBase.piv3d2x ;
 else
-    nU = QS.nU ;
-    nV = QS.nV ;
-    piv3dFileBase = QS.fullFileBase.piv3d ;
+    nU = tubi.nU ;
+    nV = tubi.nV ;
+    piv3dFileBase = tubi.fullFileBase.piv3d ;
 end
 if strcmp(averagingStyle, 'Lagrangian')
     if doubleResolution
-        QS.getVelocityAverage2x('vf', 'v2dum') ;
-        vf = QS.velocityAverage2x.vf ;
-        v2dum = QS.velocityAverage2x.v2dum ;
-        decDirRoot = QS.dir.piv.avgDEC2x ;
-        decFnBase = QS.fullFileBase.decAvg2x ;
+        tubi.getVelocityAverage2x('vf', 'v2dum') ;
+        vf = tubi.velocityAverage2x.vf ;
+        v2dum = tubi.velocityAverage2x.v2dum ;
+        decDirRoot = tubi.dir.piv.avgDEC2x ;
+        decFnBase = tubi.fullFileBase.decAvg2x ;
     else
-        QS.getVelocityAverage('vf', 'v2dum') ;
-        vf = QS.velocityAverage.vf ;
-        v2dum = QS.velocityAverage.v2dum ;
-        decDirRoot = QS.dir.piv.avgDEC ;
-        decFnBase = QS.fullFileBase.decAvg ;    
+        tubi.getVelocityAverage('vf', 'v2dum') ;
+        vf = tubi.velocityAverage.vf ;
+        v2dum = tubi.velocityAverage.v2dum ;
+        decDirRoot = tubi.dir.piv.avgDEC ;
+        decFnBase = tubi.fullFileBase.decAvg ;    
     end
 elseif strcmp(averagingStyle, 'simple') 
     if doubleResolution
-        QS.getVelocitySimpleAverage2x('vf', 'v2dum') ;
-        vf = QS.velocitySimpleAverage2x.vf ;
-        v2dum = QS.velocitySimpleAverage2x.v2dum ;
-        decDirRoot = QS.dir.pivSimAvgDEC2x ;
-        nU = 2 * QS.nU - 1 ;
-        nV = 2 * QS.nV - 1 ;
-        piv3dFileBase = QS.fullFileBase.piv3d2x ;
-        decFnBase = QS.fullFileBase.decSimAvg2x ;
+        tubi.getVelocitySimpleAverage2x('vf', 'v2dum') ;
+        vf = tubi.velocitySimpleAverage2x.vf ;
+        v2dum = tubi.velocitySimpleAverage2x.v2dum ;
+        decDirRoot = tubi.dir.pivSimAvgDEC2x ;
+        nU = 2 * tubi.nU - 1 ;
+        nV = 2 * tubi.nV - 1 ;
+        piv3dFileBase = tubi.fullFileBase.piv3d2x ;
+        decFnBase = tubi.fullFileBase.decSimAvg2x ;
     else
-        QS.getVelocitySimpleAverage('vf', 'v2dum') ;
-        vf = QS.velocitySimpleAverage.vf ;
-        v2dum = QS.velocitySimpleAverage.v2dum ;
-        decDirRoot = QS.dir.pivSimAvgDEC ;
-        nU = QS.nU ;
-        nV = QS.nV ;
-        piv3dFileBase = QS.fullFileBase.piv3d ;
-        decFnBase = QS.fullFileBase.decSimAvg ;
+        tubi.getVelocitySimpleAverage('vf', 'v2dum') ;
+        vf = tubi.velocitySimpleAverage.vf ;
+        v2dum = tubi.velocitySimpleAverage.v2dum ;
+        decDirRoot = tubi.dir.pivSimAvgDEC ;
+        nU = tubi.nU ;
+        nV = tubi.nV ;
+        piv3dFileBase = tubi.fullFileBase.piv3d ;
+        decFnBase = tubi.fullFileBase.decSimAvg ;
     end
 elseif strcmp(averagingStyle, 'none') 
     if doubleResolution
-        QS.getVelocityRaw('vf', 'v2dum') ;
-        vf = QS.velocityRaw2x.vf ;
-        v2dum = QS.velocityRaw2x.v2dum ;
-        decDirRoot = QS.dir.pivRawDEC2x ;
-        nU = 2 * QS.nU - 1 ;
-        nV = 2 * QS.nV - 1 ;
-        piv3dFileBase = QS.fullFileBase.piv3d2x ;
-        decFnBase = QS.fullFileBase.dec2x ;
+        tubi.getVelocityRaw('vf', 'v2dum') ;
+        vf = tubi.velocityRaw2x.vf ;
+        v2dum = tubi.velocityRaw2x.v2dum ;
+        decDirRoot = tubi.dir.pivRawDEC2x ;
+        nU = 2 * tubi.nU - 1 ;
+        nV = 2 * tubi.nV - 1 ;
+        piv3dFileBase = tubi.fullFileBase.piv3d2x ;
+        decFnBase = tubi.fullFileBase.dec2x ;
     else
-        QS.getVelocityRaw('vf', 'v2dum') ;
-        vf = QS.velocityRaw.vf ;
-        v2dum = QS.velocityRaw.v2dum ;
-        decDirRoot = QS.dir.pivRawDEC ;
-        nU = QS.nU ;
-        nV = QS.nV ;
-        piv3dFileBase = QS.fullFileBase.piv3d ;
-        decFnBase = QS.fullFileBase.dec ;
+        tubi.getVelocityRaw('vf', 'v2dum') ;
+        vf = tubi.velocityRaw.vf ;
+        v2dum = tubi.velocityRaw.v2dum ;
+        decDirRoot = tubi.dir.pivRawDEC ;
+        nU = tubi.nU ;
+        nV = tubi.nV ;
+        piv3dFileBase = tubi.fullFileBase.piv3d ;
+        decFnBase = tubi.fullFileBase.dec ;
     end
 else
     error('averagingStyle not recognized. Use Lagrangian or simple')
 end
  
-t0 = QS.t0set() ;
-[~, ~, ~, xyzlim] = QS.getXYZLims() ;
+t0 = tubi.t0set() ;
+[~, ~, ~, xyzlim] = tubi.getXYZLims() ;
 
 %% define the output dirs
 decDir = decDirRoot.data ;
@@ -284,7 +284,7 @@ for tidx = tidx2do
         % Note: vfsmM is in um/min rs
         FF = piv3d.m0f ;   % #facesx3 float: mesh connectivity list
         V2D = piv3d.m0XY ; % Px2 float: 2d mesh vertices in pullback image pixel space
-        v3drs = QS.xyz2APDV(piv3d.m0v3d) ;
+        v3drs = tubi.xyz2APDV(piv3d.m0v3d) ;
         
         % Check it
         % figure;
@@ -312,7 +312,7 @@ for tidx = tidx2do
         Options.lambda_mesh = lambda_mesh ;     
         Options.nSpectralFilterModes = nmodes ;
         Options.spectralFilterWidth = zwidth ;
-        Options.outdir = QS.dir.piv.avgDEC.data ;
+        Options.outdir = tubi.dir.piv.avgDEC.data ;
         Options.do_calibration = (tidx == tidx2do(1)) ;
         Options.computeLaplacian = computeLaplacian ;
         [divs, rots, harms, lapvs, glueMesh] = ...
@@ -363,7 +363,7 @@ for tidx = tidx2do
         % Note: vfsmM is in um/min rs
         FF = piv3d.m0f ;   % #facesx3 float: mesh connectivity list
         V2D = piv3d.m0XY ; % Px2 float: 2d mesh vertices in pullback image pixel space
-        v3drs = QS.xyz2APDV(piv3d.m0v3d) ;
+        v3drs = tubi.xyz2APDV(piv3d.m0v3d) ;
 
         % Grab cutMesh from piv3d. Could grab from disk instead...
         cutM.f = FF ;
@@ -379,7 +379,7 @@ for tidx = tidx2do
         close all
         set(gcf, 'visible', 'off')
         if strcmp(pivimCoords, 'sp_sme')
-            im = imread(sprintfm(QS.fullFileBase.im_sp_sme, tp)) ;
+            im = imread(sprintfm(tubi.fullFileBase.im_sp_sme, tp)) ;
             ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
         else
             error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])
@@ -388,8 +388,8 @@ for tidx = tidx2do
         if size(im, 3) ~= 3
             im = cat(3, im, im, im) ;
         end
-        addTitleStr = [': $t=$', num2str((tp - t0)*QS.timeInterval), ...
-                       ' ', QS.timeUnits] ;
+        addTitleStr = [': $t=$', num2str((tp - t0)*tubi.timeInterval), ...
+                       ' ', tubi.timeUnits] ;
         Options = struct() ;
         Options.addTitleStr = addTitleStr ;
         Options.div2dfn = div2dfn ;
@@ -420,14 +420,14 @@ for tidx = tidx2do
         close all
         set(gcf, 'visible', 'off')
         if strcmp(pivimCoords, 'sp_sme')
-            im = imread(sprintfm(QS.fullFileBase.im_sp_sme, tp)) ;
+            im = imread(sprintfm(tubi.fullFileBase.im_sp_sme, tp)) ;
             ylims = [0.25 * size(im, 1), 0.75 * size(im, 1)] ;
         else
             error(['Have not coded for this pivimCoords option. Do so here: ' pivimCoords])
         end
         im = cat(3, im, im, im) ;  % convert to rgb for no cmap change
-        addTitleStr = [': $t=$', num2str((tp - t0)*QS.timeInterval), ...
-                       ' ', QS.timeUnits] ;
+        addTitleStr = [': $t=$', num2str((tp - t0)*tubi.timeInterval), ...
+                       ' ', tubi.timeUnits] ;
         Options = struct() ;
         Options.addTitleStr = addTitleStr ;
         Options.lapv2dfn = lap2dfn ;
@@ -449,9 +449,9 @@ for tidx = tidx2do
     if plot_dec_texturepatch_tidx
         % load current timepoint
         % (3D data for coloring mesh pullback)
-        QS.setTime(tp) ;
-        QS.getCurrentData() ;     
-        IV = QS.currentData.IV ;
+        tubi.setTime(tp) ;
+        tubi.getCurrentData() ;     
+        IV = tubi.currentData.IV ;
         IV = imcomplement(IV) ; % does this work? debug 2020
         % IV = max(IV(:)) - IV ; % used to do this.
 

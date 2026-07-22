@@ -177,12 +177,31 @@ if strcmp(smoothingMethod, 'savgol')
     % Note we ignore the variations in ds -->
     % (instead use du=constant) to do this fit
     phi0_fit = savgol(phi0s, polyorder, framelen)' ;
+elseif strcmp(smoothingMethod, 'rsavgol')
+    % Smoothing parameters
+    framelen = smoothingWidth ;  % must be odd
+    try
+        assert(mod(framelen, 2) == 1)
+    catch
+        error('phiOpts.smoothingWidth must be odd for smoothingMethod savgol')
+    end
+    polyorder = smoothingOrder ;
+    % Low pass filter (Savitsky-Golay)
+    % Note we ignore the variations in ds -->
+    % (instead use du=constant) to do this fit
+    phi0_fit = rsavgol(phi0s, polyorder, framelen)' ;
 elseif strcmp(smoothingMethod, 'movmean')
     % Smoothing parameters
     framelen = smoothingWidth ;  % window over which to smooth the result
     % Note we ignore the variations in ds -->
     % (instead use du=constant) to do this fit
     phi0_fit = movmean(phi0s, framelen)' ;
+elseif strcmp(smoothingMethod, 'movmedian')
+    % Smoothing parameters
+    framelen = smoothingWidth ;  % window over which to smooth the result
+    % Note we ignore the variations in ds -->
+    % (instead use du=constant) to do this fit
+    phi0_fit = movmedian(phi0s, framelen)' ;
 elseif strcmp(smoothingMethod, 'none')    
     phi0_fit = phi0s ;
 end

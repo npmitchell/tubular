@@ -75,6 +75,7 @@ function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 %       iteratively determine phi0 until convergence
 %   smoothingMethod : str specifier (default='none')
 %       method for smoothing phi0 wrt AP axis coordinate (ss)
+%       can be: 'savgol', 'none', 'movmean', 'rsavgol', 'movmedian'
 %   textureAxisOrder : 'xyz', 'yxz', etc
 %   smoothingWidth : int 
 %       width of kernel for smoothing of phi0 that takes v->phi=v-phi0.
@@ -98,7 +99,7 @@ function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 %% Default options
 overwrite = false ;
 save_phi0patch = false ;
-iterative_phi0 = false ;
+iterative_phi0 = true ;
 smoothingMethod = 'none' ;
 maxPhiIterations = 10 ;     % maximum # iterations of minimizing phi via phi -> phi-phi0(s) 
 textureAxisOrder = tubi.data.axisOrder ;
@@ -160,6 +161,16 @@ if nargin > 2
     end
     if isfield(spcutMeshOptions, 'phi0TextureOpts')
          phi0TextureOpts = spcutMeshOptions.phi0TextureOpts ;
+    end
+    if isfield(spcutMeshOptions, 'minPhi0')
+        minPhi0 = spcutMeshOptions.minPhi0 ;
+    else
+        minPhi0 = -0.45 ;
+    end
+    if isfield(spcutMeshOptions, 'maxPhi0')
+        maxPhi0 = spcutMeshOptions.maxPhi0 ;
+    else
+        maxPhi0 = 0.45 ;
     end
 end
 
@@ -579,7 +590,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
                 %% THIS WORKS
                 [phi0_fit_kk, phi0s_kk] = fitPhiOffsetsFromPrevMesh(TF,...
                     TV2D, TV3D, uspace_ds_umax, phiv_kk, ...
-                    prev3d_sphi_dsdv, -0.45, 0.45, ...
+                    prev3d_sphi_dsdv, minPhi0, maxPhi0, ...
                     save_ims, plotfn, smoothingMethod, ...
                     phiOpts, patchOpts) ;
                 
