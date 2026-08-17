@@ -191,6 +191,7 @@ function data = loadStackBioformats(tubi, varargin)
     % Get the channel filler
     fprintf(['loading file : ' fullFileName '\n']);
     r = bfGetReader(fullFileName);
+    loci.common.DebugTools.setRootLevel('ERROR');
     r.setSeries(0);
 
     % corrupted metadata can give the wrong stack resolution and
