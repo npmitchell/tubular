@@ -142,7 +142,15 @@ else
 end
 if isfield(opts, 'useAxesPixels4Permutation')
     useAxesPixels4Permutation = opts.useAxesPixels4Permutation ;
+else
+    useAxesPixels4Permutation = false ;
 end
+if isfield(opts, 'initGuessFn')
+    initGuessFn = opts.initGuessFn ;
+else
+    initGuessFn = '' ;
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Identify the surface using the loaded probabilities here
@@ -205,8 +213,7 @@ if ~contains(ofn_smoothply, '%') || ~contains(ofn_smoothply, 'd')
     ofn_smoothply = [ofn_smoothply tubi.timeStampStringSpec '.ply'] ;
 end
 
-for tidx = length(timepoints):-1:1
-%for tidx = 1:length(timepoints)
+for tidx = 1:length(timepoints)
     tp = timepoints(tidx) ;
     try
         previous_tp = timepoints(tidx-1) ;
@@ -503,7 +510,7 @@ for tidx = length(timepoints):-1:1
                 disp('eroding input LS by pre_pressure...')
                 SE = strel('sphere', abs(pre_pressure)) ;
                 init_ls = imerode(init_ls, SE) ;
-            elseif pre_pressure > 0                
+            elseif pre_pressure > 0
                 disp('dilating input LS by pre_pressure...')
                 SE = strel('sphere', abs(pre_pressure)) ;
                 init_ls = imdilate(init_ls, SE) ;
@@ -512,7 +519,7 @@ for tidx = length(timepoints):-1:1
             % data_clipped = data - 0.1 ;
             % data_clipped(data_clipped < 0) = 0. ;
 
-            % visualize result
+            % visualize probabilities
             if preview && previewIsosurface
                 disp('Previewing data as isosurface -- close figure to continue')
                 close all
@@ -528,13 +535,73 @@ for tidx = length(timepoints):-1:1
                 % waitfor(gcf)
                 pause(5)
             end
+            if preview
+                figure('Name', 'init_ls vs probabilities', 'Color', 'w') ; clf
+                % ---- row 1: slices along dim 1 --------------------------------------
+                dmyk = 1 ;
+                for ind = 1:10:max(size(init_ls))
+                    xind = min(ind, size(init_ls, 1)) ;
+                    yind = min(ind, size(init_ls, 2)) ;
+                    zind = min(ind, size(init_ls, 3)) ;
+
+                    iim = squeeze(init_ls(ind, :, :)) ;
+                    pim = squeeze(pred(xind, :, :)) ;
+                    subplot(3, 3, 1)
+                    imshow(iim)
+                    title(sprintf('initial guess, dim1 = %d', xind))
+                    subplot(3, 3, 2)
+                    imagesc(pim)
+                    axis('equal') ; axis('tight')
+                    title('probabilities')
+                    subplot(3, 3, 3)
+                    imshow(cat(3, double(iim), double(pim), double(pim)))
+                    title('overlay')
+
+                    iim = squeeze(init_ls(:, yind, :)) ;
+                    pim = squeeze(pred(:, yind, :)) ;
+                    subplot(3, 3, 4)
+                    imshow(iim)
+                    title(sprintf('initial guess, dim2 = %d', yind))
+                    subplot(3, 3, 5)
+                    imagesc(pim)
+                    axis('equal') ; axis('tight')
+                    title('probabilities')
+                    subplot(3, 3, 6)
+                    imshow(cat(3, double(iim), double(pim), double(pim)))
+                    title('overlay')
+
+                    iim = squeeze(init_ls(:, :, zind)) ;
+                    pim = squeeze(pred(:, :, zind)) ;
+                    subplot(3, 3, 7)
+                    imshow(iim)
+                    title(sprintf('initial guess, dim3 = %d', zind))
+                    subplot(3, 3, 8)
+                    imagesc(pim)
+                    axis('equal') ; axis('tight')
+                    title('probabilities')
+                    subplot(3, 3, 9)
+                    imshow(cat(3, double(iim), double(pim), double(pim)))
+                    title('overlay')
+                    drawnow
+
+                    %debug 0813/2026 saving those figures as gif for better
+                    %compare
+                    frameIdx = 0 ;                                  
+                    frameIdx = frameIdx + 1;
+                    if ~strcmpi(initGuessFn, '')
+                        writeGifFrame(gcf, initGuessFn, frameIdx == dmyk);
+                    end
+                    dmyk = dmyk + 1 ;
+                end
+            end
+
 
             disp(['Smoothing now; niter is ', num2str(niter_ii)]);
             BW = activecontour(pred, init_ls, niter_ii, 'Chan-Vese', ...
                 'SmoothFactor', tension, 'ContractionBias', -pressure) ;
 
             % visualize result
-            if preview
+            if preview && previewIsosurface
                 close all
                 isosurface(BW) ;
                 hold on;
@@ -546,7 +613,7 @@ for tidx = length(timepoints):-1:1
                 % set(gcf, 'color', 'w')
                 % export_fig( './final_guess_300_full.png', '-r300')
                 % waitfor(gcf)
-                pause(5)
+                pause(1)
             end
 
             % Post processing
@@ -750,5 +817,17 @@ for tidx = length(timepoints):-1:1
         end
     else
         disp(['t=', num2str(tp) ': smoothed mesh file found...'])
+    end
+end
+end
+
+
+%% Helper function for saving gifs for those preview 
+function writeGifFrame(fig, fname, isFirst)
+    [imind, cm] = rgb2ind(frame2im(getframe(fig)), 256);
+    if isFirst
+        imwrite(imind, cm, fname, 'gif', 'Loopcount', inf, 'DelayTime', 0.15);
+    else
+        imwrite(imind, cm, fname, 'gif', 'WriteMode', 'append', 'DelayTime', 0.15);
     end
 end
