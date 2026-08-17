@@ -99,7 +99,7 @@ function spcutMesh = generateCurrentSPCutMesh(tubi, cutMesh, spcutMeshOptions)
 %% Default options
 overwrite = false ;
 save_phi0patch = false ;
-iterative_phi0 = true ;
+iterative_phi0 = false ;
 smoothingMethod = 'none' ;
 maxPhiIterations = 10 ;     % maximum # iterations of minimizing phi via phi -> phi-phi0(s) 
 textureAxisOrder = tubi.data.axisOrder ;
@@ -516,7 +516,7 @@ if ~exist(spcutMeshfn, 'file') || overwrite
             % If iterative_phi0 is true, then we do a second/third/etc pass
             % if the adjustment from the fit is large.
             do_iteration = true ;
-            while any(phi0_fit_kk > 0.005) && do_iteration
+            while any(abs(phi0_fit_kk) > 0.005) && do_iteration
                 % Make sure we do only one pass if not iterative
                 if ~iterative_phi0 || dmyk > maxPhiIterations
                     do_iteration = false ;

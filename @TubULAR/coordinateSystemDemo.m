@@ -152,7 +152,9 @@ function fig = coordinateSystemDemo(tubi, options)
         ylim(xyzlims(2, :))
         zlim(xyzlims(3, :))
         xlabel([ 'ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
-        ylabel([ 'lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
+        ylabel({'lateral', ['position [' tubi.spaceUnits ']']}, ...
+            'HorizontalAlignment', 'center', ...
+            'interpreter', interpreter)
         zlabel([ 'dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
 
         if ~axisOn
@@ -177,7 +179,9 @@ function fig = coordinateSystemDemo(tubi, options)
         ylim(xyzlims(2, :))
         zlim(xyzlims(3, :))
         xlabel(['ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
-        ylabel(['lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
+        ylabel({'lateral', ['position [' tubi.spaceUnits ']']}, ...
+            'HorizontalAlignment', 'center', ...
+            'interpreter', interpreter)
         zlabel(['dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
 
         if ~axisOn
@@ -230,7 +234,9 @@ function fig = coordinateSystemDemo(tubi, options)
     ylim(xyzlims(2, :))
     zlim(xyzlims(3, :))
         xlabel([ 'ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
-        ylabel([ 'lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
+        ylabel({'lateral', ['position [' tubi.spaceUnits ']']}, ...
+            'HorizontalAlignment', 'center', ...
+            'interpreter', interpreter)
         zlabel([ 'dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         grid off
 
@@ -256,7 +262,9 @@ function fig = coordinateSystemDemo(tubi, options)
     ylim(xyzlims(2, :))
     zlim(xyzlims(3, :))
         xlabel([ 'ap position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
-        ylabel([ 'lateral position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
+        ylabel({'lateral', ['position [' tubi.spaceUnits ']']}, ...
+            'HorizontalAlignment', 'center', ...
+            'interpreter', interpreter)
         zlabel([ 'dv position [' tubi.spaceUnits ']'], 'interpreter', interpreter)
         grid off
         if ~axisOn
@@ -295,7 +303,9 @@ function fig = coordinateSystemDemo(tubi, options)
     end
     
     set(gcf, 'color', 'w')
-    set(gcf, 'position', [0, 0, 9, 12])
+    set(gcf, 'position', [0, 0, 15, 12])
+    sgtitle(['t=', num2str((tubi.currentTime - tubi.t0)*tubi.timeInterval), ...
+        ' ', tubi.timeUnits])
     export_fig(fullfile(tubi.dir.uvCoord, [sprintf(...
         'coordSystemDemo_%06d_', tubi.currentTime) style '_' coordSys exten]), ...
         '-nocrop','-r600')

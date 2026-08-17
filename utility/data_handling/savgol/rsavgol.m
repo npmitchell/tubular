@@ -1,50 +1,66 @@
-function ySmoothed = rsavgol(y,order,windowSize,varargin)
+function ySmoothed = rsavgol(y, order, windowSize, varargin)
 % ySmoothed = RSAVGOL(y, order, windowSize)
-% ySmoothed = RSAVGOL(y, order, windowSize, 'Tune',T, 'MaxIter',M, 'Tol',t)
+% ySmoothed = RSAVGOL(y, order, windowSize, 'Name',Value, ...)
 %
-% Robust Savitzky-Golay filter. Like SAVGOL, a polynomial of the given order
-% is fit to each sliding window, but the ordinary least-squares fit is
-% replaced by iteratively reweighted least squares (IRLS) with Tukey's
-% bisquare loss. Samples whose residual is large relative to a robust scale
-% estimate (the MAD) are down-weighted, and gross outliers (residual beyond
-% Tune*sigma) are ignored entirely, so a few bad points no longer drag the
-% local fit.
+% Robust Savitzky-Golay filter with median spike suppression. Drop-in
+% replacement for SAVGOL. Two stages:
 %
-% Note: the plain SAVGOL precomputes one filter matrix B and applies it with
-% FILTER because every window shares the same (identity) weight matrix. Here
-% each window gets its own data-dependent weights, so shift-invariance is
-% lost and each window is fit explicitly in a loop.
+%   Stage 1 (median filter): every sample is replaced by the median of a local
+%   window of width MedianWin. This is an ordinary sliding-median filter and it
+%   bridges ISOLATED spikes -- e.g. the phi0(u) values pinned at 0 where
+%   fminbnd failed to match a hoop -- because the real backbone is the window
+%   majority. Wide, genuinely-sharp features (the real dips) survive because
+%   they span more than half the median window.
+%
+%   Stage 2 (robust smoothing): a polynomial of the given order is fit to each
+%   sliding window of the de-spiked signal by IRLS with Tukey bisquare, giving
+%   a smooth backbone. With spikes already gone the IRLS just reduces to a
+%   clean least-squares SG fit; it stays as a second line of defence.
+%
+% OUTPUT ORIENTATION: like SAVGOL, RSAVGOL ALWAYS returns a 1 x N ROW vector,
+% independent of input orientation. The pipeline calls it as
+% phi0_fit = rsavgol(phi0s, order, win)' -- the transpose expects a row so the
+% result is a column; returning a column here would broadcast against an
+% nU x 1 accumulator into an nU x nU matrix.
 %
 % Parameters
 % ----------
-% y : 1d array of data (Nx1 or 1xN)
-% order : order of the polynomial fit to each window
-% windowSize : odd integer
+% y          : 1d array (Nx1 or 1xN)
+% order      : polynomial order per smoothing window
+% windowSize : odd integer, smoothing window width
 %
-% Optional name/value parameters
-% ------------------------------
-% 'Tune' : bisquare tuning constant (default 4.685, ~95% Gaussian efficiency)
-% 'MaxIter' : max IRLS iterations per window (default 10)
-% 'Tol' : relative convergence tolerance on the coefficients (default 1e-4)
+% Optional name/value
+% -------------------
+% 'MedianWin' : width of the sliding-median spike filter (default 7). This is
+%               the knob that removes spikes. Set larger if spikes come in
+%               short CLUSTERS (a cluster wider than MedianWin/2 cannot be
+%               bridged by any median); set to 1 to disable stage 1 entirely.
+%               NOTE: reachable only if you add it to the rsavgol call inside
+%               fitPhiOffsetsFromPrevMesh, which currently passes no varargin,
+%               so the default of 7 is what the pipeline uses as-is.
+% 'Tune'      : bisquare tuning constant (default 4.685)
+% 'MaxIter'   : max IRLS iterations per window (default 10)
+% 'Tol'       : relative convergence tol on coefficients (default 1e-4)
 %
 % Returns
 % -------
-% ySmoothed : same shape as y
+% ySmoothed : 1 x N row vector
 %
-% edited NPMitchell 2019; robust IRLS variant 2026
+% edited NPMitchell 2019; robust IRLS variant 2026; median spike filter + shape fix 2026
 
-% ---- parse optional args ----
+%% ---- parameters ----
 p = inputParser;
-p.addParameter('Tune',    4.685, @(v) isscalar(v) && v > 0);
-p.addParameter('MaxIter', 10,    @(v) isscalar(v) && v >= 1);
-p.addParameter('Tol',     1e-4,  @(v) isscalar(v) && v > 0);
+p.addParameter('Tune',      4.685, @(v) isscalar(v) && v > 0);
+p.addParameter('MaxIter',   10,    @(v) isscalar(v) && v >= 1);
+p.addParameter('Tol',       1e-4,  @(v) isscalar(v) && v > 0);
+p.addParameter('MedianWin', 7,     @(v) isscalar(v) && v >= 1);
 p.parse(varargin{:});
 tune    = p.Results.Tune;
 maxIter = p.Results.MaxIter;
 tol     = p.Results.Tol;
+medwin  = round(p.Results.MedianWin);
 
-origShape = size(y);
-y = reshape(y, [1,length(y)]);
+y = reshape(y, [1, length(y)]);
 N = length(y);
 
 if mod(windowSize,2) == 0 || windowSize < 1
@@ -54,20 +70,28 @@ if windowSize <= order
     error('windowSize must be greater than order.');
 end
 
+x = y(:);                        % Nx1
+
+%% ---- Stage 1: sliding-median spike filter ----
+mHalf = floor((medwin-1)/2);
+xmed  = x;
+if mHalf > 0
+    for i = 1:N
+        lo = max(1, i-mHalf);
+        hi = min(N, i+mHalf);
+        xmed(i) = median(x(lo:hi));
+    end
+end
+
+%% ---- Stage 2: robust polynomial (SG) fit on the de-spiked signal ----
 halfWindow = (windowSize-1)/2;
-F = windowSize;
-
-% Local polynomial basis exponents: columns t^0, t^1, ..., t^order.
-% (Same idea as the original S = temp2.^temp3, but built per window below so
-% the abscissa is centred on each output point.)
-expo = 0:order;
-
-x = y(:);                 % Nx1
-ySmoothed = zeros(N,1);
+F          = windowSize;
+expo       = 0:order;            % basis t^0 ... t^order
+ySmoothed  = zeros(N,1);
 
 for i = 1:N
-    % Window placement: centred in the interior, and clamped to the first or
-    % last F samples near the edges (matching the original transient handling).
+    % Window placement: centred in the interior, clamped to the first/last F
+    % samples near the edges (matching SAVGOL's transient handling).
     if i <= halfWindow
         lo = 1;        hi = F;
     elseif i > N - halfWindow
@@ -76,60 +100,42 @@ for i = 1:N
         lo = i-halfWindow;  hi = i+halfWindow;
     end
 
-    % Local coordinate is measured from the OUTPUT point i, so the fitted
-    % value at i is simply the constant coefficient c(1) (t^0 term), whether
-    % or not the window is centred.
-    t     = (lo:hi).' - i;       % F x 1
-    A     = t .^ expo;           % F x (order+1) Vandermonde
-    ywin  = x(lo:hi);            % F x 1
+    % Local coordinate measured from the OUTPUT point i, so the fitted value at
+    % i is the constant coefficient c(1) whether or not the window is centred.
+    t    = (lo:hi).' - i;        % F x 1
+    A    = t .^ expo;            % F x (order+1) Vandermonde
+    ywin = xmed(lo:hi);         % F x 1  (de-spiked)
 
     c = irlsFit(A, ywin, tune, maxIter, tol);
     ySmoothed(i) = c(1);
 end
 
-ySmoothed = reshape(ySmoothed, origShape);
+%% ---- return a ROW, matching SAVGOL's contract ----
+ySmoothed = reshape(ySmoothed, [1, N]);
 
 end
 
-% ------------------------------------------------------------------------
+% ========================================================================
 function c = irlsFit(A, y, tune, maxIter, tol)
 % IRLS polynomial fit with Tukey bisquare weights.
-
 n = size(A,1);
-
-% Seed with the ordinary least-squares fit.
-c = A \ y;
-
-% If the system is not over-determined (can happen only for tiny windows),
-% robust reweighting is meaningless -- return the OLS solution.
-if n <= size(A,2)
+c = A \ y;                                   % OLS seed
+if n <= size(A,2)                            % not over-determined: return OLS
     return;
 end
-
 for iter = 1:maxIter
     r = y - A*c;
-
-    % Robust scale: MAD about the median, scaled to estimate sigma for
-    % Gaussian residuals.
-    s = median(abs(r - median(r))) / 0.6745;
+    s = median(abs(r - median(r))) / 0.6745; % robust scale (MAD)
     if s < eps
-        break;   % residuals ~0: fit is essentially exact, nothing to reweight
+        break;                               % residuals ~0
     end
-
     u = r / (tune * s);
-
-    % Tukey bisquare weights: 0 for |u| >= 1, i.e. gross outliers are ignored.
-    w = (abs(u) < 1) .* (1 - u.^2).^2;
-
-    % Weighted least-squares update via row scaling (numerically stable).
+    w = (abs(u) < 1) .* (1 - u.^2).^2;       % bisquare; 0 for gross outliers
     sw   = sqrt(w);
-    cNew = (sw .* A) \ (sw .* y);
-
+    cNew = (sw .* A) \ (sw .* y);            % weighted LS via row scaling
     if norm(cNew - c) <= tol * max(1, norm(c))
-        c = cNew;
-        break;
+        c = cNew; break;
     end
     c = cNew;
 end
-
 end

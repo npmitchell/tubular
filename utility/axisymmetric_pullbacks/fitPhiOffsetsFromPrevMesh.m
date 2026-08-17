@@ -91,6 +91,8 @@ function [phi0_fit, phi0s] = fitPhiOffsetsFromPrevMesh(TF, TV2D, TV3D,...
 try
     assert(strcmp(smoothingMethod, 'none') ||...
         strcmp(smoothingMethod, 'savgol') ||...
+        strcmp(smoothingMethod, 'rsavgol') || ...
+        strcmp(smoothingMethod, 'movmedian') || ...
         strcmp(smoothingMethod, 'movmean'))
 catch
     error('smoothingMethod must be none, movmean or savgol')
@@ -300,7 +302,7 @@ if save_phi0patch
     % convert (ss, phi) to (x, y)
     xx = ringpath_ss * size(patchIm, 2) / max(ringpath_ss) ;
     yy = 1:100:size(patchIm, 1) ;
-    phi0grid = (phi0_fit .* ones(length(uspace), length(yy)))' ;
+    phi0grid = (phi0_fit(:) .* ones(length(uspace), length(yy)))' ;
     tmp = cat(3, patchIm, 0.5 * (patchIm + im0), im0) ;
     opts.label = '$\phi_0$' ;
     opts.qsubsample = 2 ;
