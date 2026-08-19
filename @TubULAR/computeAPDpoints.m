@@ -117,6 +117,8 @@ if useCustomPts
     use_iLastik = false;
 elseif isfield(opts, 'use_iLastik')
     use_iLastik = opts.use_iLastik ;
+elseif isfield(opts, 'use_ilastik')
+    use_iLastik = opts.use_ilastik ;
 else
     use_iLastik = exist(aProbFileName, 'file') && ...
         exist(pProbFileName, 'file') ;

@@ -76,6 +76,7 @@ ssfactor = tubi.ssfactor ;
 use_APDVAxes = [1 3] ;  % forcibly use these axes as the AP and DV axes, respectively
 flipAP = false ;   % only used if use_APDVAxes is true 
 flipDV = false ;   % only used if use_APDVAxes is true
+useiLastikLabels = true ;
 
 %% Unpack opts
 if isfield(opts, 'aProbFileName')
@@ -132,6 +133,11 @@ else
         disp(['No ilastik training specifically for surface alignment ', ...
         'was found, so define the APDV axes based on the data axes and the mesh elongation axis'])
     end
+end
+
+% Use labels instead of probabilities
+if isfield(opts, 'useiLastikLabels')
+    useiLastikLabels = opts.useiLastikLabels ;
 end
 
 if ~use_iLastik
@@ -264,18 +270,22 @@ if redo_rot_calc || overwrite
         end
 
         % Obtain just the dorsal channel from probabilities
-        dorsalAxis = strfind(ilastikOutputAxisOrder, 'c') ;
-        if dorsalAxis == 1
-            ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
-        elseif dorsalAxis == 2 
-            ddat = squeeze(ddatM(:, dorsalChannel, :, :)) ;
-        elseif dorsalAxis == 3
-            ddat = squeeze(ddatM(:, :, dorsalChannel, :)) ;
-        elseif dorsalAxis == 4 
-            ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+        if useiLastikLabels
+             ddat = squeeze(ddatM) == dorsalChannel;
         else
-            error(['Expected 4D dorsal probabilities data, but was ' ...
-                num2str(length(size(ddatM))) 'D'])
+            channelAxis = strfind(ilastikOutputAxisOrder, 'c') ;
+            if channelAxis == 1
+                ddat = squeeze(ddatM(dorsalChannel, :, :, :)) ;
+            elseif channelAxis == 2 
+                ddat = squeeze(ddatM(:, dorsalChannel, :, :)) ;
+            elseif channelAxis == 3
+                ddat = squeeze(ddatM(:, :, dorsalChannel, :)) ;
+            elseif channelAxis == 4 
+                ddat = squeeze(ddatM(:, :, :, dorsalChannel)) ;
+            else
+                error(['Expected 4D dorsal probabilities data, but was ' ...
+                    num2str(length(size(ddatM))) 'D'])
+            end
         end
 
         xyzstring = erase(lower(ilastikOutputAxisOrder), 'c') ;
@@ -405,14 +415,19 @@ if redo_rot_calc || overwrite
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Compute and save anterior and posterior points to use as definition of 
             % AP axis and for translation offset to put anterior at the origin
-            if strcmpi(ilastikOutputAxisOrder(1), 'c')
-                adat = squeeze(adatM(anteriorChannel,:,:,:)) ;
-                pdat = squeeze(pdatM(posteriorChannel,:,:,:)) ;
-            elseif strcmpi(ilastikOutputAxisOrder(4), 'c')
-                adat = squeeze(adatM(:,:,:,anteriorChannel)) ;
-                pdat = squeeze(pdatM(:,:,:,posteriorChannel)) ;
+            if useiLastikLabels
+                adat = squeeze(adatM) == anteriorChannel;
+                pdat = squeeze(pdatM) == posteriorChannel;
             else
-                error('Did not recognize ilastikAxisOrder. Code here')
+                if strcmpi(ilastikOutputAxisOrder(1), 'c')
+                    adat = squeeze(adatM(anteriorChannel,:,:,:)) ;
+                    pdat = squeeze(pdatM(posteriorChannel,:,:,:)) ;
+                elseif strcmpi(ilastikOutputAxisOrder(4), 'c')
+                    adat = squeeze(adatM(:,:,:,anteriorChannel)) ;
+                    pdat = squeeze(pdatM(:,:,:,posteriorChannel)) ;
+                else
+                    error('Did not recognize ilastikAxisOrder. Code here')
+                end
             end
 
             % define axis order: 

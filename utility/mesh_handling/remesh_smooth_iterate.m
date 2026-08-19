@@ -8,23 +8,24 @@ function [V,F] = remesh_smooth_iterate(V, F, options)
 %   vertices, locations of vertices in 3d before smoothing/remeshing
 % F : M x 3
 %   faces, face connectivity list indexing input vertices V
-% lambda : float 
-%   smoothing parameter for laplacian
-% tar_length : numeric
-%   target edge length for remeshing
-% num_iter : int
-%   number of iterations for isotropic remeshing
-% protect_constraints : bool
-%   protect constraints during isotropic remeshing
-% enforceQuality : bool
-%   error out if there are boundaries, mesh intersections, or if not
-%   spherical topology
-% maxIterRelaxMeshSpikes : int >=0 
-%   maximum number of iterations of relaxing mesh spikes 
-% enforceTopology : bool
-%   enforce the topology of the mesh to match targetEulerCharacteristic
-% targetEulerCharacteristic : int
-%   required topology of the mesh if enforceTopology == true    
+% options : struct with fields
+%    lambda : float 
+%      smoothing parameter for laplacian
+%    tar_length : numeric
+%      target edge length for remeshing
+%    num_iter : int
+%      number of iterations for isotropic remeshing
+%    protect_constraints : bool
+%      protect constraints during isotropic remeshing
+%    enforceQuality : bool
+%      error out if there are boundaries, mesh intersections, or if not
+%      spherical topology
+%    maxIterRelaxMeshSpikes : int >=0 
+%      maximum number of iterations of relaxing mesh spikes 
+%    enforceTopology : bool
+%      enforce the topology of the mesh to match targetEulerCharacteristic
+%    targetEulerCharacteristic : int
+%      required topology of the mesh if enforceTopology == true    
 %
 % Returns
 % -------
@@ -98,8 +99,9 @@ else
     % Boundary indices
     tr = triangulation(F, V) ;
     fb = tr.freeBoundary ;
-    fb = fb(:, 1) ;
-    
+    if ~isempty(fb)
+        fb = fb(:, 1) ;
+    end
     % Isotropically remesh the surface
     try
         [F, V, ~, ~] = isotropic_remeshing( F, V, ...

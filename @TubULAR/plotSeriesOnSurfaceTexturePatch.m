@@ -123,6 +123,7 @@ normal_shift = tubi.normalShift ;
 plot_time_points = [];
 perspective_angle = [ -20, 20 ] ;
 directory_extension = '' ;
+doLighting = true ;
 
 timePoints = tubi.xp.fileMeta.timePoints ;
 
@@ -179,6 +180,9 @@ if isfield(options, 'plot_perspective')
 end
 if isfield(options, 'directory_extension')
     directory_extension = options.directory_extension ;
+end
+if isfield(options, 'doLighting')
+    doLighting = options.doLighting ;
 end
 if isfield(options, 'perspective_angle')
     perspective_angle = options.perspective_angle ;
@@ -515,6 +519,15 @@ for tidx = tidx_todo
         
         % Capture all four views
         disp(['saving figure...' num2str(tp, '%06d')])
+
+        camera_az_el = perspective_angle;  % ensure a 2-element [az, el] vector is available
+
+        if doLighting
+            view(camera_az_el(1), camera_az_el(2))
+            camlight
+            lighting gouraud
+        end
+
         % Save each figure
         for ii = 1:length(fns)
             % Only plot this view if plot_view(ii) is true

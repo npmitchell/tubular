@@ -234,7 +234,7 @@ for tidx = 1:length(timepoints)
     if (~exist(outputSmoothMesh, 'file') && ~exist(outputMesh, 'file')) || overwrite
         %% load the exported data out of the ilastik prediction
         fileName = fullfile(dataDir, ...
-            [sprintf(fileBaseName, tp), '_Probabilities.h5']) ;
+            [sprintf(fileBaseName, tp), opts.prob_searchstr]) ;
         disp(['Reading h5 file: ' fileName])
         h5fileInfo = h5info(fileName);
         if strcmp(h5fileInfo.Datasets.Name,'exported_data')

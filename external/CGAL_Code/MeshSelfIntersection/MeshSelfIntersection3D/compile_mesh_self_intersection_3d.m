@@ -1,4 +1,14 @@
-function compile_mesh_self_intersection_3d
-    mex -v -O mesh_self_intersection_3d.cpp -I/usr/include:/usr/local/include -L/usr/lib:/usr/local/lib -lCGAL -lgmp -lboost_thread
-end
+% function compile_mesh_self_intersection_3d
+%     mex -v -O mesh_self_intersection_3d.cpp -I/usr/include:/usr/local/include -L/usr/lib:/usr/local/lib -lCGAL -lgmp -lboost_thread
+% end
 
+% NPM: as of 2026 the following works on D'Arcy
+
+function compile_mesh_self_intersection_3d
+    mex('-v', '-O', ...
+        'CXXFLAGS=$CXXFLAGS -std=c++14 -frounding-math', ...
+        'mesh_self_intersection_3d.cpp', ...
+        '-lgmp', ...
+        '-lmpfr', ...
+        '-lboost_thread');
+end
